@@ -24,6 +24,12 @@ export function checkStartupConfig(): StartupCheck {
         "N'importe qui qui connaît un numéro peut ouvrir ce compte. À réserver à une démonstration devant des personnes de confiance.",
     );
   }
+  if (process.env.SMS_PROVIDER?.toLowerCase() === 'log' && (process.env.BITNOB_MODE === 'sandbox' || process.env.NODE_ENV === 'production')) {
+    warnings.push('SMS_PROVIDER=log : les codes de connexion sont écrits dans les journaux du serveur. Réservé au développement ; configurez un vrai fournisseur SMS.');
+  }
+  if (process.env.SMS_PROVIDER?.toLowerCase() === 'twilio' && !(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM)) {
+    warnings.push("SMS_PROVIDER=twilio mais TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN ou TWILIO_FROM manque : l'envoi de SMS est désactivé.");
+  }
   // Heuristic for the "never live" rule: live keys carry a `live` marker (prd:live_...).
   const LIVE_KEY = /(^|[:_])live[:_]/i; // prd:live_... is live, prd:sandbox_... is not
   if (process.env.BITNOB_MODE === 'sandbox' && [process.env.BITNOB_CLIENT_ID, process.env.BITNOB_CLIENT_SECRET].some((k) => LIVE_KEY.test(k ?? ''))) {

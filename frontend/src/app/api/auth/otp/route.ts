@@ -1,21 +1,22 @@
-import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
-import { normalizePhone, smsUnavailable } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { normalizePhone } from '@/server/auth';
 import { respond } from '@/server/http';
+import { requestOtp } from '@/server/otp';
+import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * "Sends" the SMS code. There is no SMS provider in this prototype: with ALLOW_DEMO the shared demo code is
- * returned so the screen can display it. Without ALLOW_DEMO no code exists, so we say so instead of pretending.
+ * Sends the sign-in code by SMS. With an SMS provider configured, the answer never contains the code.
+ * Without one, and only if ALLOW_DEMO permits, the shared demo code is returned so the screen can show it.
+ * Otherwise 503: no code exists, and we say so instead of pretending.
  */
 export async function POST(request: Request) {
   return respond(async () => {
-    const { allowDemo, demoOtp } = getConfig();
-    if (!allowDemo) throw smsUnavailable();
     const body = await request.json().catch(() => ({}));
+    const phone = normalizePhone(String(body.phone ?? ''));
     enforce(`otp:ip:${clientIp(request)}`, LIMITS.otpIp.max, LIMITS.otpIp.windowMs);
-    enforce(`otp:phone:${normalizePhone(String(body.phone ?? ''))}`, LIMITS.otpPhone.max, LIMITS.otpPhone.windowMs, 'Trop de codes demandés pour ce numéro');
-    return { sent: true, demo: true, demoCode: demoOtp };
+    enforce(`otp:phone:${phone}`, LIMITS.otpPhone.max, LIMITS.otpPhone.windowMs, 'Trop de codes demandés pour ce numéro');
+    const delivery = await requestOtp(phone);
+    return delivery.kind === 'demo' ? { sent: true, demo: true, demoCode: delivery.demoCode } : { sent: true, resendIn: delivery.resendIn };
   });
 }

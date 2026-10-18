@@ -261,7 +261,7 @@ Erreurs : `{ "error": "message en français", "code"?: "…" }` avec le statut H
 
 | Méthode et chemin | Accès | Corps → réponse |
 |---|---|---|
-| `POST /api/auth/otp` | public | `{phone}` → `{sent, demo:true, demoCode}` (**aucun SMS**, ne valide rien). **503** `sms_unavailable` si `ALLOW_DEMO` est refusé (aucun code n'existe) |
+| `POST /api/auth/otp` | public | `{phone}` → avec un fournisseur SMS : `{sent, resendIn}` (le code n'est **jamais** renvoyé) ; sans fournisseur et si `ALLOW_DEMO` autorise : `{sent, demo:true, demoCode}` (**aucun SMS**) ; sinon **503** `sms_unavailable`. **429** `otp_too_soon` (renvoi avant 30 s) |
 | `POST /api/auth/register` | public | `{firstName,lastName,country,phone,otp}` → cookie + `{user}` |
 | `POST /api/auth/login` | public | `{phone, otp}` → cookie + `{user}` |
 | `POST /api/auth/demo` | public | → cookie du compte démo `u_aminata`. **403** `demo_disabled` si `ALLOW_DEMO` est refusé |
@@ -290,7 +290,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 - Cookie `nobpay_session` = `<userId>.<version>.<expiration>.<HMAC-SHA256>` (HMAC complet, sur les trois champs), `httpOnly`, `sameSite=lax`, **`Secure` quand `PUBLIC_BASE_URL` est en https**, **7 jours**, renouvelé à l'usage (dans les routes d'API, seules à pouvoir écrire un cookie : un utilisateur qui ne ferait que lire des pages sans appeler l'API serait déconnecté au bout de 7 jours). `version` doit égaler `user.sessionVersion` : « Se déconnecter » l'incrémente, ce qui invalide tous les cookies de l'utilisateur sur tous ses appareils (sauf pour le compte démo, partagé). Secret = `SESSION_SECRET`.
 - **`SESSION_SECRET` faible refusé** (absent, valeur par défaut, `change-me`, moins de 32 caractères) : le serveur **refuse de démarrer** en `sandbox`, ou en production avec `ALLOW_DEMO=0` (`src/instrumentation.ts` → `server/startup.ts`) ; en pratique Next répond alors 500 à toute requête, webhooks compris. Un second contrôle a lieu à chaque signature de cookie. En `mock` (y compris `npm start`), la valeur par défaut est tolérée avec un avertissement : c'est le plan B de la démonstration.
 - **`ALLOW_DEMO`** : `1` autorise, `0` refuse, absent = autorisé **en `mock` seulement**. Conditionne : le compte démo, le code SMS unique `DEMO_OTP`, `POST /api/dev/reset`, `POST /api/fundings/:id/simulate` et le paiement « Continuer en simulation ». Les boutons correspondants sont masqués. **Conséquence : sans `ALLOW_DEMO=1`, en `sandbox`, personne ne peut se connecter**, car il n'existe pas encore de vrai envoi de SMS (B1.1). Avec `ALLOW_DEMO=1` en sandbox, un avertissement est affiché au démarrage.
-- **Reste faux :** le code SMS est la valeur unique `DEMO_OTP` (123456) pour tout le monde et `POST /api/auth/otp` ne mémorise rien : **n'importe qui connaissant un numéro peut ouvrir ce compte** dès que `ALLOW_DEMO` est autorisé. Acceptable en démonstration devant des personnes de confiance, **inacceptable** avec de vraies données (B1.1).
+- **Codes SMS (B1.1, `server/otp.ts`, `server/sms.ts`)** : avec `SMS_PROVIDER` configuré (`log` pour le développement, `twilio`), chaque demande crée un code à 6 chiffres **aléatoire**, stocké **haché** (HMAC du numéro + code : un code ne vaut que pour son numéro), valable **5 minutes**, **5 essais**, **usage unique**, 30 s minimum entre deux demandes ; un nouveau code remplace l'ancien ; si l'envoi échoue le code est oublié. Sans fournisseur, seul existe le code de démonstration partagé `DEMO_OTP`, accepté uniquement si `ALLOW_DEMO` autorise : dans ce cas **n'importe qui connaissant un numéro peut ouvrir ce compte** (acceptable en démonstration devant des personnes de confiance, inacceptable avec de vraies données). **Reste à décider : le fournisseur SMS définitif** (Twilio est codé et testé avec un faux `fetch`, jamais essayé en vrai ; Africa's Talking ou WhatsApp Business restent possibles).
 - Garde-fou « jamais de clés live » : en `sandbox`, le démarrage est refusé si `BITNOB_CLIENT_ID` ou `BITNOB_CLIENT_SECRET` ressemble à une clé de production (`prd:…`, `live_…`). C'est une heuristique sur le préfixe, pas une preuve.
 - La personne de confiance n'a pas de compte : elle possède un **jeton** (`managerToken`, 24 caractères hex, aussi dans l'URL `/terrain/<jeton>`), valable indéfiniment, qui donne accès aux fichiers du projet et au dépôt de preuves.
 
@@ -305,7 +305,9 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `PUBLIC_BASE_URL` | URL publique (webhook, liens) | `http://localhost:3000` |
 | `SESSION_SECRET` | signe le cookie de session ; aussi graine des préimages simulées. **32 caractères au moins, obligatoire en sandbox** (§ 10) | valeur de dev publique, tolérée en `mock` seulement |
 | `ALLOW_DEMO` | `1` / `0` / absent : facilités de démonstration (§ 10) | absent = autorisé en `mock` seulement |
-| `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement si `ALLOW_DEMO` autorise) | `123456` |
+| `SMS_PROVIDER` | `log` (codes écrits dans la console serveur, développement), `twilio`, ou vide | vide |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | identifiants Twilio (si `SMS_PROVIDER=twilio`) | vide |
+| `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement sans fournisseur SMS et si `ALLOW_DEMO` autorise) | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |
 | `CAPTURE_WEBHOOKS` | `1` : enregistre chaque webhook reçu dans `.data/webhook-captures/` (débogage sandbox) | absent |
@@ -349,7 +351,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 
 | # | Gravité | Problème |
 |---|---|---|
-| D1 | S1 | **OTP unique global** ; `/api/auth/otp` ne valide rien (§ 10). Atténué : fermé hors `mock` sans `ALLOW_DEMO=1`. **Reste ouvert** tant que B1.1 n'est pas fait. |
+| D1 | S1 | **OTP unique global** ; `/api/auth/otp` ne valide rien (§ 10). ~~Atténué~~ **Corrigé (B1.1)** avec un fournisseur SMS configuré ; le code partagé n'existe plus que sans fournisseur et avec `ALLOW_DEMO`. |
 | D2 | S1 | ~~`/api/auth/demo` actif dans tous les modes ; `SESSION_SECRET` par défaut ; cookie non `Secure` ; pas de révocation de session.~~ **Corrigé** (B1.2, B1.3, § 10). Reste : renouvellement du cookie seulement via les routes d'API. |
 | D3 | S1 | ~~Aucune limitation de débit~~ **Corrigé (B1.4)** : `server/rateLimit.ts`, en mémoire (un seul processus ; à remplacer par Redis si plusieurs instances). Limites dans `LIMITS` : code SMS (5 / 10 min par numéro, 20 par adresse), connexion et inscription (8 par numéro, 20 par adresse), compte démo, dépôt de preuves (20 / 10 min par jeton ou compte), création de projet / financement / ancrage, lecture publique (dossier, `.ots`, fichiers), `anchors/:id/refresh` (30 / 10 min par adresse **et** une vérification toutes les 20 s par ancrage), webhook (600 / min, large : Bitnob réessaie sur un 429). Réponse **429** `rate_limited`, message français, en-tête `Retry-After`. `RATE_LIMIT=0` désactive (tests). Adresse du client : entrée `X-Forwarded-For` ajoutée par notre proxy (`TRUSTED_PROXY_HOPS`, défaut 1). |
 | D4 | S1 | Base = **un fichier JSON** (`db.ts`) : un seul processus, réécriture complète à chaque écriture, pas de sauvegarde, pas de migration. Inadapté aux hébergements sans disque partagé. |

@@ -50,6 +50,13 @@ export function getConfig() {
     btcUsd: Number(process.env.BTC_USD_RATE) || 81500,
     dataDir: process.env.DATA_DIR || path.join(process.cwd(), '.data'),
     captureWebhooks: process.env.CAPTURE_WEBHOOKS === '1',
+    /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */
+    smsProvider: (process.env.SMS_PROVIDER || '').toLowerCase(),
+    twilio: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      from: process.env.TWILIO_FROM || '',
+    },
   };
 }
 

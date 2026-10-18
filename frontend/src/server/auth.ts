@@ -5,6 +5,9 @@ import { getConfig, sessionSecretMustBeStrong, sessionSecretProblem } from './co
 import { hmacHex, randomId, safeEqual } from './crypto';
 import { readDb, withDb } from './db';
 import { HttpError } from './http';
+import { smsUnavailable as smsUnavailableError, verifyOtp } from './otp';
+
+export const smsUnavailable = smsUnavailableError;
 import { DEMO_USER_ID } from './seed';
 
 /**
@@ -114,19 +117,6 @@ export async function endSession(): Promise<void> {
 
 export const normalizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');
 
-/** The only code that exists today is the shared demo code. Without ALLOW_DEMO nobody can sign in (no SMS provider yet). */
-export function smsUnavailable(): HttpError {
-  return new HttpError(503, "La connexion par SMS n'est pas encore disponible sur cette instance.", 'sms_unavailable');
-}
-
-function checkOtp(otp: string): void {
-  const { allowDemo, demoOtp } = getConfig();
-  if (!allowDemo) throw smsUnavailable();
-  if (!safeEqual(String(otp ?? '').trim(), demoOtp)) {
-    throw new HttpError(400, 'Code incorrect', 'bad_otp');
-  }
-}
-
 export async function registerUser(input: {
   firstName: string;
   lastName: string;
@@ -140,7 +130,7 @@ export async function registerUser(input: {
   if (!firstName || !lastName) throw new HttpError(400, 'Prénom et nom requis');
   if (!RESIDENCE_COUNTRIES.some((c) => c.code === input.country)) throw new HttpError(400, 'Pays de résidence invalide');
   if (phone.replace(/\D/g, '').length < 8) throw new HttpError(400, 'Numéro de téléphone invalide');
-  checkOtp(input.otp);
+  await verifyOtp(phone, input.otp);
 
   return withDb((db) => {
     if (db.users.some((u) => normalizePhone(u.phone) === phone)) {
@@ -161,7 +151,7 @@ export async function registerUser(input: {
 
 export async function loginUser(input: { phone: string; otp: string }): Promise<User> {
   const phone = normalizePhone(String(input.phone ?? ''));
-  checkOtp(input.otp);
+  await verifyOtp(phone, input.otp);
   const db = await readDb();
   const user = db.users.find((u) => normalizePhone(u.phone) === phone);
   if (!user) throw new HttpError(404, "Aucun compte avec ce numéro. Créez-en un.", 'not_found');
