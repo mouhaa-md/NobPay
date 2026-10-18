@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "message": "Payouts retrieved successfully",
+  "data": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a2",
+        "quote_id": "QT2_21053047",
+        "status": "QUOTE",
+        "amount": "300",
+        "settlement_amount": "178023.24",
+        "reference": "nobpay:pay:s2:test",
+        "country": "SN"
+      },
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "quote_id": "QT2_21053046",
+        "status": "INITIATED",
+        "amount": "100",
+        "settlement_amount": "59341.08",
+        "reference": "nobpay:pay:s1:test",
+        "country": "SN"
+      }
+    ],
+    "total_count": 2,
+    "limit": 100,
+    "offset": 0,
+    "has_more": false
+  }
+}

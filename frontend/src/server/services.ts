@@ -17,6 +17,7 @@ import {
 import { formatInt, formatUsdShort, usdToSats } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import { gatewayFor, getGateway } from './bitnob';
+import type { PayoutStart } from './bitnob/types';
 import { getConfig } from './config';
 import { randomId, randomToken } from './crypto';
 import { readDb, withDb } from './db';
@@ -403,8 +404,9 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
 
   // Phase 2: ask the gateway to move the money (outside the database lock).
   const { publicBaseUrl } = getConfig();
+  let start: PayoutStart;
   try {
-    const start = await gatewayFor(quote.mode).startPayout({
+    start = await gatewayFor(quote.mode).startPayout({
       quote,
       reference: quote.reference,
       supplier,
@@ -412,19 +414,8 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
       reason: 'vendor_payment',
       callbackUrl: publicBaseUrl.startsWith('https://') ? `${publicBaseUrl}/api/webhooks/bitnob` : undefined,
     });
-    // Phase 3: store the gateway's answer. Completion arrives by webhook (or polling).
-    return await withDb((db) => {
-      const project = findProject(db, projectId)!;
-      const step = stepOf(project, stepId);
-      if (step.payout) {
-        step.payout.payoutId = start.payoutId;
-        step.payout.status = start.status === 'initiated' ? 'pending' : start.status;
-      }
-      if (start.status === 'completed') applyPayoutCompleted(db, project, step, { payoutId: start.payoutId });
-      if (start.status === 'failed') applyPayoutFailed(db, project, step, 'Paiement refusé par le réseau');
-      return structuredClone(step);
-    });
   } catch (err) {
+    // Only a definite refusal gets here (an unconfirmed finalize comes back as start.uncertain, not as an error).
     const message = (err as Error).message;
     await withDb((db) => {
       const project = findProject(db, projectId)!;
@@ -432,6 +423,22 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     });
     throw new HttpError(502, `Paiement non exécuté : ${message}`, 'gateway_error');
   }
+
+  // Phase 3: store the gateway's answer. Completion arrives by webhook (or polling). This write is OUTSIDE the
+  // try above on purpose: if it fails the money may have moved, so the step stays `releasing` and reconcile()
+  // finds the payout again by its reference instead of declaring a failure.
+  return withDb((db) => {
+    const project = findProject(db, projectId)!;
+    const step = stepOf(project, stepId);
+    if (step.payout) {
+      step.payout.payoutId = start.payoutId;
+      step.payout.status = start.status === 'initiated' ? 'pending' : start.status;
+      if (start.uncertain) step.payout.uncertain = true; // reconcile() decides, the funds stay reserved
+    }
+    if (start.status === 'completed') applyPayoutCompleted(db, project, step, { payoutId: start.payoutId });
+    if (start.status === 'failed') applyPayoutFailed(db, project, step, 'Paiement refusé par le réseau');
+    return structuredClone(step);
+  });
 }
 
 /* ------------------------------------------------------------------------- *
@@ -439,6 +446,9 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
  *  - mock: the simulator "receives" the payout webhook shortly after the request
  *  - sandbox: poll the payout status (the webhook normally arrives first)
  * ------------------------------------------------------------------------- */
+
+/** How long an unconfirmed payout is left alone before we conclude Bitnob never started it (quotes live ~16 min). */
+export const UNCONFIRMED_GRACE_MS = 5 * 60_000;
 
 export async function reconcile(): Promise<void> {
   const db = await readDb();
@@ -449,26 +459,57 @@ export async function reconcile(): Promise<void> {
       const age = Date.now() - Date.parse(payout.startedAt);
       if (payout.mode === 'mock') {
         if (age > 2500) await simulatePayoutCompleted(step);
-      } else if (payout.payoutId && age > 4000) {
+      } else if (age > 4000) {
         try {
-          const status = await gatewayFor('sandbox').payoutStatus(payout.payoutId);
-          if (status.status === 'completed') {
-            await withDb((d) => {
-              const p = findProject(d, project.id)!;
-              applyPayoutCompleted(d, p, stepOf(p, step.id), { payoutId: payout.payoutId });
-            });
-          } else if (status.status === 'failed') {
-            await withDb((d) => {
-              const p = findProject(d, project.id)!;
-              applyPayoutFailed(d, p, stepOf(p, step.id), status.error ?? 'Paiement refusé par le réseau');
-            });
-          }
+          await reconcileSandboxPayout(project.id, step.id, payout, age);
         } catch {
           /* try again on the next poll */
         }
       }
     }
   }
+}
+
+/**
+ * Finishes a sandbox payout that is still in flight. Money safety rules:
+ *  - funds stay reserved while Bitnob may have moved them (status processing, or finalize unconfirmed);
+ *  - a payout is only declared failed when Bitnob says so, or when it provably never started: still not
+ *    finalized (INITIATED/QUOTE) or unknown by reference after UNCONFIRMED_GRACE_MS;
+ *  - the decision is re-checked inside the transaction: if the step moved on (retried, paid) nothing is touched.
+ */
+async function reconcileSandboxPayout(projectId: string, stepId: string, payout: Payout, ageMs: number): Promise<void> {
+  const gateway = gatewayFor('sandbox');
+  const settled = ageMs > UNCONFIRMED_GRACE_MS;
+  let payoutId = payout.payoutId;
+  let seen: { status: Payout['status']; error?: string } | null;
+
+  if (payoutId) {
+    seen = await gateway.payoutStatus(payoutId);
+  } else {
+    // The process stopped between the two database writes of confirmRelease (or Bitnob returned no id):
+    // look the payout up by the reference we gave it.
+    if (!settled) return; // the original request may still be on its way
+    const found = await gateway.findPayoutByReference(payout.reference);
+    payoutId = found?.payoutId;
+    seen = found;
+  }
+
+  const neverStarted =
+    settled && (seen === null || (seen.status === 'initiated' && (payout.uncertain === true || !payout.payoutId)));
+
+  await withDb((d) => {
+    const p = findProject(d, projectId)!;
+    const s = stepOf(p, stepId);
+    if (s.status !== 'releasing' || s.payout?.reference !== payout.reference) return; // the step moved on meanwhile
+    if (payoutId && !s.payout.payoutId) s.payout.payoutId = payoutId;
+    if (seen?.status === 'completed') {
+      applyPayoutCompleted(d, p, s, { payoutId });
+    } else if (seen?.status === 'failed') {
+      applyPayoutFailed(d, p, s, seen.error ?? 'Paiement refusé par le réseau');
+    } else if (neverStarted) {
+      applyPayoutFailed(d, p, s, "Le paiement n'a pas démarré chez Bitnob (la réponse a été perdue). Votre séquestre est intact : vous pouvez réessayer.");
+    }
+  });
 }
 
 /** Used by the UI to re-evaluate which step can be started after a funding or a payout. */

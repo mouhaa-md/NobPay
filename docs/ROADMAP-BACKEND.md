@@ -48,7 +48,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 **Objectif :** remplacer chaque hypothèse de `CONTEXTE-PROJET.md` § 8.2 par un fait observé, et obtenir un parcours complet en `BITNOB_MODE=sandbox`.
 
 ### B0.1 Poser la base de référence  `P0 · S`
-- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (45 tests verts), `npm run dev`.
+- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (102 tests verts), `npm run dev`.
 - Faire le parcours de démonstration du README en `mock` (compte démo, valider l'étape 3 de « Résidence à Thiès », envoyer une preuve via `/terrain/demo-villa-thies`, financer, ancrer).
 - Lire dans cet ordre : `server/services.ts`, `server/domain.ts`, `server/webhooks.ts`, `server/bitnob/client.ts`, `server/db.ts`.
 - **Terminé quand :** tout est vert chez vous et vous pouvez expliquer en 2 minutes ce qui se passe quand le financeur clique « Confirmer et payer » (CONTEXTE § 7.2).
@@ -167,7 +167,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Tant que la base est un fichier JSON (un seul processus), exécuter la tâche **dans le même processus** (`src/instrumentation.ts`, option `experimental.instrumentationHook`, ou un `setInterval` initialisé une seule fois via `globalThis`). Un processus séparé exige la Phase 3.
 - **Terminé quand :** les pages sont en lecture seule ; le mode `mock` termine toujours un paiement en ~3 s ; le sandbox n'est plus interrogé à chaque rendu.
 
-### B2.2 Reprise des états bloqués  `P0 · M`
+### B2.2 Reprise des états bloqués  `P0 · M`  ◐ paiements faits (`finalize` ambigu, arrêt entre les deux écritures, état périmé : `tests/payout-recovery.test.ts`) ; reste les factures `pending` expirées par une tâche de fond (B2.1)
 - Cas D9 : étape en `releasing` **sans `payoutId`** depuis plus de N minutes (arrêt entre les phases 1 et 3). Rechercher le payout chez Bitnob par `reference` si l'API le permet ; sinon revenir à `proof_submitted` en écrivant `payout_failed` avec la raison « interrompu », **après** avoir vérifié qu'aucun payout n'existe.
 - Factures `pending` dont `expiresAt` est passé → `expired` par la tâche (aujourd'hui seulement quand l'écran interroge).
 - **Terminé quand :** un test coupe volontairement le processus entre deux phases (simulé) et l'étape se rétablit seule.
