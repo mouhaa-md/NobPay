@@ -30,3 +30,11 @@
 
 ## Régénérer la vidéo
 Le script `docs/demo/record-demo.mjs` rejoue ce parcours dans Chromium et l'enregistre (sous-titres et curseur ajoutés par injection, aucune dépendance ajoutée au projet). Les instructions sont en tête du fichier. La vidéo n'est pas versionnée (poids) : le dossier `demo-video/` est ignoré par Git.
+
+## Vidéo avec voix (MP4, lisible sur WhatsApp)
+
+`demo-video/nobpay-demo-voix.mp4` : 5 min 03, 1280 × 720, H.264 + AAC, **environ 11 Mo** (WhatsApp accepte les vidéos jusqu'à environ 16 Mo). Voix d'homme français de synthèse, **sans sous-titres** ; le curseur visible montre ce dont la voix parle. Le texte du commentaire est dans `docs/demo/narration-fr.json` (19 phrases, ton parlé ; « WhatsApp » y est écrit « Ouatsappe » et « Code and Chain » « Code ande Tchaïne » pour que la voix les prononce correctement).
+
+- **Fabrication :** `docs/demo/voice/synth.py` (voix locale Piper, aucun service en ligne), `docs/demo/record-demo-voix.mjs` (enregistrement synchronisé sur la durée de chaque phrase), `docs/demo/voice/assemble.py` (recalage son/image sur un éclair de calibration : écart mesuré de 0,04 s), puis `ffmpeg`.
+- **Contrôles faits :** la piste son finale a été retranscrite par un modèle de reconnaissance vocale (Whisper) : **93 % de correspondance** avec le texte ; images extraites aux moments clés pour vérifier que l'écran correspond à la phrase. **La voix n'a pas été écoutée par un humain : écoutez-la en entier avant de la diffuser.**
+- **Licence de la voix :** `fr_FR-tom-medium` est entraînée sur un jeu de données sous **AGPLv3** ([modèle](https://huggingface.co/rhasspy/piper-voices/tree/main/fr/fr_FR/tom/medium)). Le son généré n'est en principe pas soumis à cette licence, mais le point n'est pas tranché juridiquement : pour une diffusion publique large, vérifiez ou utilisez `fr_FR-gilles-low` (**CC0**, sans contrainte, qualité un peu plus basse).

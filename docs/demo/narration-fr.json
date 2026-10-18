@@ -1,0 +1,78 @@
+[
+ {
+  "id": "intro",
+  "text": "Bonjour. Je vais vous présenter NobPay, un prototype réalisé pendant le hackathon Code ande Tchaïne Dakar. Le problème est simple. La diaspora africaine envoie chaque année des sommes considérables à ses familles. Une partie finance des projets, une maison, un champ, une boutique, gérés à distance. Mais un transfert déplace l'argent, il n'en contrôle pas l'usage."
+ },
+ {
+  "id": "chiffres",
+  "text": "Ces chiffres viennent du rapport du Fonds international de développement agricole, publié en septembre deux mille vingt-six : cent vingt-quatre milliards de dollars envoyés vers l'Afrique en deux mille vingt-cinq. Ils décrivent le marché, pas des résultats de NobPay."
+ },
+ {
+  "id": "principe",
+  "text": "NobPay répond en quatre gestes : financer, prouver, libérer, vérifier. L'argent reste en séquestre dans un portefeuille Bitnob, et n'est libéré qu'étape par étape, sur preuve, directement au fournisseur."
+ },
+ {
+  "id": "entree",
+  "text": "Pour cette démonstration, j'entre avec le compte de démonstration. Nous sommes en mode simulé : aucun argent réel n'est en jeu, et Lightning ainsi que le mobile money sont simulés."
+ },
+ {
+  "id": "accueil",
+  "text": "Voici le tableau de bord du financeur : le total en séquestre, les projets en cours, les étapes payées. Une preuve attend ma décision, et rien n'est payé sans mon accord."
+ },
+ {
+  "id": "projet",
+  "text": "Ouvrons la Résidence à Tiès : vingt-quatre mille dollars, en six étapes. L'étape trois, l'élévation des murs, vient de recevoir une preuve de la personne de confiance sur place : des photos géolocalisées, la facture du fournisseur, et le nom de la personne à payer."
+ },
+ {
+  "id": "decision",
+  "text": "Je regarde les photos et la facture. Si la preuve ne me convient pas, je peux la refuser. Sinon, je libère le paiement."
+ },
+ {
+  "id": "devis",
+  "text": "Avant de payer, NobPay affiche le devis : le montant débité de mon séquestre, le taux appliqué, les frais, et ce que le fournisseur recevra en francs CFA. Ce devis expire au bout d'une minute. Je confirme."
+ },
+ {
+  "id": "paye",
+  "text": "Le paiement part directement au fournisseur, en mobile money. La confirmation de Bitnob arrive sous forme de notification signée : l'étape est marquée comme payée, et la suivante s'ouvre."
+ },
+ {
+  "id": "terrain",
+  "text": "Passons côté terrain. La personne de confiance n'a pas de compte : elle ouvre simplement un lien privé, depuis son téléphone. C'est maintenant l'étape quatre, la dalle."
+ },
+ {
+  "id": "formulaire",
+  "text": "Elle ajoute une photo, datée et localisée par son téléphone, puis la facture du fournisseur. Elle indique qui doit être payé : son nom, son numéro et son opérateur mobile money."
+ },
+ {
+  "id": "envoi",
+  "text": "Elle envoie la preuve. Le financeur n'a plus qu'à décider."
+ },
+ {
+  "id": "nouveau",
+  "text": "Créer un projet prend cinq écrans. On choisit un secteur, immobilier, agricole ou commerce, puis un nom, une ville et un budget."
+ },
+ {
+  "id": "nouveau2",
+  "text": "NobPay propose des étapes, que l'on peut modifier : la somme des étapes doit égaler le budget. Enfin, on désigne la personne de confiance."
+ },
+ {
+  "id": "cree",
+  "text": "Voilà, le projet est prêt. Il a son lien terrain, à envoyer par Ouatsappe ou à copier."
+ },
+ {
+  "id": "financer",
+  "text": "Pour financer, on tape un montant. Le versement se fait en Bitcoin Lightning. Ici, la facture n'est pas payable, car nous sommes en démonstration : ce bouton envoie à NobPay l'événement signé que Bitnob enverrait, et le séquestre est crédité."
+ },
+ {
+  "id": "certificat",
+  "text": "Chaque événement s'ajoute à un registre enchaîné : chaque ligne contient l'empreinte de la précédente, donc modifier une seule ligne casserait toute la suite. On peut ancrer l'empreinte de ce registre sur Bitcoin, avec OpenTimestamps. Seule l'empreinte sort de l'application."
+ },
+ {
+  "id": "public",
+  "text": "Et n'importe qui peut ensuite vérifier ce dossier, sans compte : le navigateur refait lui-même les calculs. L'ancrage attend un bloc Bitcoin, en général quelques heures. Une précision importante : l'ancrage prouve qu'un dossier n'a pas changé, pas qu'une photo montre le bon chantier. Cela, c'est le financeur qui en juge."
+ },
+ {
+  "id": "fin",
+  "text": "NobPay : l'argent de la diaspora, libéré étape par étape, sur preuve, et vérifiable par tous. Merci de votre attention."
+ }
+]
