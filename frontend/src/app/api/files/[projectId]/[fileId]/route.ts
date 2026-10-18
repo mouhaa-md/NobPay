@@ -3,6 +3,7 @@ import type { StoredFile } from '@/lib/types';
 import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { getSessionUser } from '@/server/auth';
 import { readDb } from '@/server/db';
+import { managerTokenMatches } from '@/server/managerToken';
 import { readUpload, sniffMime } from '@/server/files';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,7 @@ export async function GET(request: Request, { params }: { params: { projectId: s
 
   const token = new URL(request.url).searchParams.get('t');
   const user = await getSessionUser();
-  const allowed = (user && user.id === project.ownerId) || (token && token === project.managerToken);
+  const allowed = (user && user.id === project.ownerId) || (token && managerTokenMatches(project, token));
   if (!allowed) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
 
   let file: StoredFile | undefined;

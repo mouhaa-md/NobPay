@@ -12,6 +12,7 @@ import { formatFcfa, formatUsd, formatUsdShort } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
@@ -132,8 +133,8 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
             Elle ouvre ce lien privé, prend les photos, ajoute la facture et indique qui payer. Elle ne voit pas votre solde et ne peut rien débloquer.
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <ShareManagerLink token={project.managerToken} managerName={project.managerName} projectName={project.name} />
-            <Link href={`/terrain/${project.managerToken}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
+            <ShareManagerLink token={managerLinkToken(project)} managerName={project.managerName} projectName={project.name} projectId={project.id} />
+            <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
               Ouvrir la vue terrain
             </Link>
           </div>

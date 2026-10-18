@@ -9,6 +9,7 @@ import { Avatar, Chip, SectionTitle } from '@/components/ui/primitives';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { userProjects } from '@/server/views';
 
@@ -68,10 +69,10 @@ export default async function Profile() {
                     <span className="truncate font-label-sm text-label-sm text-on-surface-variant">{project.name}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <Link href={`/terrain/${project.managerToken}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
+                    <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
                       Ouvrir
                     </Link>
-                    <CopyButton value={`/terrain/${project.managerToken}`} label="Copier le lien" />
+                    <CopyButton value={`/terrain/${managerLinkToken(project)}`} label="Copier le lien" />
                   </span>
                 </li>
               ))}
