@@ -19,6 +19,7 @@ Je suis le développeur qui reprend le backend. Le chef de projet est francophon
 ## 1. Lis d'abord, en entier et dans cet ordre
 1. docs/CONTEXTE-PROJET.md : le produit, l'architecture, les règles métier, ce qui est vérifié ou non, la dette technique (D1 à D17).
 2. docs/ROADMAP-BACKEND.md : le plan par phases (B0 à B5), les contrats à ne pas casser, la définition de « terminé ».
+   Puis docs/BITNOB-SANDBOX-NOTES.md : la spécification officielle de l'API Bitnob a déjà été relue, avec 6 écarts à corriger dans notre code et la façon d'alimenter la sandbox. Vérifie-les par un vrai appel avant de les croire.
 3. README.md, puis frontend/design-reference/COPY-RULES.md (règles de rédaction : le jury relit chaque phrase affichée).
 4. Le code, dans cet ordre : frontend/src/server/services.ts, domain.ts, webhooks.ts, bitnob/client.ts, bitnob/mock.ts, bitnob/types.ts, db.ts, auth.ts, ledger.ts. Puis la liste de frontend/src/app/api/**/route.ts.
 

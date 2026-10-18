@@ -225,6 +225,8 @@ Base `https://api.bitnob.com` pour sandbox **et** production : **l'environnement
 
 Statuts de payout documentés : `INITIATED → PENDING → COMPLETED / FAILED` (aussi `PROCESSING`, `EXPIRED` acceptés par notre correspondance). Endpoints existants non utilisés : `GET /api/balances`, `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`.
 
+> **Mise à jour du 18 oct. :** la spécification OpenAPI officielle a été relue ; elle contredit plusieurs lignes du tableau ci-dessus (`customer_id` obligatoire pour une facture, `payment_reason` obligatoire pour un devis, `callback_url` obligatoire, évènement Lightning `transfer.success`). Détails et corrections : `docs/BITNOB-SANDBOX-NOTES.md`.
+
 Les analyseurs de réponse sont **volontairement tolérants** (réponse avec ou sans enveloppe `data`, plusieurs noms de clés). C'est un filet, pas une preuve : la première tâche du backend est de **remplacer les hypothèses par des faits** (voir `ROADMAP-BACKEND.md`, Phase 0).
 
 Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Orange Money, Free Money, Expresso, Wave), Côte d'Ivoire, Niger ; GHS MTN MoMo ; KES M-Pesa ; NGN NIP ; RWF/UGX MTN-Airtel ; XAF Cameroun et Gabon ; USD ACH/wire/SWIFT. **Toujours vérifier `GET /api/payouts/supported-countries` avant de promettre un corridor.**
@@ -373,6 +375,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 ## 17. Autres fichiers à lire
 
 - `docs/ROADMAP-BACKEND.md` : le plan de travail complet, tâche par tâche.
+- `docs/BITNOB-SANDBOX-NOTES.md` : ce que dit la spécification officielle de Bitnob, écarts avec notre code, comment alimenter la sandbox.
 - `docs/PROMPT-CLAUDE-BACKEND.md` : le message à donner à Claude pour démarrer.
 - `README.md` : démarrage, parcours de démonstration, passage en sandbox.
 - `frontend/design-reference/COPY-RULES.md` : règles de rédaction et jeu de données de démonstration.
