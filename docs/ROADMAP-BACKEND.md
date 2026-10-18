@@ -142,7 +142,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Ajouter `zod` ; un schéma par route (corps, paramètres, longueurs maximales, énumérations). Rejeter les champs inconnus. Garder les messages d'erreur **en français** et la forme `{error, code?}`.
 - **Terminé quand :** chaque route valide son entrée au même endroit ; des tests envoient des corps absurdes (types faux, très longs, `NaN`).
 
-### B1.6 Dépôts de fichiers  `P1 · M`
+### B1.6 Dépôts de fichiers  `P1 · M`  ✅ fait (CONTEXTE D5)
 - Contrôler les **octets** (JPEG, PNG, WebP, PDF) au lieu de croire `file.type` ; refuser le reste. SVG : accepté seulement pour les démonstrations (`publicPath`), **pas** en dépôt utilisateur. Nettoyer le nom, limiter le nombre et le poids (déjà 6 × 8 Mo).
 - **Terminé quand :** un fichier `.exe` renommé en `.jpg` est refusé (415) ; test.
 
@@ -150,7 +150,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Stocker **le hachage** du jeton (comparaison en temps constant), ajouter expiration (ex. 90 jours) et une route pour **régénérer** le lien (`POST /api/projects/:id/manager-token`). Option : code SMS envoyé au numéro du responsable avant le premier dépôt.
 - Attention : les jetons de démonstration (`demo-villa-thies`…) doivent rester valables en `ALLOW_DEMO=1`.
 
-### B1.8 Origine, en-têtes, HTTPS  `P1 · S`
+### B1.8 Origine, en-têtes, HTTPS  `P1 · S`  ✅ fait (CONTEXTE § 10, « Protection du navigateur »), testé dans Chromium
 - Vérifier `Origin` / `Sec-Fetch-Site` sur les routes qui modifient (POST) ; en-têtes de sécurité dans `next.config.mjs` : `Content-Security-Policy` (polices et scripts propres, `connect-src 'self'`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (géolocalisation autorisée pour soi seulement), HSTS derrière HTTPS.
 - **Attention :** la page `/verifier` appelle uniquement `self`, mais la vitrine charge des polices locales et des images locales : la CSP doit rester compatible (tester dans le navigateur).
 
