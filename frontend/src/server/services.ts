@@ -81,6 +81,17 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
     if (!Number.isInteger(s.amountCents) || s.amountCents < 100) throw new HttpError(400, `Montant invalide pour l'étape ${i + 1}`);
     return { title: title.slice(0, 80), amountCents: s.amountCents, proofKinds: s.proofKinds?.length ? s.proofKinds : (['photos', 'facture'] as ProofKind[]) };
   });
+  const maxStepUsd = getConfig().maxStepUsd;
+  if (maxStepUsd > 0) {
+    const tooBig = steps.findIndex((s) => s.amountCents > maxStepUsd * 100);
+    if (tooBig >= 0) {
+      throw new HttpError(
+        400,
+        `En mode sandbox, Bitnob limite un paiement mobile money à environ ${formatUsdShort(maxStepUsd * 100)} : l'étape « ${steps[tooBig].title} » (${formatUsdShort(steps[tooBig].amountCents)}) ne pourrait pas être payée. Réduisez son montant ou ajoutez des étapes.`,
+        'step_over_payout_limit',
+      );
+    }
+  }
   if (steps.reduce((sum, s) => sum + s.amountCents, 0) !== input.budgetCents) {
     throw new HttpError(400, 'La somme des étapes doit être égale au budget');
   }

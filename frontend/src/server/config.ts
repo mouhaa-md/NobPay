@@ -50,9 +50,14 @@ export function getConfig() {
     btcUsd: Number(process.env.BTC_USD_RATE) || 81500,
     dataDir: process.env.DATA_DIR || path.join(process.cwd(), '.data'),
     captureWebhooks: process.env.CAPTURE_WEBHOOKS === '1',
-    /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */
+    /**
+     * Largest step a project may have, in dollars (0 = no limit). Bitnob refuses a Senegal mobile money payout above
+     * 200 000 XOF (~336 $), so in sandbox a bigger step could never be paid: it is refused when the project is created.
+     */
+    maxStepUsd: process.env.MAX_STEP_USD !== undefined && process.env.MAX_STEP_USD !== '' ? Number(process.env.MAX_STEP_USD) || 0 : mode === 'sandbox' ? 330 : 0,
     /** the stablecoin payouts are paid from (and conversions end in) */
     payoutAsset: (process.env.PAYOUT_ASSET || 'USDT').toUpperCase(),
+    /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */
     smsProvider: (process.env.SMS_PROVIDER || '').toLowerCase(),
     twilio: {
       accountSid: process.env.TWILIO_ACCOUNT_SID || '',

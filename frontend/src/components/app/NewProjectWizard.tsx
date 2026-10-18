@@ -31,6 +31,9 @@ const PLACEHOLDER: Record<Sector, { name: string; city: string }> = {
 };
 const STEP_LABELS = ['Secteur', 'Projet', 'Étapes', 'Équipe', 'Récapitulatif'];
 const MIN_BUDGET = 100;
+const MAX_STEPS = 12;
+/** budgets offered in sandbox, where one payout is capped (only those whose automatic split fits are shown) */
+const SANDBOX_PRESETS = [100, 150, 200, 300, 500, 800];
 const MAX_BUDGET = 500_000;
 
 const nf = { format: formatInt };
@@ -49,7 +52,10 @@ function buildSteps(sector: Sector, budgetUsd: number): DraftStep[] {
   }));
 }
 
-export function NewProjectWizard({ usdXof }: { usdXof: number }) {
+/** Largest step (dollars) the automatic split gives for this sector and budget. */
+const largestStep = (sector: Sector, budgetUsd: number) => Math.max(0, ...buildSteps(sector, budgetUsd).map((s) => dollars(s.amount)));
+
+export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /** sandbox: Bitnob refuses a payout above this (0 = no limit) */ maxStepUsd?: number }) {
   const router = useRouter();
   const [stage, setStage] = useState(0);
   const [sector, setSector] = useState<Sector | null>(null);
@@ -73,9 +79,13 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
     if (steps.some((s) => !s.title.trim())) return 'Donnez un nom à chaque étape';
     if (steps.some((s) => dollars(s.amount) < 1)) return 'Chaque étape doit valoir au moins 1 $';
     if (steps.some((s) => s.proofKinds.length === 0)) return 'Choisissez au moins une preuve par étape';
+    if (maxStepUsd > 0) {
+      const big = steps.find((s) => dollars(s.amount) > maxStepUsd);
+      if (big) return `En mode sandbox, un paiement est limité à ${formatUsdShort(maxStepUsd * 100)} : réduisez l'étape « ${big.title.trim()} » ou ajoutez des étapes.`;
+    }
     if (remaining !== 0) return remaining > 0 ? `Il reste ${formatUsdShort(remaining * 100)} à répartir` : `Les étapes dépassent le budget de ${formatUsdShort(-remaining * 100)}`;
     return '';
-  }, [steps, remaining]);
+  }, [steps, remaining, maxStepUsd]);
 
   const problem = (): string => {
     if (stage === 0) return sector ? '' : 'Choisissez un secteur';
@@ -83,6 +93,9 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
       if (name.trim().length < 2) return 'Donnez un nom au projet';
       if (!city.trim()) return 'Indiquez la ville';
       if (budgetUsd < MIN_BUDGET || budgetUsd > MAX_BUDGET) return `Le budget doit être compris entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`;
+      if (maxStepUsd > 0 && budgetUsd > MAX_STEPS * maxStepUsd) {
+        return `En mode sandbox, un paiement est limité à ${formatUsdShort(maxStepUsd * 100)} : un projet ne peut pas dépasser ${formatUsdShort(MAX_STEPS * maxStepUsd * 100)} (${MAX_STEPS} étapes au plus).`;
+      }
     }
     if (stage === 2) return stepsProblem;
     if (stage === 3 && !managerName.trim()) return 'Indiquez la personne de confiance sur place';
@@ -242,7 +255,7 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
                   {budgetUsd > 0 ? `≈ ${formatFcfa(budgetUsd * usdXof)} (taux indicatif)` : `Entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`}
                 </span>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  {PRESETS[sector].map((p) => (
+                  {(maxStepUsd > 0 ? SANDBOX_PRESETS.filter((b) => largestStep(sector, b) <= maxStepUsd) : PRESETS[sector]).map((p) => (
                     <button key={p} type="button" onClick={() => setBudget(String(p))} className={`h-9 rounded-full px-4 font-label-md text-label-md transition ${budgetUsd === p ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'}`}>
                       {nf.format(p)} $
                     </button>

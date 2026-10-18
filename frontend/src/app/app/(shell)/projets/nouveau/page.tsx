@@ -13,7 +13,7 @@ export default async function NewProject() {
   return (
     <>
       <DesktopTopbar title="Nouveau projet" backHref="/app/projets" />
-      <NewProjectWizard usdXof={getConfig().usdXof} />
+      <NewProjectWizard usdXof={getConfig().usdXof} maxStepUsd={getConfig().maxStepUsd} />
     </>
   );
 }
