@@ -11,6 +11,8 @@ import { verifyWebhookSignature } from './bitnob/sign';
  *   2. event id never seen (replay protection, stored in the database)   -> 200, nothing done
  *   3. the invoice / payout is known                                     -> 200, nothing to credit
  * Valid events always get a 200 so Bitnob does not keep retrying them.
+ * An event is only "seen" once it was applied: deliveries that found no resource yet (or whose amount did
+ * not match) are logged but can be processed again, e.g. when the same event is re-sent from the dashboard.
  */
 
 type Json = Record<string, unknown>;
@@ -46,27 +48,61 @@ export function extractEventId(payload: Json, rawBody: string): string {
   return `body:${createHash('sha256').update(rawBody).digest('hex')}`;
 }
 
+/** Outcomes that do not consume the event id: the same event may be processed again later. */
+const REPROCESSABLE = new Set(['unknown_invoice', 'unknown_payout', 'amount_mismatch']);
+
+/** Amount fields seen or expected in payment events; their unit is not documented, see amountMatches. */
+const AMOUNT_KEYS = ['amount', 'amount_sats', 'amountSats', 'sats', 'amount_msat', 'amount_msats', 'amountMsat', 'msats', 'amount_received'];
+
+/**
+ * True when `received` equals the expected invoice amount in satoshis, read as sats, millisats or BTC
+ * (the real unit is confirmed in sandbox, task B0.5). Tolerance: 0.5 %, at least 1 sat.
+ */
+export function amountMatches(received: number, expectedSats: number): boolean {
+  const tolerance = Math.max(1, Math.round(expectedSats * 0.005));
+  return [received, received / 1000, received * 1e8].some((sats) => Math.abs(sats - expectedSats) <= tolerance);
+}
+
+/** 'unknown' when the event carries no amount we can read: we do not refuse a signed payment on a guess. */
+export function checkReceivedAmount(payload: Json, expectedSats: number | undefined): 'ok' | 'mismatch' | 'unknown' {
+  if (!expectedSats) return 'unknown';
+  const received = [...collectValues(payload, AMOUNT_KEYS)].map(Number).filter((n) => Number.isFinite(n) && n > 0);
+  if (received.length === 0) return 'unknown';
+  // several amounts can appear (fees, totals...): the invoice amount must be one of them
+  return received.some((n) => amountMatches(n, expectedSats)) ? 'ok' : 'mismatch';
+}
+
+interface Routed {
+  outcome: string;
+  note?: string;
+}
+
 const SUCCESS = /(success|succeeded|completed|complete|paid|settled|received)/;
 const FAILURE = /(fail|expire|cancel|reject|declin)/;
 
-function route(db: Db, type: string, payload: Json): string {
+function route(db: Db, type: string, payload: Json): Routed {
   const t = type.toLowerCase();
   const failed = FAILURE.test(t);
   const succeeded = SUCCESS.test(t) && !failed;
 
   if (/lightning|invoice/.test(t)) {
-    if (!succeeded) return 'ignored';
+    if (!succeeded) return { outcome: 'ignored' };
     const ids = collectValues(payload, ['id', 'invoice_id', 'payment_hash', 'paymentHash', 'reference']);
     const funding = db.fundings.find(
       (f) => ids.has(f.reference) || (f.invoiceId && ids.has(f.invoiceId)) || (f.paymentHash && ids.has(f.paymentHash)),
     );
-    if (!funding) return 'unknown_invoice';
+    if (!funding) return { outcome: 'unknown_invoice' };
+    if (funding.status !== 'paid' && checkReceivedAmount(payload, funding.amountSats) === 'mismatch') {
+      const received = [...collectValues(payload, AMOUNT_KEYS)].join(', ');
+      console.warn(`[webhook] amount mismatch on ${funding.id}: expected ${funding.amountSats} sats, event carries ${received}`);
+      return { outcome: 'amount_mismatch', note: `attendu ${funding.amountSats} sats, reçu ${received}` };
+    }
     const preimage = [...collectValues(payload, ['preimage', 'payment_preimage'])][0];
-    return applyFundingPaid(db, funding, { preimage }) ? 'funding_paid' : 'funding_already_paid';
+    return { outcome: applyFundingPaid(db, funding, { preimage }) ? 'funding_paid' : 'funding_already_paid' };
   }
 
   if (/payout|withdrawal|transfer/.test(t)) {
-    if (!succeeded && !failed) return 'ignored';
+    if (!succeeded && !failed) return { outcome: 'ignored' };
     const ids = collectValues(payload, ['id', 'payout_id', 'quote_id', 'reference']);
     for (const project of db.projects) {
       for (const step of project.steps) {
@@ -74,15 +110,15 @@ function route(db: Db, type: string, payload: Json): string {
         if (!p) continue;
         const match = ids.has(p.reference) || (p.payoutId && ids.has(p.payoutId)) || ids.has(p.quoteId);
         if (!match) continue;
-        if (succeeded) return applyPayoutCompleted(db, project, step, { payoutId: [...collectValues(payload, ['payout_id'])][0] }) ? 'payout_completed' : 'payout_already_completed';
+        if (succeeded) return { outcome: applyPayoutCompleted(db, project, step, { payoutId: [...collectValues(payload, ['payout_id'])][0] }) ? 'payout_completed' : 'payout_already_completed' };
         const reason = [...collectValues(payload, ['failure_reason', 'reason', 'message'])][0] ?? 'Paiement refusé par le réseau';
-        return applyPayoutFailed(db, project, step, reason) ? 'payout_failed' : 'payout_already_settled';
+        return { outcome: applyPayoutFailed(db, project, step, reason) ? 'payout_failed' : 'payout_already_settled' };
       }
     }
-    return 'unknown_payout';
+    return { outcome: 'unknown_payout' };
   }
 
-  return 'ignored';
+  return { outcome: 'ignored' };
 }
 
 export async function handleBitnobWebhook(rawBody: string, signature: string | null | undefined): Promise<WebhookResult> {
@@ -104,13 +140,16 @@ export async function handleBitnobWebhook(rawBody: string, signature: string | n
   const type = extractEventType(payload);
 
   return withDb((db) => {
-    // 2. replay protection
-    if (db.webhooks.some((w) => w.eventId === eventId)) {
+    // 2. replay protection: only an event that was applied (or is final) counts as seen
+    const seen = db.webhooks.find((w) => w.eventId === eventId);
+    if (seen && !REPROCESSABLE.has(seen.outcome)) {
       return { status: 200, body: { received: true, duplicate: true } };
     }
     // 3. known resource, then apply
-    const outcome = route(db, type, payload);
-    db.webhooks.push({ eventId, type, at: new Date().toISOString(), outcome });
+    const { outcome, note } = route(db, type, payload);
+    const record = { eventId, type, at: new Date().toISOString(), outcome, ...(note ? { note } : {}) };
+    if (seen) Object.assign(seen, record);
+    else db.webhooks.push(record);
     if (db.webhooks.length > 500) db.webhooks.splice(0, db.webhooks.length - 500);
     return { status: 200, body: { received: true, outcome } };
   });

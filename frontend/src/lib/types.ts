@@ -190,6 +190,8 @@ export interface WebhookRecord {
   type: string;
   at: string;
   outcome: string;
+  /** why the event was not applied (e.g. amount mismatch); never contains secrets */
+  note?: string;
 }
 
 export interface Db {
