@@ -189,6 +189,8 @@ releasing ──(webhook / réponse « échec »)──► proof_submitted   (la
 
 La **fin** du paiement arrive normalement par **webhook** (`payouts.withdrawal.success`…). Repli : `reconcile()` (§ 12, point D11).
 
+**Règles de sécurité de l'argent (B2.2).** Seul un refus net de Bitnob (réponse 4xx : solde insuffisant, validation, montant trop élevé) ramène l'étape à `proof_submitted` tout de suite. Si `finalize` reste sans réponse claire (`GatewayError.ambiguous` : réseau, délai, 5xx), le débit a peut-être eu lieu : l'étape reste `releasing` avec `payout.uncertain`, et `reconcile()` suit le statut réel du payout (`GET /api/payouts/:id`). Après `UNCONFIRMED_GRACE_MS` (5 min) elle conclut à l'échec seulement si le payout est encore `INITIATED`/`QUOTE` (jamais finalisé) ou introuvable par `reference`. L'écriture de la phase 3 est hors du `try` de la phase 2, donc une panne de disque après un paiement réussi ne déclare plus d'échec. Chaque décision est revérifiée dans la transaction : un paiement remplacé entre-temps n'est jamais touché.
+
 ### 7.3 Financement (`services.createFunding`)
 
 Minimum 5 $. Refus si le montant dépasse le reste du budget de plus de 500 $. Lightning seulement. Montant converti en sats avec `gateway.btcUsd()`, limite **20 000 000 sats** par facture. `reference = nobpay:fund:<id>` sert d'identifiant d'idempotence côté Bitnob et de clé de rapprochement des webhooks. Facture valable 24 h.
@@ -225,8 +227,9 @@ Détail, écarts et hypothèses restantes : **`docs/BITNOB-SANDBOX-REPORT.md`**.
 | Initialiser | `POST /api/payouts/:quoteId/initialize` | `{quote_id, reference, payment_reason, callback_url?, beneficiary{destination_type, country, account_name, account_number, network, sender{account_name, country}}}` | `data.payout.{id, status:'INITIATED'}` | **Confirmé** (`sender` obligatoire ; réseaux `wave`/`orange`/`free`) |
 | Finaliser | `POST /api/payouts/:quoteId/finalize` | (vide) | succès : **non observé** ; sans fonds : `422 INSUFFICIENT_FUNDS` | **Partiel** |
 | Statut payout | `GET /api/payouts/:payoutId` | | `data.payout.{status, provider_settlement_id}` | **Confirmé** (id du payout) |
+| Retrouver un payout | `GET /api/payouts?limit=100` | | `data.items[].{id, reference, status}` (un simple devis y figure avec notre `reference`), pagination `total_count/limit/offset/has_more` | **Confirmé** (utilisé pour reprendre un paiement ambigu) |
 
-Statuts de payout vus : `QUOTE`, `INITIATED` ; documentés : `initiated`, `processing`, `success`, `expired` (webhooks), `PENDING`/`COMPLETED`/`FAILED` acceptés par notre correspondance. **Limite : 200 000 XOF par paiement mobile money au Sénégal** (devis refusé au-delà, ≈ 336 $). Endpoints existants non utilisés : `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`, `GET /api/payouts` (liste), `GET /api/payouts/limits`.
+Statuts de payout vus : `QUOTE`, `INITIATED` ; documentés : `initiated`, `processing`, `success`, `expired` (webhooks), `PENDING`/`COMPLETED`/`FAILED` acceptés par notre correspondance. **Limite : 200 000 XOF par paiement mobile money au Sénégal** (devis refusé au-delà, ≈ 336 $). Endpoints existants non utilisés : `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`, `GET /api/payouts/limits`.
 
 Les analyseurs restent **tolérants** là où rien n'a été observé. Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Orange Money, Free Money, Expresso, Wave), Côte d'Ivoire, Niger ; GHS MTN MoMo ; KES M-Pesa ; NGN NIP ; RWF/UGX MTN-Airtel ; XAF Cameroun et Gabon ; USD ACH/wire/SWIFT. **Toujours vérifier `GET /api/payouts/supported-countries` avant de promettre un corridor.**
 
@@ -314,7 +317,7 @@ cd frontend
 npm install
 npm run dev                # http://localhost:3000   (le service worker n'existe qu'en production)
 npm run typecheck
-npm test                   # 45 tests Vitest
+npm test                   # 102 tests Vitest
 npm run build && npm start # production locale
 ```
 
@@ -352,7 +355,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 | D6 | S2 | **Le séquestre est un nombre dans notre base**, jamais rapproché du solde Bitnob (`GET /api/balances` non utilisé). Portefeuille Bitnob commun à tous les projets. |
 | D7 | S2 | La **conversion BTC→USDT** n'est tentée que dans `refreshFunding` (quand l'écran de financement interroge), **pas** quand le webhook crédite. Le paiement fournisseur part d'USDT : fonds insuffisants possibles. De plus, un résultat `failed` est stocké dans `funding.conversion` et **empêche toute nouvelle tentative**, et deux sondages simultanés passent tous deux le test `!funding.conversion` (instantané périmé) : **double vente possible**. |
 | D8 | S2 | ~~Le webhook ne compare pas le montant reçu~~ : **fait pour les factures** (§ 8.3, point 4), avec le champ réel à confirmer en B0.5. Reste : le **repli par interrogation** (`refreshFunding`) crédite sur le seul statut, sans montant ; le montant des payouts n'est pas comparé. |
-| D9 | S2 | **Pas d'idempotence ni de reprise** sur l'enchaînement `initialize` → `finalize` (§ 7.2). (a) Si le processus s'arrête entre la phase 1 et la phase 3, l'étape reste `releasing` sans `payoutId` et `reconcile()` ne la reprend pas. (b) **Plus grave :** toute exception de la phase 2, y compris un délai dépassé (20 s) *après* que Bitnob a accepté `finalize`, est traitée comme un échec définitif : l'étape revient à `proof_submitted`, le séquestre est libéré, et le financeur peut **repayer** avec une nouvelle `reference` (elle contient l'heure), sans déduplication possible côté Bitnob. **Risque de double paiement.** À traiter en B2.2 après avoir vu en sandbox si un payout se retrouve par `reference`. |
+| D9 | S2 | ~~Pas d'idempotence ni de reprise sur `initialize` → `finalize`~~ **Corrigé (B2.2, § 7.2)** : un `finalize` sans réponse claire (réseau, délai, 5xx) laisse l'étape `releasing` et le séquestre réservé (`payout.uncertain`) ; la reprise interroge Bitnob et ne conclut à l'échec que s'il le dit, ou si le paiement n'a **jamais démarré** (non finalisé ou référence inconnue) après **5 minutes**. Un arrêt du processus entre les deux écritures est repris par recherche de la `reference`. **Reste :** une référence neuve est créée à chaque nouveau devis, donc si un `finalize` perdu s'exécutait chez Bitnob plus de 5 minutes plus tard, un double paiement resterait possible (très improbable ; à surveiller avec les soldes, B2.5). |
 | D10 | S2 | Aucun **remboursement** : le financeur ne peut pas récupérer un séquestre inutilisé (projet abandonné). Fonctionnalité produit manquante. |
 | D11 | S2 | `reconcile()` s'exécute **pendant le rendu des pages et le sondage `/state`** (écritures dans des requêtes GET ; en sandbox, un appel Bitnob par rendu pour chaque payout en cours). À sortir dans une tâche de fond. |
 | D12 | S3 | **Position GPS et heure déclarées par le client** (§ 4) ; l'EXIF n'est pas lu. |

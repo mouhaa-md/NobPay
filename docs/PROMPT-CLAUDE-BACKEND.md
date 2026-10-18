@@ -57,7 +57,7 @@ Méthode
 
 ## 5. Contexte rapide, au cas où
 - Stack : Next.js 14 (App Router), TypeScript strict, un seul projet dans frontend/. Le backend = frontend/src/server/ et frontend/src/app/api/. Base = fichier JSON (.data/db.json), un seul processus.
-- Commandes (dans frontend/) : npm install, npm run dev, npm run typecheck, npm test (45 tests), npm run build && npm start.
+- Commandes (dans frontend/) : npm install, npm run dev, npm run typecheck, npm test (102 tests), npm run build && npm start.
 - Compte démo : bouton « Essayer avec le compte démo », code SMS 123456. Projets de démonstration : p_villa, p_champ, p_boutique ; jetons terrain : demo-villa-thies, demo-champ-kaolack, demo-boutique-sandaga.
 - Le séquestre est une règle logicielle : l'argent est dans des portefeuilles Bitnob communs, NobPay le compte projet par projet dans sa base. Les paiements partent en USDT vers le mobile money du Sénégal (XOF).
 - Ce qui n'a jamais été testé : tout appel à l'API Bitnob réelle, les charges utiles réelles des webhooks, la confirmation Bitcoin d'un ancrage OpenTimestamps.

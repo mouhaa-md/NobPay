@@ -30,6 +30,7 @@ beforeEach(() => {
       calls.push({ method: String(init.method), url, headers: init.headers as Record<string, string>, body: String(init.body ?? '') });
       const r = replies.shift();
       if (!r) throw new Error(`unexpected request ${init.method} ${url}`);
+      if (r.status === 0) throw new TypeError('fetch failed'); // no answer at all: network cut or timeout
       return new Response(JSON.stringify(r.json), { status: r.status });
     }),
   );
@@ -163,6 +164,24 @@ describe('payout start: initialize then finalize', () => {
     });
   });
 
+  it.each([
+    ['network cut or timeout (no answer)', 0, 'error-insufficient-funds'],
+    ['server error 503', 503, 'error-auth-failed'],
+  ])('reports an unconfirmed finalize (%s) as uncertain instead of failing: the debit may have happened', async (_label, status) => {
+    reply('payout-initialize');
+    replies.push({ status, json: fixture('error-auth-failed') });
+    const res = await sandboxGateway.startPayout({ quote, reference: quote.reference, supplier, sender, reason: 'vendor_payment' });
+    expect(res).toEqual({ payoutId: '00000000-0000-4000-8000-0000000000a1', status: 'pending', uncertain: true });
+  });
+
+  it('still treats a 4xx on finalize as a definite refusal', async () => {
+    reply('payout-initialize');
+    reply('error-insufficient-funds', 422);
+    const err = await sandboxGateway.startPayout({ quote, reference: quote.reference, supplier, sender, reason: 'x' }).catch((e) => e);
+    expect(err).toBeInstanceOf(GatewayError);
+    expect(err.ambiguous).toBe(false);
+  });
+
   it('does not call Bitnob at all when the supplier number is not a Senegalese mobile', async () => {
     await expect(sandboxGateway.startPayout({ quote, reference: 'r', supplier: { ...supplier, phone: '+33612345678' }, sender, reason: 'x' })).rejects.toMatchObject({ code: 'invalid_beneficiary' });
     expect(calls).toHaveLength(0);
@@ -172,6 +191,21 @@ describe('payout start: initialize then finalize', () => {
     reply('payout-get-initiated');
     expect(await sandboxGateway.payoutStatus('00000000-0000-4000-8000-0000000000a1')).toEqual({ status: 'initiated', error: undefined });
     expect(calls[0].url).toBe('https://api.example.test/api/payouts/00000000-0000-4000-8000-0000000000a1');
+  });
+});
+
+describe('finding a payout by our reference', () => {
+  it('matches the reference in the list, a bare quote included, and maps statuses', async () => {
+    reply('payouts-list');
+    expect(await sandboxGateway.findPayoutByReference('nobpay:pay:s1:test')).toEqual({ payoutId: '00000000-0000-4000-8000-0000000000a1', status: 'initiated', error: undefined });
+    expect(calls[0].url).toBe('https://api.example.test/api/payouts?limit=100');
+    reply('payouts-list');
+    expect(await sandboxGateway.findPayoutByReference('nobpay:pay:s2:test')).toMatchObject({ status: 'initiated' }); // QUOTE = not finalized
+  });
+
+  it('returns null when Bitnob does not know the reference', async () => {
+    reply('payouts-list');
+    expect(await sandboxGateway.findPayoutByReference('nobpay:pay:other')).toBeNull();
   });
 });
 

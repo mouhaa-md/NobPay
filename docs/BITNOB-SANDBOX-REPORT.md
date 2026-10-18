@@ -26,6 +26,7 @@
 | `POST /api/payouts/:quoteId/initialize` | **400 sans `sender`** (« sender: Sender is required »). Avec : `200`, `data.payout.{id, quote_id, status:"INITIATED", beneficiary (numéro normalisé en `221…`), reference, expires_at}`. L'`id` est **celui du payout du devis**. | `sender` obligatoire. Réponse sous `data.payout`. | Corrigé. |
 | `POST /api/payouts/:quoteId/finalize` | **422 `INSUFFICIENT_FUNDS`** sans solde. Réponse en cas de succès : **non observée**. | — | `payoutId` pris à `initialize`. Messages d'erreur : `detail` lu, code conservé. |
 | `GET /api/payouts/:id` | `200` avec l'**id du payout** ; `data.payout.{status:"INITIATED", provider_settlement_id:"sandbox_txn_…", callback_url, trip.{quote_at, initialized_at}}`. | Hypothèse « id de payout ou de devis » : **id du payout**. Réponse sous `data.payout`. | Corrigé. |
+| `GET /api/payouts?limit=100` | `200`, `data.items[]` (mêmes champs qu'un payout, **y compris les simples devis**), `total_count`, `limit`, `offset`, `has_more`. Pas de filtre documenté par `reference` (seulement `status`, `limit`). | Nouveau : permet de retrouver un paiement par sa `reference` (reprise D9). | `findPayoutByReference`. |
 | Limite de montant | Devis de 6 000 $ : **400** « Amount 3567600.00 XOF exceeds maximum of 200000.00 XOF ». 300 $ passe (178 023 XOF) ; 400 $ échoue. | **Aucun paiement mobile money > ≈ 336 $** au Sénégal. | Message français clair. **Décision produit nécessaire** (voir ci-dessous). |
 
 ## Webhooks (documentation lue, charges **pas encore vues**)

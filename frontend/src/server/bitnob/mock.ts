@@ -58,6 +58,10 @@ async function payoutStatus() {
   return { status: 'pending' as const };
 }
 
+async function findPayoutByReference() {
+  return null; // nothing exists outside this process in mock mode
+}
+
 export const mockGateway: Gateway = {
   mode: 'mock',
   btcUsd: async () => getConfig().btcUsd,
@@ -67,4 +71,5 @@ export const mockGateway: Gateway = {
   quotePayout,
   startPayout,
   payoutStatus,
+  findPayoutByReference,
 };

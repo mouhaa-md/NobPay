@@ -8,6 +8,7 @@ import {
   type InvoiceInput,
   type InvoiceResult,
   type InvoiceStatus,
+  type PayoutLookup,
   type PayoutStart,
   type PayoutStartInput,
 } from './types';
@@ -42,7 +43,7 @@ async function request(method: 'GET' | 'POST' | 'DELETE', path: string, body?: u
       cache: 'no-store',
     });
   } catch (err) {
-    throw new GatewayError(`Bitnob injoignable (${(err as Error).message}).`);
+    throw new GatewayError(`Bitnob injoignable (${(err as Error).message}).`, undefined, undefined, 'network_error');
   }
 
   const text = await res.text();
@@ -147,6 +148,7 @@ async function convertBtcToStable(input: { sats: number; reference: string }): P
  * ------------------------------------------------------------------------- */
 
 const STATUS_MAP: Record<string, PayoutStatus> = {
+  QUOTE: 'initiated', // a bare quote: nothing was finalized
   INITIATED: 'initiated',
   PENDING: 'pending',
   PROCESSING: 'pending',
@@ -231,15 +233,32 @@ async function startPayout(input: PayoutStartInput): Promise<PayoutStart> {
       beneficiary,
     }),
   );
-  const fin = payoutOf(await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/finalize`));
   // the payout id is the one returned by initialize (it is also the id of the quote's payout)
-  const payoutId = String(pick(init, 'id', 'payout_id') ?? pick(fin, 'id', 'payout_id') ?? '') || undefined;
-  return { payoutId, status: mapStatus(pick(fin, 'status') ?? pick(init, 'status')) };
+  const payoutId = String(pick(init, 'id', 'payout_id') ?? '') || undefined;
+  let fin: Json;
+  try {
+    fin = payoutOf(await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/finalize`));
+  } catch (err) {
+    // finalize is the step that debits. No answer (network, timeout) or a 5xx does NOT mean it failed: report it
+    // as unconfirmed so the funds stay reserved until the payout status says what happened.
+    if (err instanceof GatewayError && err.ambiguous) return { payoutId, status: 'pending', uncertain: true };
+    throw err; // a 4xx (insufficient funds, validation...) is a definite refusal
+  }
+  return { payoutId: payoutId ?? (String(pick(fin, 'id', 'payout_id') ?? '') || undefined), status: mapStatus(pick(fin, 'status') ?? pick(init, 'status')) };
 }
 
 async function payoutStatus(payoutId: string): Promise<{ status: PayoutStatus; error?: string }> {
   const p = payoutOf(await request('GET', `/api/payouts/${encodeURIComponent(payoutId)}`));
   return { status: mapStatus(pick(p, 'status')), error: pick(p, 'failure_reason', 'error', 'message') as string | undefined };
+}
+
+/** Looks through the most recent payouts for our reference (a bare quote counts: it carries the reference too). */
+async function findPayoutByReference(reference: string): Promise<PayoutLookup | null> {
+  const res = await request('GET', '/api/payouts?limit=100');
+  const items = (unwrap(res).items ?? []) as Json[];
+  const found = items.find((p) => p.reference === reference);
+  if (!found) return null;
+  return { payoutId: String(found.id), status: mapStatus(found.status), error: pick(found, 'failure_reason', 'error', 'message') as string | undefined };
 }
 
 export const sandboxGateway: Gateway = {
@@ -251,4 +270,5 @@ export const sandboxGateway: Gateway = {
   quotePayout,
   startPayout,
   payoutStatus,
+  findPayoutByReference,
 };

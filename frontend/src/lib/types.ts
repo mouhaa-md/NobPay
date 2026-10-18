@@ -84,6 +84,8 @@ export interface Payout {
   startedAt: string;
   completedAt?: string;
   error?: string;
+  /** `finalize` got no clear answer: the money may have moved, so the funds stay reserved until Bitnob says */
+  uncertain?: boolean;
 }
 
 export interface StepDecision {

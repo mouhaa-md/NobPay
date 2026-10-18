@@ -37,6 +37,14 @@ export interface PayoutStartInput {
 export interface PayoutStart {
   payoutId?: string;
   status: PayoutStatus;
+  /** `finalize` was sent but its outcome is unknown (network cut, timeout, 5xx): the debit may have happened */
+  uncertain?: boolean;
+}
+
+export interface PayoutLookup {
+  payoutId: string;
+  status: PayoutStatus;
+  error?: string;
 }
 
 /** What the rest of the app needs from a payment gateway. Two implementations: Bitnob sandbox and a local mock. */
@@ -49,6 +57,8 @@ export interface Gateway {
   quotePayout(input: { amountUsdCents: number; reference: string }): Promise<PayoutQuote>;
   startPayout(input: PayoutStartInput): Promise<PayoutStart>;
   payoutStatus(payoutId: string): Promise<{ status: PayoutStatus; error?: string }>;
+  /** Finds a payout (even a bare quote) by the reference we gave it, or null when Bitnob does not know it. */
+  findPayoutByReference(reference: string): Promise<PayoutLookup | null>;
 }
 
 export class GatewayError extends Error {
@@ -61,5 +71,10 @@ export class GatewayError extends Error {
   ) {
     super(message);
     this.name = 'GatewayError';
+  }
+
+  /** The request may or may not have been processed: no answer (network, timeout) or a server-side error. */
+  get ambiguous(): boolean {
+    return this.code === 'network_error' || (this.status !== undefined && this.status >= 500);
   }
 }
