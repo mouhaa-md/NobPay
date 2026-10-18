@@ -1,0 +1,24 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>NobPay · vidéo</title>
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:700;src:url('fonts/bricolage-grotesque-latin-700-normal.woff')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:800;src:url('fonts/bricolage-grotesque-latin-800-normal.woff')}
+@font-face{font-family:'Figtree';font-weight:400;src:url('fonts/figtree-latin-400-normal.woff')}
+@font-face{font-family:'Figtree';font-weight:500;src:url('fonts/figtree-latin-500-normal.woff')}
+@font-face{font-family:'Figtree';font-weight:600;src:url('fonts/figtree-latin-600-normal.woff')}
+@font-face{font-family:'Figtree';font-weight:700;src:url('fonts/figtree-latin-700-normal.woff')}
+@font-face{font-family:'Figtree';font-weight:800;src:url('fonts/figtree-latin-800-normal.woff')}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;src:url('fonts/instrument-serif-latin-400-italic.woff')}
+html,body{margin:0;background:#000;overflow:hidden}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#0B132B;font-family:'Figtree',sans-serif;-webkit-font-smoothing:antialiased}
+img{display:block}
+</style></head><body><div id="stage"></div>
+<script src="timeline.js"></script><script src="assets.js"></script><script src="engine.js"></script><script src="lib.js"></script><script src="sc-a.js"></script><script src="sc-b.js"></script><script src="sc-c.js"></script>
+<script>
+window.READY=(async()=>{
+  await document.fonts.load("800 40px 'Bricolage Grotesque'");await document.fonts.load("700 40px 'Figtree'");await document.fonts.load("500 40px 'Figtree'");await document.fonts.load("italic 40px 'Instrument Serif'");
+  const imgs=[...document.images];await Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(r=>{i.onload=i.onerror=r})));
+  await Promise.all(imgs.map(i=>i.decode?i.decode().catch(()=>{}):0));
+  window.ENG.renderAt(0);return true;
+})();
+window.renderAt=(t)=>{window.ENG.renderAt(t);return t};
+</script></body></html>

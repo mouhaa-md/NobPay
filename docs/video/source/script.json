@@ -1,0 +1,71 @@
+[
+  { "id": "intro", "lines": ["Nob Pay.", "L’argent de la diaspora, libéré étape par étape, sur preuve."] },
+  { "id": "probleme", "lines": [
+    "Chaque année, la diaspora envoie plus de cent vingt-quatre milliards de dollars vers l’Afrique.",
+    "Dans le monde, seul un quart des transferts finance un logement, la santé, l’éducation ou un commerce, et cet argent repose sur la confiance.",
+    "Un virement prouve que l’argent est parti.",
+    "Pas que la maison existe."
+  ] },
+  { "id": "principe", "lines": [
+    "Nob Pay répond avec un principe simple.",
+    "L’argent reste en séquestre. Il est libéré étape par étape, seulement sur preuve, et versé directement au fournisseur.",
+    "Financer. Prouver. Valider. Payer. Vérifier.",
+    "Voyons les parcours, un par un."
+  ] },
+  { "id": "financeur", "lines": [
+    "Premier parcours : le financeur.",
+    "Moussa vit en France. Il crée son compte avec son numéro de téléphone, et confirme avec un code reçu par SMS.",
+    "Aussitôt, il arrive sur son tableau de bord. Pour l’instant, il est vide."
+  ] },
+  { "id": "projet", "lines": [
+    "Il crée son premier projet : une maison familiale à Thiès.",
+    "Il choisit un secteur, immobilier, agricole ou commerce, puis un nom, une ville et un budget de vingt-quatre mille dollars.",
+    "Nob Pay propose des étapes, qu’il peut modifier. La somme des étapes doit être égale au budget.",
+    "Puis il désigne la personne de confiance sur place, et choisit qui valide les paiements : lui seul.",
+    "Le projet est prêt. Aucune étape n’est payée tant que rien n’est prouvé."
+  ] },
+  { "id": "financement", "lines": [
+    "Pour financer, Moussa saisit un montant : six mille dollars.",
+    "Il paie une facture Bitcoin Lightning, depuis n’importe quel portefeuille.",
+    "Ici, en démonstration, le paiement est simulé. Bitnob confirme par une notification signée, et le séquestre est crédité.",
+    "La première étape s’ouvre : la vérification du titre foncier."
+  ] },
+  { "id": "terrain", "lines": [
+    "Deuxième parcours : la personne sur place.",
+    "Moussa envoie un lien privé à Mamadou, sur WhatsApp. Mamadou n’a aucun compte à créer.",
+    "Il ouvre le lien sur son téléphone, et voit l’étape à faire.",
+    "Il photographie le titre foncier : la position de son téléphone est jointe à la photo.",
+    "Il indique qui doit être payé : le nom du géomètre, son numéro mobile money, son opérateur.",
+    "Il envoie la preuve. C’est tout."
+  ] },
+  { "id": "decision", "lines": [
+    "Retour au financeur. Une alerte l’informe : une preuve attend sa décision.",
+    "Il regarde la photo géolocalisée, le fournisseur à payer, le message de Mamadou.",
+    "Si la preuve ne convient pas, il peut la refuser, en précisant pourquoi. Rien n’est payé sans son accord.",
+    "Sinon, il libère le paiement. Nob Pay affiche le devis : le montant débité, le taux, les frais, et ce que le fournisseur recevra : neuf cent douze mille francs CFA.",
+    "Il confirme. Le paiement part directement vers le mobile money du fournisseur, via Bitnob.",
+    "La confirmation arrive par une notification signée : l’étape est payée, et la suivante peut s’ouvrir."
+  ] },
+  { "id": "fournisseur", "lines": [
+    "Troisième parcours : le fournisseur.",
+    "Il reçoit un lien de reçu, sans compte à créer.",
+    "Il y voit le montant en francs CFA, l’état du paiement, la date, et une référence. Son numéro de téléphone est partiellement masqué."
+  ] },
+  { "id": "preuve", "lines": [
+    "Quatrième parcours : la preuve.",
+    "Chaque événement du projet entre dans un registre enchaîné : modifier une seule ligne casserait toute la suite.",
+    "Moussa peut ancrer l’empreinte de ce registre sur Bitcoin, avec OpenTimestamps. Seule l’empreinte quitte l’application.",
+    "Et n’importe qui peut ensuite vérifier le dossier, sans compte : le navigateur refait lui-même tous les calculs."
+  ] },
+  { "id": "admin", "lines": [
+    "Dernier parcours : l’administrateur.",
+    "Son tableau de bord est en lecture seule : les paiements, les versements, les ancrages.",
+    "Et des alertes, si un paiement se bloque ou si un ancrage tarde. Il voit tout, mais il ne déplace jamais d’argent."
+  ] },
+  { "id": "bitnob", "lines": [
+    "Sous le capot, l’API Bitnob fait circuler l’argent.",
+    "Des factures Lightning à l’entrée, une conversion en stablecoin, des paiements mobile money en sortie, et des webhooks signés pour confirmer chaque étape.",
+    "Bitnob déplace l’argent. Nob Pay décide quand."
+  ] },
+  { "id": "outro", "lines": ["Nob Pay. Investir au pays, avec preuve.", "Merci."] }
+]
