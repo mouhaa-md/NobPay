@@ -5,6 +5,7 @@ import { HeroArt } from '@/components/site/HeroArt';
 import { MotionProvider } from '@/components/site/MotionProvider';
 import { Phone } from '@/components/site/Phone';
 import { Icon } from '@/components/ui/Icon';
+import { Logo } from '@/components/ui/Logo';
 import { SECTORS, STEP_TEMPLATES } from '@/lib/templates';
 import type { Sector } from '@/lib/types';
 
@@ -60,12 +61,7 @@ export default function Landing() {
       <section className="hero nm-grain" data-nm-parallax-root>
         <header className="site-header">
           <Link href="/" className="site-logo" aria-label="NobPay, accueil">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
-            </svg>
-            <span>
-              Nob<b>Pay</b>
-            </span>
+            <Logo tone="light" />
           </Link>
           <nav className="site-nav" aria-label="Navigation principale">
             <a href="#how" className="hide-sm">
