@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildBeneficiary, friendlyError, sandboxGateway, toSenegalNumber } from '@/server/bitnob/client';
+import { buildBeneficiary, friendlyError, RETRY, sandboxGateway, setSleepForTests, toSenegalNumber } from '@/server/bitnob/client';
 import { GatewayError } from '@/server/bitnob/types';
 import { hmacHex } from '@/server/crypto';
 
@@ -17,9 +17,12 @@ interface Call {
 let calls: Call[];
 let replies: { status: number; json: unknown }[];
 
+let waits: number[];
 beforeEach(() => {
   calls = [];
   replies = [];
+  waits = [];
+  setSleepForTests(async (ms) => void waits.push(ms)); // never really wait in tests
   vi.stubEnv('BITNOB_MODE', 'sandbox');
   vi.stubEnv('BITNOB_CLIENT_ID', 'test-client');
   vi.stubEnv('BITNOB_CLIENT_SECRET', 'test-secret');
@@ -36,6 +39,7 @@ beforeEach(() => {
   );
 });
 afterEach(() => {
+  setSleepForTests(null);
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -294,5 +298,82 @@ describe('beneficiary and error helpers', () => {
     expect(friendlyError(401, fixture('error-auth-failed'), 'GET', '/x')).toMatch(/authentification/);
     expect(friendlyError(400, fixture('error-sender-required'), 'POST', '/api/payouts/q/initialize')).toContain('sender: Sender is required');
     expect(friendlyError(500, {}, 'GET', '/x')).toBe('Bitnob 500 sur GET /x : 500');
+  });
+});
+
+describe('automatic retries: only what is safe to repeat', () => {
+  const quoteArgs = { amountUsdCents: 10_000, reference: 'nobpay:pay:s1:test' };
+  const startArgs = {
+    quote: { quoteId: 'QT2_21053046', reference: 'r', amountUsdCents: 10_000, rate: 593, feeUsdCents: 0, amountFcfa: 59_341, expiresAt: '2099-01-01T00:00:00Z', mode: 'sandbox' as const },
+    reference: 'r',
+    supplier: { name: 'A', network: 'wave' as const, phone: '+221771234567' },
+    sender: { name: 'Aminata Sow', country: 'FR' },
+    reason: 'vendor_payment',
+  };
+
+  it('repeats a GET after a 5xx or a lost answer, then succeeds, with growing waits and a fresh signature each time', async () => {
+    reply('error-bad-gateway', 502);
+    replies.push({ status: 0, json: {} });
+    reply('invoice-get-pending');
+    expect(await sandboxGateway.invoiceStatus('x')).toMatchObject({ status: 'pending' });
+    expect(calls).toHaveLength(3);
+    expect(new Set(calls.map((c) => c.headers['X-Auth-Nonce'])).size).toBe(3); // never a replay of the same nonce
+    expect(waits).toHaveLength(2);
+    expect(waits[1]).toBeGreaterThan(waits[0] - RETRY.jitterMs);
+  });
+
+  it('gives up after 3 attempts and reports the last error', async () => {
+    for (let i = 0; i < 5; i++) reply('error-bad-gateway', 502);
+    await expect(sandboxGateway.invoiceStatus('x')).rejects.toMatchObject({ status: 502 });
+    expect(calls).toHaveLength(RETRY.attempts);
+  });
+
+  it('never repeats a 4xx: it would give the same answer', async () => {
+    reply('error-auth-failed', 401);
+    await expect(sandboxGateway.invoiceStatus('x')).rejects.toMatchObject({ status: 401 });
+    expect(calls).toHaveLength(1);
+    reply('error-sender-required', 400);
+    await expect(sandboxGateway.payoutStatus('x')).rejects.toMatchObject({ status: 400 });
+    expect(calls).toHaveLength(2);
+  });
+
+  it('repeats a quote (harmless to create twice)', async () => {
+    replies.push({ status: 503, json: fixture('error-bad-gateway') });
+    reply('payout-quote');
+    await expect(sandboxGateway.quotePayout(quoteArgs)).resolves.toMatchObject({ quoteId: 'QT2_21053046' });
+    expect(calls).toHaveLength(2);
+  });
+
+  it('NEVER repeats finalize after a lost answer: it may have debited, the caller decides', async () => {
+    reply('payout-initialize');
+    replies.push({ status: 0, json: {} }); // finalize: no answer
+    replies.push({ status: 200, json: fixture('payout-get-initiated') }); // would be a second finalize if we retried
+    const res = await sandboxGateway.startPayout(startArgs);
+    expect(res.uncertain).toBe(true);
+    expect(calls.map((c) => c.url.split('/').pop())).toEqual(['initialize', 'finalize']); // finalize sent exactly once
+  });
+
+  it('never repeats a trading order or an invoice creation', async () => {
+    reply('trading-quote');
+    reply('error-bad-gateway', 502); // the order
+    reply('trading-order'); // would be a second order
+    const res = await sandboxGateway.convertBtcToStable({ sats: 122_630, reference: 'nobpay:conv:f_1' });
+    expect(res).toMatchObject({ status: 'failed', uncertain: true });
+    expect(calls.filter((c) => c.url.endsWith('/api/trading/orders'))).toHaveLength(1);
+
+    expect(replies).toHaveLength(1); // the second order answer was never asked for
+    replies.length = 0;
+    calls.length = 0;
+    reply('error-bad-gateway', 502);
+    await expect(sandboxGateway.createInvoice({ amountSats: 1000, description: 'd', reference: 'r' })).rejects.toMatchObject({ status: 502 });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('repeats a 429 whatever the method: the request was refused before being processed', async () => {
+    replies.push({ status: 429, json: { code: 'RATE_LIMITED', detail: 'slow down', retry_after: 1 } });
+    reply('invoice-create', 201);
+    await expect(sandboxGateway.createInvoice({ amountSats: 1000, description: 'd', reference: 'r' })).resolves.toMatchObject({ bolt11: expect.stringMatching(/^lntb/) });
+    expect(calls).toHaveLength(2);
+    expect(waits[0]).toBeLessThanOrEqual(RETRY.maxRetryAfterMs);
   });
 });

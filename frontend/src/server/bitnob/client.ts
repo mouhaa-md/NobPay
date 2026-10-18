@@ -22,7 +22,8 @@ import {
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-async function request(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<Json> {
+/** One signed HTTP call, no retry. A fresh nonce and timestamp are generated each time, so a retry is never a replay. */
+async function attemptRequest(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<Json> {
   const cfg = getConfig();
   if (!cfg.clientId || !cfg.clientSecret) {
     throw new GatewayError('BITNOB_CLIENT_ID et BITNOB_CLIENT_SECRET sont requis en mode sandbox (voir .env.example).');
@@ -80,6 +81,45 @@ const formatLimit = (n: number) => n.toLocaleString('fr-FR').replace(/\u202f|\u0
 
 const unwrap = (json: Json): Json => (json && typeof json.data === 'object' && json.data !== null && !Array.isArray(json.data) ? json.data : json);
 
+/* ------------------------------------------------------------------------- *
+ * Retries. Only what is safe to repeat is repeated automatically:
+ *  - GET always (reads change nothing);
+ *  - POST only when the caller says so (`retry: true`): quotes, which are harmless to create twice;
+ *  - 429 for any method: the request was refused BEFORE being processed, so it can be sent again.
+ * Never for finalize, trading orders, initialize or invoice creation: an answer that got lost does not mean the
+ * request was not processed, and repeating it could pay or sell twice. Those cases are handled by their callers
+ * (see services.confirmRelease and attemptConversion).
+ * ------------------------------------------------------------------------- */
+
+export const RETRY = { attempts: 3, baseMs: 300, jitterMs: 200, deadlineMs: 30_000, maxRetryAfterMs: 5_000 };
+
+let sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Tests replace the real wait. */
+export function setSleepForTests(fn: ((ms: number) => Promise<void>) | null): void {
+  sleep = fn ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+}
+
+function retryDelay(attempt: number, err: GatewayError): number {
+  const retryAfter = Number((err.body as Json | undefined)?.retry_after ?? 0) * 1000;
+  const backoff = RETRY.baseMs * 2 ** (attempt - 1) + Math.floor(Math.random() * RETRY.jitterMs);
+  return Math.min(Math.max(retryAfter, backoff), RETRY.maxRetryAfterMs);
+}
+
+async function request(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown, opts: { retry?: boolean } = {}): Promise<Json> {
+  const started = Date.now();
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await attemptRequest(method, path, body);
+    } catch (err) {
+      const temporary = err instanceof GatewayError && (err.ambiguous || err.status === 429);
+      const safeToRepeat = method === 'GET' || opts.retry === true || (err instanceof GatewayError && err.status === 429);
+      const delay = err instanceof GatewayError ? retryDelay(attempt, err) : 0;
+      if (!temporary || !safeToRepeat || attempt >= RETRY.attempts || Date.now() - started + delay > RETRY.deadlineMs) throw err;
+      await sleep(delay);
+    }
+  }
+}
+
 /** Payout endpoints answer { data: { payout: {...} } }; older shapes had the object directly. */
 const payoutOf = (json: Json): Json => (json?.data?.payout ?? json?.payout ?? unwrap(json)) as Json;
 
@@ -136,7 +176,7 @@ async function convertBtcToStable(input: { sats: number; reference: string }): P
   try {
     // SELL BTC for the stablecoin; quantity is in BTC. The quote lives 5 minutes and its id goes into the order.
     const base = { base_currency: 'BTC', quote_currency: asset, side: 'sell', quantity: (input.sats / 1e8).toFixed(8) };
-    const quote = (unwrap(await request('POST', '/api/trading/quotes', base)).quote ?? {}) as Json;
+    const quote = (unwrap(await request('POST', '/api/trading/quotes', base, { retry: true })).quote ?? {}) as Json;
     const quoteId = String(pick(quote, 'id', 'quote_id') ?? '');
     if (!quoteId) throw new GatewayError('Devis de conversion sans identifiant.');
     const order = unwrap(await request('POST', '/api/trading/orders', { ...base, quote_id: quoteId, reference: input.reference }));
@@ -194,15 +234,20 @@ function mapStatus(raw: unknown): PayoutStatus {
 async function quotePayout(input: { amountUsdCents: number; reference: string }): Promise<PayoutQuote> {
   const amount = (input.amountUsdCents / 100).toFixed(2);
   const d = payoutOf(
-    await request('POST', '/api/payouts/quotes', {
-      amount,
-      country: 'SN',
-      from_asset: getConfig().payoutAsset,
-      to_currency: 'XOF',
-      source: 'offchain',
-      payment_reason: 'vendor_payment',
-      reference: input.reference,
-    }),
+    await request(
+      'POST',
+      '/api/payouts/quotes',
+      {
+        amount,
+        country: 'SN',
+        from_asset: getConfig().payoutAsset,
+        to_currency: 'XOF',
+        source: 'offchain',
+        payment_reason: 'vendor_payment',
+        reference: input.reference,
+      },
+      { retry: true },
+    ),
   );
   const quoteId = String(pick(d, 'quote_id') ?? '');
   if (!quoteId) throw new GatewayError('Réponse Bitnob inattendue pour le devis de paiement.', undefined, d);
