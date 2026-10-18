@@ -2,6 +2,7 @@ import { normalizePhone } from '@/server/auth';
 import { respond } from '@/server/http';
 import { requestOtp } from '@/server/otp';
 import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
+import { otpRequestSchema, readJson } from '@/server/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +13,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: Request) {
   return respond(async () => {
-    const body = await request.json().catch(() => ({}));
-    const phone = normalizePhone(String(body.phone ?? ''));
+    const body = await readJson(request, otpRequestSchema);
+    const phone = normalizePhone(body.phone);
     enforce(`otp:ip:${clientIp(request)}`, LIMITS.otpIp.max, LIMITS.otpIp.windowMs);
     enforce(`otp:phone:${phone}`, LIMITS.otpPhone.max, LIMITS.otpPhone.windowMs, 'Trop de codes demandés pour ce numéro');
     const delivery = await requestOtp(phone);

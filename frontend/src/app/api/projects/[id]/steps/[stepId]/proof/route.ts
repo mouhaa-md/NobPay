@@ -1,5 +1,6 @@
 import type { ProofPhoto } from '@/lib/types';
 import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
+import { photoMetaSchema, proofFieldsSchema, validate } from '@/server/validation';
 import { requireUser } from '@/server/auth';
 import { saveUpload } from '@/server/files';
 import { HttpError, respond } from '@/server/http';
@@ -34,12 +35,24 @@ export async function POST(request: Request, { params }: { params: { id: string;
     enforce(`proof:ip:${clientIp(request)}`, LIMITS.proof.max * 3, LIMITS.proof.windowMs);
     await assertProjectAccess(actor, params.id); // check access BEFORE writing any file
 
-    let meta: PhotoMeta[] = [];
+    // validated BEFORE any file is written
+    const rawMeta = String(form.get('photoMeta') ?? '[]');
+    let metaJson: unknown;
     try {
-      meta = JSON.parse(String(form.get('photoMeta') ?? '[]')) as PhotoMeta[];
+      metaJson = JSON.parse(rawMeta);
     } catch {
-      /* ignore broken metadata */
+      throw new HttpError(400, 'Métadonnées des photos illisibles.', 'invalid_input');
     }
+    const meta: PhotoMeta[] = validate(photoMetaSchema, metaJson);
+    const amountRaw = form.get('invoiceAmountFcfa');
+    const fields = validate(proofFieldsSchema, {
+      token,
+      supplierName: String(form.get('supplierName') ?? ''),
+      supplierPhone: String(form.get('supplierPhone') ?? ''),
+      supplierNetwork: String(form.get('supplierNetwork') ?? ''),
+      invoiceAmountFcfa: amountRaw === null || amountRaw === '' ? undefined : Number(amountRaw),
+      note: String(form.get('note') ?? ''),
+    });
 
     const photos: (Awaited<ReturnType<typeof saveUpload>> & { takenAt?: string; gps?: ProofPhoto['gps'] })[] = [];
     const files = form.getAll('photos').filter(isFile).slice(0, 6);
@@ -50,7 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string;
       const hasGps = typeof m.lat === 'number' && typeof m.lng === 'number';
       photos.push({
         ...stored,
-        takenAt: m.takenAt,
+        takenAt: m.takenAt ? new Date(m.takenAt).toISOString() : undefined,
         gps: hasGps ? { lat: Number(m.lat!.toFixed(5)), lng: Number(m.lng!.toFixed(5)), accuracy: m.accuracy ? Math.round(m.accuracy) : undefined } : undefined,
       });
     }
@@ -60,19 +73,12 @@ export async function POST(request: Request, { params }: { params: { id: string;
       ? await saveUpload(params.id, Buffer.from(await invoiceEntry.arrayBuffer()), invoiceEntry.name, invoiceEntry.type || 'image/jpeg')
       : undefined;
 
-    const network = String(form.get('supplierNetwork') ?? '');
-    if (!['wave', 'orange_money', 'free_money'].includes(network)) throw new HttpError(400, "Choisissez l'opérateur mobile money du fournisseur");
-
     const step = await submitProof(actor, params.id, params.stepId, {
       photos,
       invoice,
-      invoiceAmountFcfa: Number(form.get('invoiceAmountFcfa')) || undefined,
-      note: String(form.get('note') ?? ''),
-      supplier: {
-        name: String(form.get('supplierName') ?? ''),
-        phone: String(form.get('supplierPhone') ?? ''),
-        network: network as 'wave' | 'orange_money' | 'free_money',
-      },
+      invoiceAmountFcfa: fields.invoiceAmountFcfa || undefined,
+      note: fields.note,
+      supplier: { name: fields.supplierName, phone: fields.supplierPhone, network: fields.supplierNetwork },
     });
     return { step: { id: step.id, status: step.status } };
   });

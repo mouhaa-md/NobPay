@@ -1,5 +1,6 @@
 import { requireUser } from '@/server/auth';
 import { respond } from '@/server/http';
+import { quoteSchema, readJson } from '@/server/validation';
 import { quoteRelease } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
@@ -8,8 +9,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request, { params }: { params: { id: string; stepId: string } }) {
   return respond(async () => {
     const user = await requireUser();
-    const body = await request.json().catch(() => ({}));
-    const quote = await quoteRelease(user, params.id, params.stepId, { simulate: body?.simulate === true });
+    const body = await readJson(request, quoteSchema);
+    const quote = await quoteRelease(user, params.id, params.stepId, { simulate: body.simulate === true });
     return { quote };
   });
 }
