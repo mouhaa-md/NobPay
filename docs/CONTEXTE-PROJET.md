@@ -209,25 +209,26 @@ Documentation lisible : **https://bitnob.dev** (`docs.bitnob.co` ne se résout p
 
 Base `https://api.bitnob.com` pour sandbox **et** production : **l'environnement dépend de la clé utilisée**. En-têtes : `X-Auth-Client` (client id), `X-Auth-Timestamp` (secondes), `X-Auth-Nonce` (16 octets hex), `X-Auth-Signature` = HMAC-SHA256 hex de `CLIENT_ID:TIMESTAMP:NONCE:PAYLOAD` avec le secret client, où `PAYLOAD` est le **corps JSON exact** (chaîne vide sans corps). La méthode et le chemin ne sont pas signés d'après la doc.
 
-### 8.2 Appels réellement faits par `bitnob/client.ts`
+### 8.2 Appels faits par `bitnob/client.ts` (observés en sandbox le 18 oct. 2026)
 
-| Usage | Appel | Corps / paramètres envoyés | Réponse lue (clés acceptées) | Statut |
+Détail, écarts et hypothèses restantes : **`docs/BITNOB-SANDBOX-REPORT.md`**. Jeux d'essai : `frontend/tests/fixtures/bitnob/`, tests : `tests/bitnob-client.test.ts`.
+
+| Usage | Appel | Corps envoyé | Réponse lue | Statut |
 |---|---|---|---|---|
-| Facture | `POST /api/lightning/invoices` | `{amount (sats), description, reference, expiry?}` | `request` ou `payment_request` ou `bolt11` ou `invoice` ; `id` ou `invoice_id` ; `expires_at` ; `payment_hash` | **hypothèse** |
-| Statut facture | `GET /api/lightning/invoices/:id` | | `status` testé par regex (`paid\|settled\|complete\|success` ; `expire\|cancel\|fail`), `preimage` | **hypothèse** |
-| Prix BTC | `GET /api/trading/prices` | | `prices[]` avec `base_currency`, `quote_currency`, `price` ; repli `BTC_USD_RATE` | **hypothèse** |
-| Conversion BTC→USDT | `POST /api/trading/quotes` puis `/orders` | `{base_currency:'BTC', quote_currency:'USDT', side:'sell', quantity}` | `price`, `id` | **hypothèse** (sens et unités à vérifier) |
-| Devis payout | `POST /api/payouts/quotes` | `{amount (string, USD), country:'SN', from_asset:'USDT', to_currency:'XOF', source:'offchain', reference}` | `quote_id` ou `id`, `settlement_amount`, `exchange_rate.rate` ou `rate`, `fees`, `expires_at` | doc lue, **réponse à confirmer** |
-| Pays supportés | `GET /api/payouts/supported-countries/SN` | | liste de champs requis du bénéficiaire (`fields`) | **à lire en vrai** |
-| Initialiser | `POST /api/payouts/:quoteId/initialize` | `{quote_id, reference, payment_reason, callback_url?, beneficiary{destination_type:'mobile_money', country:'SN', account_name, account_number, network}}` | `payout.id`, `status` | **hypothèse** : valeurs de `network` (`wave` / `orange` / `free`) **devinées** |
-| Finaliser | `POST /api/payouts/:quoteId/finalize` | (vide) | `payout.id`, `status` | doc lue |
-| Statut payout | `GET /api/payouts/:payoutId` | | `status`, `failure_reason` ou `error` ou `message` | **hypothèse** (id de payout ou de devis ?) |
+| Facture | `POST /api/lightning/invoices` | `{amount (sats), description, reference, expiry (s)}` | `data.{id, payment_hash, request, expires_at}` | **Confirmé** (facture `lntb…`, testnet) |
+| Statut facture | `GET /api/lightning/invoices/:id` | | `data.status`, `preimage` (déjà visible avant paiement) | **Partiel** : valeur de `status` payée non observée |
+| Prix BTC | `GET /api/trading/prices` | | `data.prices[]` (`BTC/USDT`) | **Confirmé** |
+| Soldes | `GET /api/balances` | | `data.accounts[]` | **Confirmé** (non utilisé par `Gateway`, B0.6) |
+| Conversion BTC→USDT | `POST /api/trading/quotes` puis `/orders` | `{base_currency:'BTC', quote_currency:'USDT', side:'sell', quantity}` | `price`, `id` | **Hypothèse** (jamais exécuté : pas de solde) |
+| Pays supportés | `GET /api/payouts/supported-countries/SN` | | champs sous `data.destination_types.mobile_money.fields` ; limites 100–200 000 XOF | **Confirmé** (n'est plus appelé à chaque paiement) |
+| Devis payout | `POST /api/payouts/quotes` | `{amount, country:'SN', from_asset:'USDT', to_currency:'XOF', source:'offchain', payment_reason, reference}` | `data.payout.{quote_id, settlement_amount, fees, exchange_rate.effective_rate, expires_at}` | **Confirmé** (devis valable ~16 min) |
+| Initialiser | `POST /api/payouts/:quoteId/initialize` | `{quote_id, reference, payment_reason, callback_url?, beneficiary{destination_type, country, account_name, account_number, network, sender{account_name, country}}}` | `data.payout.{id, status:'INITIATED'}` | **Confirmé** (`sender` obligatoire ; réseaux `wave`/`orange`/`free`) |
+| Finaliser | `POST /api/payouts/:quoteId/finalize` | (vide) | succès : **non observé** ; sans fonds : `422 INSUFFICIENT_FUNDS` | **Partiel** |
+| Statut payout | `GET /api/payouts/:payoutId` | | `data.payout.{status, provider_settlement_id}` | **Confirmé** (id du payout) |
 
-Statuts de payout documentés : `INITIATED → PENDING → COMPLETED / FAILED` (aussi `PROCESSING`, `EXPIRED` acceptés par notre correspondance). Endpoints existants non utilisés : `GET /api/balances`, `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`.
+Statuts de payout vus : `QUOTE`, `INITIATED` ; documentés : `initiated`, `processing`, `success`, `expired` (webhooks), `PENDING`/`COMPLETED`/`FAILED` acceptés par notre correspondance. **Limite : 200 000 XOF par paiement mobile money au Sénégal** (devis refusé au-delà, ≈ 336 $). Endpoints existants non utilisés : `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`, `GET /api/payouts` (liste), `GET /api/payouts/limits`.
 
-Les analyseurs de réponse sont **volontairement tolérants** (réponse avec ou sans enveloppe `data`, plusieurs noms de clés). C'est un filet, pas une preuve : la première tâche du backend est de **remplacer les hypothèses par des faits** (voir `ROADMAP-BACKEND.md`, Phase 0).
-
-Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Orange Money, Free Money, Expresso, Wave), Côte d'Ivoire, Niger ; GHS MTN MoMo ; KES M-Pesa ; NGN NIP ; RWF/UGX MTN-Airtel ; XAF Cameroun et Gabon ; USD ACH/wire/SWIFT. **Toujours vérifier `GET /api/payouts/supported-countries` avant de promettre un corridor.**
+Les analyseurs restent **tolérants** là où rien n'a été observé. Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Orange Money, Free Money, Expresso, Wave), Côte d'Ivoire, Niger ; GHS MTN MoMo ; KES M-Pesa ; NGN NIP ; RWF/UGX MTN-Airtel ; XAF Cameroun et Gabon ; USD ACH/wire/SWIFT. **Toujours vérifier `GET /api/payouts/supported-countries` avant de promettre un corridor.**
 
 ### 8.3 Récepteur de webhooks (`webhooks.ts`, route `POST /api/webhooks/bitnob`, testé)
 
@@ -332,8 +333,8 @@ npm run build && npm start # production locale
 | Parcours complet financeur + terrain + vérification | **Testé** en mode `mock`, Edge, téléphone et ordinateur |
 | Dépôt d'une empreinte chez un vrai calendrier OpenTimestamps | **Testé** (statut `pending` atteint) |
 | Confirmation Bitcoin d'un ancrage, recoupement de bloc | **Non vérifié** (attendre quelques heures) |
-| **Tout appel à l'API Bitnob réelle (sandbox ou prod)** | **Jamais testé.** Écrit d'après la documentation et le workshop. |
-| Charges utiles réelles des webhooks Bitnob | **Jamais vues** |
+| Appels à l'API Bitnob sandbox : facture, prix, soldes, pays, devis, initialisation | **Testés en vrai le 18 oct. 2026** (rapport + tests rejoués). **Jamais vus** : paiement d'une facture, `finalize` réussi, webhooks réels, conversion BTC→USDT (aucun solde en sandbox). |
+| Charges utiles réelles des webhooks Bitnob | **Jamais vues** (formes documentées dans le rapport) |
 | Safari / Firefox / iOS / installation PWA sur téléphone | **Non testé** |
 | Charge, concurrence multi-processus, sécurité en production | **Non évalué** |
 

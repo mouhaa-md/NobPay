@@ -408,6 +408,7 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
       quote,
       reference: quote.reference,
       supplier,
+      sender: { name: `${owner.firstName} ${owner.lastName}`.trim(), country: owner.country },
       reason: 'vendor_payment',
       callbackUrl: publicBaseUrl.startsWith('https://') ? `${publicBaseUrl}/api/webhooks/bitnob` : undefined,
     });

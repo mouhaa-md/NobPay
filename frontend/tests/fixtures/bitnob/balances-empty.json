@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "message": "Company balances retrieved successfully",
+  "data": {
+    "accounts": [
+      {
+        "account_id": "a1",
+        "account_number": "0000000000",
+        "currency": "BTC",
+        "ledger_balance": "0",
+        "available_balance": "0"
+      },
+      {
+        "account_id": "a2",
+        "account_number": "0000000000",
+        "currency": "USDC",
+        "ledger_balance": "0",
+        "available_balance": "0"
+      },
+      {
+        "account_id": "a3",
+        "account_number": "0000000000",
+        "currency": "USDT",
+        "ledger_balance": "0",
+        "available_balance": "0"
+      }
+    ],
+    "company_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

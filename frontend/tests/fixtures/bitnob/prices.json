@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "message": "Prices retrieved successfully",
+  "data": {
+    "prices": [
+      {
+        "base_currency": "BTC",
+        "quote_currency": "USDC",
+        "price": "81496.80500000",
+        "as_of": "2026-10-18T00:53:25.279956184Z"
+      },
+      {
+        "base_currency": "USDC",
+        "quote_currency": "USDT",
+        "price": "1.0011150",
+        "as_of": "2026-10-18T00:53:25.208219359Z"
+      },
+      {
+        "base_currency": "BTC",
+        "quote_currency": "USDT",
+        "price": "81584.950",
+        "as_of": "2026-10-18T00:53:25.199865229Z"
+      }
+    ]
+  },
+  "timestamp": "2026-10-18T00:53:25.401346937Z"
+}

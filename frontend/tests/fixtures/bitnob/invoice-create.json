@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Lightning invoice created successfully",
+  "data": {
+    "id": "00000000-0000-4000-8000-0000000000b1",
+    "payment_hash": "24d7bc97d51fecd6acea01297aff51137fb7603a5cc7a816051536bcbcb9d48b",
+    "request": "lntb10u1pREDACTEDREDACTEDREDACTED",
+    "amount_sat": "1000",
+    "description": "NobPay probe",
+    "status": "pending",
+    "expires_at": "2026-10-18T01:53:25Z",
+    "created_at": "2026-10-18T00:53:25Z"
+  },
+  "timestamp": "2026-10-18T00:53:25.608025335Z"
+}
