@@ -4,7 +4,7 @@ import { simulateFundingPaid } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 
-/** Mock mode only: "pays" the invoice through a signed event sent to the real webhook handler. */
+/** Demo only (ALLOW_DEMO): "pays" the invoice through an event signed by NobPay and sent to the real webhook handler. In sandbox the funding is marked `simulated`. */
 export async function POST(_request: Request, { params }: { params: { id: string } }) {
   return respond(async () => {
     const user = await requireUser();

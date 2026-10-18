@@ -170,6 +170,8 @@ export interface Funding {
   };
   /** why a payment seen at Bitnob was not credited (e.g. different amount); never contains secrets */
   note?: string;
+  /** credited by our own signed event (demo button), not by a payment seen at Bitnob: the ledger says so */
+  simulated?: boolean;
   demo?: boolean;
 }
 

@@ -22,7 +22,7 @@ import { getConfig } from './config';
 import { randomId } from './crypto';
 import { issueManagerToken, managerTokenMatches } from './managerToken';
 import { readDb, withDb } from './db';
-import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep } from './domain';
+import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep, simulatedMark } from './domain';
 import { HttpError } from './http';
 import { logger } from './logger';
 import { appendLedger } from './ledger';
@@ -272,7 +272,7 @@ export const CONVERSION_MAX_ATTEMPTS = 6;
 export async function convertPaidFundings(now = Date.now()): Promise<void> {
   let firstError: unknown;
   for (const f of (await readDb()).fundings) {
-    if (f.status !== 'paid' || f.mode !== 'sandbox' || !f.amountSats) continue;
+    if (f.status !== 'paid' || f.mode !== 'sandbox' || !f.amountSats || f.simulated) continue; // simulated: no bitcoin ever arrived
     const c = f.conversion;
     if (c && (c.status === 'done' || c.status === 'skipped')) continue;
     if (c?.status === 'failed' && !c.retryable) continue; // gave up: a person must look
@@ -343,7 +343,7 @@ const gs = globalThis as unknown as { __nobpaySolvency?: Solvency };
 
 /** Real (non-demo, sandbox) money NobPay owes: paid fundings minus payouts completed or in flight. */
 export function sandboxLiabilityCents(db: Db): number {
-  const funded = db.fundings.filter((f) => f.status === 'paid' && f.mode === 'sandbox' && !f.demo).reduce((s, f) => s + f.amountCents, 0);
+  const funded = db.fundings.filter((f) => f.status === 'paid' && f.mode === 'sandbox' && !f.demo && !f.simulated).reduce((s, f) => s + f.amountCents, 0);
   let out = 0;
   for (const p of db.projects) {
     for (const st of p.steps) {
@@ -393,13 +393,22 @@ async function assertPayoutCovered(amountCents: number): Promise<void> {
 
 /** Mock mode only: pays the invoice by sending a signed event to the real webhook handler. */
 export async function simulateFundingPaid(owner: User, fundingId: string): Promise<Funding> {
-  if (getConfig().mode !== 'mock') throw new HttpError(403, 'La simulation est désactivée en mode sandbox');
   if (!getConfig().allowDemo) throw new HttpError(403, 'Le mode démonstration est désactivé sur cette instance', 'demo_disabled');
   const db = await readDb();
   const funding = db.fundings.find((f) => f.id === fundingId);
   if (!funding) throw new HttpError(404, 'Versement introuvable');
   ownedProject(db, owner, funding.projectId);
-  if (funding.status === 'pending') await simulateInvoicePaid(funding);
+  if (funding.status === 'pending') {
+    // In sandbox the invoice is real at Bitnob but nobody can pay it there: our own signed event credits it, and the
+    // funding is marked so the ledger, the solvency check and the conversion job never treat it as real money.
+    if (funding.mode === 'sandbox') {
+      await withDb((d) => {
+        const f = d.fundings.find((x) => x.id === fundingId);
+        if (f && f.status === 'pending') f.simulated = true;
+      });
+    }
+    await simulateInvoicePaid(funding);
+  }
   return (await readDb()).fundings.find((f) => f.id === fundingId)!;
 }
 
@@ -555,7 +564,7 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     step.decision = { kind: 'approved', at: startedAt };
     step.payout = payout;
     step.quote = undefined;
-    appendLedger(db, projectId, 'step_approved', { stepId, index: step.index, amountCents: step.amountCents }, startedAt);
+    appendLedger(db, projectId, 'step_approved', { stepId, index: step.index, amountCents: step.amountCents, ...simulatedMark(quote.mode === 'mock') }, startedAt);
     appendLedger(
       db,
       projectId,
@@ -569,6 +578,7 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
         amountFcfa: payout.amountFcfa,
         rate: payout.rate,
         supplier: { name: supplier.name, network: supplier.network },
+        ...simulatedMark(quote.mode === 'mock'),
       },
       startedAt,
     );

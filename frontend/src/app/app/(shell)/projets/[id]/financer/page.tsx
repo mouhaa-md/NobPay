@@ -19,7 +19,7 @@ export default async function Fund({ params }: { params: { id: string } }) {
   if (!project || project.ownerId !== user.id) notFound();
 
   const s = summarize(db, project);
-  const { mode, usdXof, btcUsd: fallbackBtcUsd } = getConfig();
+  const { mode, usdXof, btcUsd: fallbackBtcUsd, allowDemo } = getConfig();
   let btcUsd = fallbackBtcUsd;
   try {
     btcUsd = await getGateway().btcUsd();
@@ -41,6 +41,7 @@ export default async function Fund({ params }: { params: { id: string } }) {
         projectId={project.id}
         projectName={project.name}
         mode={mode}
+        allowDemo={allowDemo}
         btcUsd={btcUsd}
         usdXof={usdXof}
         suggestions={suggestions.filter((x) => x.cents >= 500)}

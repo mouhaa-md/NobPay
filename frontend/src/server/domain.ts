@@ -6,6 +6,13 @@ import { appendLedger } from './ledger';
  * the callers (services, webhook handler) decide when to run them.
  */
 
+/**
+ * Ledger events about money that was only SIMULATED (mock mode, the demo button, the "continue in simulation" payout)
+ * carry `simulated: true`, so the public, anchored dossier never presents them as real. Real events carry no such key
+ * (their hashes are unchanged).
+ */
+export const simulatedMark = (simulated: boolean): { simulated?: true } => (simulated ? { simulated: true } : {});
+
 export const findProject = (db: Db, id: string): Project | undefined => db.projects.find((p) => p.id === id);
 export const findStep = (project: Project, stepId: string): Step | undefined => project.steps.find((s) => s.id === stepId);
 
@@ -40,6 +47,7 @@ export function applyFundingPaid(db: Db, funding: Funding, info: { preimage?: st
       amountSats: funding.amountSats,
       paymentHash: funding.paymentHash,
       preimage: funding.preimage,
+      ...simulatedMark(funding.mode === 'mock' || funding.simulated === true),
     },
     funding.paidAt,
   );
@@ -64,7 +72,7 @@ export function applyPayoutCompleted(
     db,
     project.id,
     'payout_completed',
-    { stepId: step.id, index: step.index, reference: step.payout.reference, payoutId: step.payout.payoutId },
+    { stepId: step.id, index: step.index, reference: step.payout.reference, payoutId: step.payout.payoutId, ...simulatedMark(step.payout.mode === 'mock') },
     at,
   );
   activateSteps(db, project);
@@ -77,6 +85,6 @@ export function applyPayoutFailed(db: Db, project: Project, step: Step, error: s
   step.payout.error = error;
   // the funder can try again: the proof stays valid
   step.status = 'proof_submitted';
-  appendLedger(db, project.id, 'payout_failed', { stepId: step.id, index: step.index, reference: step.payout.reference, error });
+  appendLedger(db, project.id, 'payout_failed', { stepId: step.id, index: step.index, reference: step.payout.reference, error, ...simulatedMark(step.payout.mode === 'mock') });
   return true;
 }
