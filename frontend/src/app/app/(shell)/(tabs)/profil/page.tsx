@@ -95,7 +95,7 @@ export default async function Profile() {
 
         <InstallCard />
 
-        <ProfileActions demo={!!user.demo && mode === 'mock'} />
+        <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} />
 
         <p className="text-center font-label-sm text-label-sm text-on-surface-variant/80 lg:col-span-2">
           NobPay · prototype Code &amp; Chain Dakar · code ouvert (licence MIT)

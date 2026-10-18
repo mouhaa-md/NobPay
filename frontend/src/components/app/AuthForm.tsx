@@ -161,15 +161,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </button>
             </div>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl bg-tertiary-fixed/50 p-space-sm text-on-tertiary-fixed">
-            <Icon name="info" size={20} className="mt-0.5 shrink-0" />
-            <p className="font-body-sm text-body-sm">
-              <strong>Prototype :</strong> aucun SMS n&apos;est envoyé. Code de démonstration : <strong className="tracking-widest">{demoCode}</strong>{' '}
-              <button type="button" className="font-semibold underline" onClick={() => setOtp(demoCode)}>
-                Remplir
-              </button>
-            </p>
-          </div>
+          {demoCode && (
+            <div className="flex items-start gap-3 rounded-2xl bg-tertiary-fixed/50 p-space-sm text-on-tertiary-fixed">
+              <Icon name="info" size={20} className="mt-0.5 shrink-0" />
+              <p className="font-body-sm text-body-sm">
+                <strong>Prototype :</strong> aucun SMS n&apos;est envoyé. Code de démonstration : <strong className="tracking-widest">{demoCode}</strong>{' '}
+                <button type="button" className="font-semibold underline" onClick={() => setOtp(demoCode)}>
+                  Remplir
+                </button>
+              </p>
+            </div>
+          )}
           <ErrorNote>{error}</ErrorNote>
           <button type="button" className={buttonPrimary} disabled={busy || otp.length !== 6} onClick={submit}>
             {busy ? <Spinner /> : null}

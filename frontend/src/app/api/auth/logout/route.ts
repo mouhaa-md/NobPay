@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST() {
   return respond(async () => {
-    endSession();
+    await endSession();
     return { ok: true };
   });
 }

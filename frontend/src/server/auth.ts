@@ -1,63 +1,128 @@
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
-import { getConfig } from './config';
+import { getConfig, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
 import { hmacHex, randomId, safeEqual } from './crypto';
 import { readDb, withDb } from './db';
 import { HttpError } from './http';
 import { DEMO_USER_ID } from './seed';
 
 /**
- * Prototype authentication: a signed cookie holding the user id, and a demo-only
- * SMS code (there is no SMS provider here). Do not reuse as-is for real users.
+ * Prototype authentication: a signed cookie, and a demo-only SMS code (there is no SMS provider here).
+ *
+ * Cookie value: `<userId>.<version>.<expiresAt>.<hmac>`. The HMAC covers all three fields, so none can be
+ * changed. `version` must equal the user's current `sessionVersion`: raising it (sign out) invalidates every
+ * cookie issued before, on every device. The lifetime is 7 days, renewed on use (see requireUser).
  */
 
 const COOKIE = 'nobpay_session';
+export const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const RENEW_AFTER_SECONDS = 60 * 60 * 24; // re-issue the cookie when it is more than a day old
 
-const sign = (uid: string) => hmacHex('sha256', getConfig().sessionSecret, `session:${uid}`).slice(0, 40);
-
-export function sessionValue(uid: string): string {
-  return `${uid}.${sign(uid)}`;
+/** Throws when the configuration says the secret must be strong and it is not. */
+export function assertSessionSecret(): string {
+  const { sessionSecret } = getConfig();
+  if (sessionSecretMustBeStrong()) {
+    const problem = sessionSecretProblem(process.env.SESSION_SECRET);
+    if (problem) throw new HttpError(500, `Configuration refusée : ${problem}`, 'weak_session_secret');
+  }
+  return sessionSecret;
 }
 
-export function parseSession(value: string | undefined): string | null {
+const sign = (uid: string, version: number, exp: number) => hmacHex('sha256', assertSessionSecret(), `session:${uid}:${version}:${exp}`);
+
+export interface SessionToken {
+  uid: string;
+  version: number;
+  /** expiry, seconds since epoch */
+  exp: number;
+}
+
+export function sessionValue(uid: string, version = 0, now = Date.now(), lifetime = SESSION_SECONDS): string {
+  const exp = Math.floor(now / 1000) + lifetime;
+  return `${uid}.${version}.${exp}.${sign(uid, version, exp)}`;
+}
+
+export function parseSession(value: string | undefined, now = Date.now()): SessionToken | null {
   if (!value) return null;
-  const i = value.lastIndexOf('.');
-  if (i < 1) return null;
-  const uid = value.slice(0, i);
-  return safeEqual(value.slice(i + 1), sign(uid)) ? uid : null;
+  const parts = value.split('.');
+  if (parts.length !== 4) return null;
+  const [uid, v, e, mac] = parts;
+  const version = Number(v);
+  const exp = Number(e);
+  if (!uid || !Number.isInteger(version) || version < 0 || !Number.isInteger(exp)) return null;
+  if (!safeEqual(mac, sign(uid, version, exp))) return null;
+  if (exp * 1000 <= now) return null;
+  return { uid, version, exp };
+}
+
+async function readSession(): Promise<{ user: User; token: SessionToken } | null> {
+  const token = parseSession(cookies().get(COOKIE)?.value);
+  if (!token) return null;
+  const db = await readDb();
+  const user = db.users.find((u) => u.id === token.uid);
+  if (!user || (user.sessionVersion ?? 0) !== token.version) return null;
+  return { user, token };
 }
 
 export async function getSessionUser(): Promise<User | null> {
-  const uid = parseSession(cookies().get(COOKIE)?.value);
-  if (!uid) return null;
-  const db = await readDb();
-  return db.users.find((u) => u.id === uid) ?? null;
+  return (await readSession())?.user ?? null;
 }
 
-export async function requireUser(): Promise<User> {
-  const user = await getSessionUser();
-  if (!user) throw new HttpError(401, 'Connectez-vous pour continuer', 'unauthenticated');
-  return user;
-}
-
-export function startSession(uid: string): void {
-  cookies().set(COOKIE, sessionValue(uid), {
+function setSessionCookie(user: User): void {
+  cookies().set(COOKIE, sessionValue(user.id, user.sessionVersion ?? 0), {
     httpOnly: true,
     sameSite: 'lax',
+    secure: getConfig().secureCookies,
     path: '/',
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: SESSION_SECONDS,
   });
 }
 
-export function endSession(): void {
+export async function requireUser(): Promise<User> {
+  const session = await readSession();
+  if (!session) throw new HttpError(401, 'Connectez-vous pour continuer', 'unauthenticated');
+  // Sliding expiry: only route handlers can write cookies, which is where requireUser runs.
+  if (session.token.exp - Math.floor(Date.now() / 1000) < SESSION_SECONDS - RENEW_AFTER_SECONDS) {
+    try {
+      setSessionCookie(session.user);
+    } catch {
+      /* not in a context where cookies can be written */
+    }
+  }
+  return session.user;
+}
+
+export function startSession(user: User): void {
+  setSessionCookie(user);
+}
+
+/**
+ * Signs the current user out on every device (raises the session version) and removes the cookie.
+ * The shared demo account keeps its version: signing out of it must not kick other visitors.
+ */
+export async function endSession(): Promise<void> {
+  const session = await readSession().catch(() => null);
+  if (session && !session.user.demo) {
+    await withDb((db) => {
+      const u = db.users.find((x) => x.id === session.user.id);
+      if (u) u.sessionVersion = (u.sessionVersion ?? 0) + 1;
+    });
+  }
   cookies().delete(COOKIE);
 }
 
 export const normalizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');
 
+/** The only code that exists today is the shared demo code. Without ALLOW_DEMO nobody can sign in (no SMS provider yet). */
+export function smsUnavailable(): HttpError {
+  return new HttpError(503, "La connexion par SMS n'est pas encore disponible sur cette instance.", 'sms_unavailable');
+}
+
 function checkOtp(otp: string): void {
-  if (!safeEqual(String(otp ?? '').trim(), getConfig().demoOtp)) {
+  const { allowDemo, demoOtp } = getConfig();
+  if (!allowDemo) throw smsUnavailable();
+  if (!safeEqual(String(otp ?? '').trim(), demoOtp)) {
     throw new HttpError(400, 'Code incorrect', 'bad_otp');
   }
 }
@@ -104,6 +169,7 @@ export async function loginUser(input: { phone: string; otp: string }): Promise<
 }
 
 export async function demoUser(): Promise<User> {
+  if (!getConfig().allowDemo) throw new HttpError(403, 'Le compte de démonstration est désactivé sur cette instance.', 'demo_disabled');
   const db = await readDb();
   const user = db.users.find((u) => u.id === DEMO_USER_ID);
   if (!user) throw new HttpError(404, 'Compte de démonstration absent (réinitialisez les données).');

@@ -9,6 +9,7 @@ export async function GET() {
     const c = getConfig();
     return {
       mode: c.mode,
+      demo: c.allowDemo,
       bitnobKeys: Boolean(c.clientId && c.clientSecret),
       webhookSecret: Boolean(c.webhookSecret),
       webhookUrl: `${c.publicBaseUrl}/api/webhooks/bitnob`,
