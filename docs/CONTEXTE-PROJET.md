@@ -120,7 +120,7 @@ NobPay/
       components/                  interface
     motion/                        kit d'animations de la vitrine (hors backend)
     design-reference/              maquettes Stitch + COPY-RULES.md
-    tests/                         Vitest (102 tests)
+    tests/                         Vitest (281 tests)
     public/                        images, icônes PWA, manifest, sw.js
 ```
 
@@ -337,7 +337,7 @@ cd frontend
 npm install
 npm run dev                # http://localhost:3000   (le service worker n'existe qu'en production)
 npm run typecheck
-npm test                   # 102 tests Vitest
+npm test                   # 281 tests Vitest
 npm run build && npm start # production locale
 ```
 
@@ -381,7 +381,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 | D12 | S3 | **Position GPS et heure déclarées par le client** (§ 4) ; l'EXIF n'est pas lu. |
 | D13 | S3 | ~~Jeton de la personne de confiance sans expiration ni rotation~~ **Corrigé pour les nouveaux projets (B1.7, `server/managerToken.ts`)** : jeton signé `<projet>.<version>.<expiration>.<hmac>` (rien de réutilisable dans la base), valable 90 jours, **renouvelable** par le financeur (`POST /api/projects/:id/manager-token`, bouton « Renouveler le lien » : l'ancien lien meurt aussitôt). **Reste :** les liens créés avant (champ `managerToken` en clair) restent valables jusqu'à leur renouvellement ; les jetons publics de démonstration ne fonctionnent que si `ALLOW_DEMO` autorise. |
 | D14 | S3 | Les ancrages sont **créés à la main** (bouton) ; en revanche ceux en attente sont maintenant vérifiés **automatiquement** toutes les 10 min (la mise à niveau `upgrade` confirme le bloc). Dépendance à `blockstream.info` pour le recoupement. |
-| D15 | S3 | `services.ts` (financement, devis, paiement) et `bitnob/client.ts` **n'ont pas de test automatique** (pas de `fetch` simulé). |
+| D15 | S3 | ~~`services.ts` (financement, devis, paiement) et `bitnob/client.ts` sans test automatique~~ **Corrigé (B0.10, B2.7)** : le client est testé avec un faux `fetch` qui rejoue des réponses réelles nettoyées (`tests/fixtures/bitnob/`), les services avec une passerelle simulée, et `tests/invariants.test.ts` rejoue **des centaines de séquences aléatoires** d'évènements (versements dupliqués ou sous un autre nom, paiements réussis ou échoués en double ou en désordre, preuves, refus, reprises, réponses perdues) en vérifiant après **chaque** action : séquestre jamais négatif, libéré + réservé ≤ versé, une seule étape ouverte, une étape payée seulement si son paiement est terminé, chaque crédit et chaque paiement enregistrés une seule fois, registre intact, jamais deux paiements pour la même référence. Les tests ont été vérifiés par mutation : réintroduire un crédit en double ou une étape payée sans paiement les fait échouer. |
 | D16 | S3 | Dates relatives (« Hier ») calculées avec le **fuseau du serveur**. |
 | D17 | S3 | Une seule règle d'approbation ; aucune notification (ni e-mail, SMS, WhatsApp, push). |
 | D18 | S3 | Le **registre ne note pas le mode** (`mock` / `sandbox`) : un paiement fait via « Continuer en simulation » en sandbox (`payout.mode = 'mock'`) est identique à un vrai dans le dossier ancré et vérifiable publiquement. Contraire à la règle d'honnêteté. Corriger = ajouter un champ aux données des évènements : **décision du chef de projet** (format du registre). |

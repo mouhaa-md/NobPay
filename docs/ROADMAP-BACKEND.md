@@ -50,7 +50,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 > **À lire d'abord : `docs/BITNOB-SANDBOX-NOTES.md`.** La spécification officielle de l'API y a été relue : elle révèle **6 écarts avec notre code** (`customer_id` obligatoire pour les factures, `payment_reason` pour les devis, `callback_url` obligatoire, évènement Lightning `transfer.success` mal routé…) et explique **comment alimenter la sandbox** (pas de simulateur Lightning documenté : demander à un mentor).
 
 ### B0.1 Poser la base de référence  `P0 · S`
-- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (102 tests verts), `npm run dev`.
+- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (281 tests verts), `npm run dev`.
 - Faire le parcours de démonstration du README en `mock` (compte démo, valider l'étape 3 de « Résidence à Thiès », envoyer une preuve via `/terrain/demo-villa-thies`, financer, ancrer).
 - Lire dans cet ordre : `server/services.ts`, `server/domain.ts`, `server/webhooks.ts`, `server/bitnob/client.ts`, `server/db.ts`.
 - **Terminé quand :** tout est vert chez vous et vous pouvez expliquer en 2 minutes ce qui se passe quand le financeur clique « Confirmer et payer » (CONTEXTE § 7.2).
@@ -187,11 +187,11 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Invariant à surveiller : `somme des séquestres NobPay ≤ solde Bitnob` (USDT + BTC valorisé). Calculé par la tâche, exposé dans `/api/health?detail=1` (accès restreint), alerte dans les journaux, et **blocage des nouveaux paiements** si violé.
 - **Terminé quand :** un test force un écart et vérifie le blocage.
 
-### B2.6 Appels sortants robustes  `P1 · M`
+### B2.6 Appels sortants robustes  `P1 · M`  ✅ fait : 3 essais avec attente croissante et gigue pour GET, devis et 429 ; **jamais** pour `finalize`, ordres de vente, `initialize` ni création de facture (un envoi perdu ne prouve pas qu'il n'a pas été traité) ; chaque essai est re-signé
 - Dans `client.ts` : nouvelle tentative (3 essais, attente exponentielle avec gigue) pour erreurs réseau / 5xx / 429, **jamais** pour 4xx. Classer `GatewayError` en `retryable: boolean`. Utiliser `reference` comme clé d'idempotence là où l'API la supporte. Délai de 20 s déjà en place.
 - **Terminé quand :** tests avec `fetch` simulé (B0.10) pour chaque classe d'erreur.
 
-### B2.7 Tests d'invariants  `P1 · M`
+### B2.7 Tests d'invariants  `P1 · M`  ✅ fait (CONTEXTE D15), vérifié par mutation
 - Avec une passerelle simulée en mémoire et une base temporaire (comme `tests/webhook.test.ts`) : le séquestre n'est jamais négatif ; libéré ≤ déposé ; jamais deux crédits ni deux payouts pour la même référence ; ordre aléatoire d'évènements (rejeu, désordre) ⇒ même état final.
 - Couvrir `services.ts` (createFunding, submitProof, quoteRelease, confirmRelease, rejectProof), aujourd'hui sans test (D15).
 
