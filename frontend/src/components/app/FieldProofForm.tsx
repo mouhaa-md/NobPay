@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
-import { shrinkImage } from '@/lib/image';
+import { isUploadableImage, isUploadableProof, shrinkImage } from '@/lib/image';
 import { formatInt } from '@/lib/money';
 import { MOBILE_NETWORKS } from '@/lib/templates';
 import type { MobileNetwork, ProofKind, Supplier } from '@/lib/types';
@@ -81,12 +81,29 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
     const files = [...list].filter((f) => f.type.startsWith('image/')).slice(0, room);
     if (files.length === 0) return setError('Choisissez des photos (JPEG, PNG ou WebP).');
     const next: Photo[] = [];
+    let refused = 0;
     for (const original of files) {
       const file = await shrinkImage(original);
+      if (!isUploadableImage(file)) {
+        refused += 1;
+        continue;
+      }
       next.push({ id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}`, file, preview: URL.createObjectURL(file), takenAt: new Date(original.lastModified || Date.now()).toISOString() });
     }
+    if (refused > 0) setError(`${refused === 1 ? 'Cette photo n’est pas dans un format accepté' : 'Ces photos ne sont pas dans un format accepté'} (JPEG, PNG ou WebP). Reprenez-la avec l’appareil photo.`);
+    if (next.length === 0) return;
     setPhotos((p) => [...p, ...next]);
     locate();
+  };
+
+  const onInvoice = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0];
+    e.target.value = '';
+    if (!picked) return;
+    setError('');
+    const file = await shrinkImage(picked);
+    if (!isUploadableProof(file)) return setError('La facture doit être une photo (JPEG, PNG ou WebP) ou un PDF.');
+    setInvoice(file);
   };
 
   const removePhoto = (id: string) =>
@@ -188,8 +205,8 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               Choisir dans la galerie
             </button>
           )}
-          <input ref={camera} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
-          <input ref={gallery} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={gallery} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
           <p className={`flex items-center gap-1.5 font-label-sm text-label-sm ${gpsState === 'ok' ? 'text-[#15803D]' : gpsState === 'denied' ? 'text-[#B45309]' : 'text-on-surface-variant'}`} role="status">
             <Icon name={gpsState === 'ok' ? 'location_on' : gpsState === 'denied' ? 'location_off' : 'my_location'} size={16} filled={gpsState === 'ok'} />
             {gpsState === 'ok' && gps ? `Position ajoutée (±${Math.round(gps.accuracy ?? 0)} m)` : gpsState === 'asking' ? 'Recherche de la position…' : gpsState === 'denied' ? 'Position non partagée : le financeur aura moins de certitude.' : 'La position de votre téléphone sera jointe aux photos.'}
@@ -218,7 +235,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               <span className="block font-label-sm text-label-sm text-on-surface-variant">{invoice ? 'Touchez pour changer' : 'Photo ou PDF'}</span>
             </span>
           </button>
-          <input ref={invoiceInput} type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => { setInvoice(e.target.files?.[0] ?? null); e.target.value = ''; }} />
+          <input ref={invoiceInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="sr-only" onChange={onInvoice} />
           <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
             Montant de la facture
             <span className="flex items-center rounded-2xl bg-surface-container-low px-space-md focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">
