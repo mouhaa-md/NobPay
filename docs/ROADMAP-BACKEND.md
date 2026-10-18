@@ -78,7 +78,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Si le routage par expression régulière (`webhooks.ts`) ne reconnaît pas l'évènement, **l'adapter** ; ajouter un test avec la charge réelle signée par vous-même.
 - **Terminé quand :** l'écran « Financer » passe seul à « reçus » **par le webhook** (pas par le sondage), l'étape 1 s'ouvre, l'évènement est dans `db.webhooks` avec le résultat `funding_paid`.
 
-### B0.6 Soldes et conversion BTC → USDT  `P0 · M`  ◐ `balances()` fait et confirmé ; devis de conversion confirmé ; ordre non testé. **Décision à prendre : séquestre crédité à la réception des BTC (actuel, avec garde-fou au paiement) ou après conversion**
+### B0.6 Soldes et conversion BTC → USDT  `P0 · M`  ◐ `balances()` fait et confirmé ; devis de conversion confirmé ; ordre non testé. **Décision prise : séquestre crédité à la réception des BTC, avec garde-fou au paiement** (CONTEXTE § 3, décisions validées)
 - Ajouter `balances()` à l'interface `Gateway` (`GET /api/balances`), dans les deux implémentations ; l'afficher dans `/api/health` (valeurs seulement si `?detail=1` et session démo/admin : jamais en public).
 - Tester `convertBtcToStable` (devis puis ordre) : sens (`sell` BTC ?), unité de `quantity`, résultat. Déterminer **si la conversion est nécessaire** : la source de payout est `from_asset: USDT`, mais peut-être qu'un payout peut débiter le portefeuille BTC.
 - **Décision à consigner** dans le rapport (B0.10) : le séquestre est-il crédité à la réception des BTC (comportement actuel) ou après conversion en USDT ?
@@ -251,6 +251,8 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 ---
 
 ## 3. Décisions à prendre avec le chef de projet (ne bloquez pas dessus : proposez et avancez)
+
+> **Tranchées le 18 oct. 2026** (voir `CONTEXTE-PROJET.md` § 3) : limite d'un paiement (étape ≤ 330 $ en sandbox), moment du crédit du séquestre (à la réception des BTC), connexion de démonstration (`ALLOW_DEMO=1`). Restent ouvertes : fournisseur SMS définitif, sous-compte Bitnob par projet, remboursement, base de données.
 
 1. **Hébergement de la démonstration** : machine locale + tunnel (recommandé pour demain) ou serveur ?
 2. **Fournisseur de SMS** pour B1.1 (coût, couverture Sénégal / France).

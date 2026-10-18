@@ -51,6 +51,12 @@
 - **Contribution open source prévue :** un « kit Bitnob » (client typé, signature HMAC, vérificateur de webhooks, repli par polling). **Pas** un « ln-watcher » : on ne prétend pas combler un manque non confirmé.
 - **Vocabulaire de l'interface (français) :** Projet, **Étape** (jamais « Jalon »), En séquestre, Preuve, Libérer le paiement, Certificat de preuve, « personne de confiance sur place ».
 
+### Décisions validées pendant le hackathon (18 oct. 2026)
+
+1. **Limite d'un paiement mobile money (≈ 336 $, 200 000 FCFA, observée en sandbox).** En `sandbox`, une étape de plus de **330 $** est refusée **à la création du projet** (`step_over_payout_limit`, message qui nomme l'étape) ; l'assistant n'offre que des budgets compatibles, signale l'étape trop grande à l'écran des étapes, et refuse un budget supérieur à 12 × 330 $. En `mock`, pas de limite : la démonstration de secours garde ses montants réalistes. Réglable par `MAX_STEP_USD` (`0` = aucune limite). Le découpage automatique d'un paiement en plusieurs payouts n'est **pas** fait (chantier à part, après le Demo Day).
+2. **Moment du crédit du séquestre : à la réception des BTC** (comportement actuel), avec les garde-fous au paiement (le portefeuille de l'actif de paiement doit couvrir l'étape ; paiements suspendus si les livres ne s'additionnent pas). Pas de crédit « après conversion ».
+3. **Connexion en démonstration : `ALLOW_DEMO=1`** (code partagé, personnes de confiance seulement). Fournisseur SMS définitif : à choisir plus tard ; Twilio est codé et testé avec un faux `fetch`.
+
 ## 4. Règles d'honnêteté (le jury relit)
 
 Chaque texte affiché doit être **vrai**. La liste complète des affirmations interdites et de leurs remplaçants est dans `frontend/design-reference/COPY-RULES.md`. À retenir :
@@ -324,6 +330,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement sans fournisseur SMS et si `ALLOW_DEMO` autorise) | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |
+| `MAX_STEP_USD` | montant maximal d'une étape, en dollars ; `0` = aucune limite (décision 1) | `330` en sandbox, aucune en mock |
 | `PAYOUT_ASSET` | stablecoin d'où partent les paiements et où finit la conversion (`USDT`, ou `USDC` si c'est ce que le robinet de test fournit) | `USDT` |
 | `BACKGROUND_JOBS` | `0` désactive la boucle de fond (§ 14, D11) | actif |
 | `AUTO_ANCHOR` | `1` : ancre un projet sur Bitcoin juste après un paiement terminé ou un versement crédité (appelle les calendriers OpenTimestamps : option) | absent |
