@@ -118,7 +118,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 
 **Objectif :** qu'on ne puisse pas entrer chez quelqu'un d'autre, ni abuser des routes publiques. Détail des failles : CONTEXTE § 14, D1 à D5.
 
-### B1.1 OTP réel par utilisateur  `P1 · M`  (**devient bloquant** : sans `ALLOW_DEMO=1`, personne ne peut se connecter en sandbox)
+### B1.1 OTP réel par utilisateur  `P1 · M`  ✅ fait (CONTEXTE § 10) ; reste le choix du fournisseur SMS définitif et un essai en vrai
 - Aujourd'hui : un code unique `DEMO_OTP` pour tous (CONTEXTE § 10). À faire : code à 6 chiffres **aléatoire par demande**, stocké **haché** avec expiration (5 min), 5 essais maximum, délai de renvoi, invalidé après usage. Nouvelle collection `otps` (ou table).
 - Interface `SmsProvider` avec deux implémentations : « journal » (écrit le code dans la console, pour le développement) et un fournisseur réel (choix à faire avec le chef de projet : Africa's Talking, Twilio, Vonage, ou WhatsApp Business).
 - Le code de démonstration n'est accepté que si `ALLOW_DEMO=1` (B1.2). `POST /api/auth/otp` renvoie `demo:true` + `demoCode` **seulement** dans ce cas. Attention : l'écran (`AuthForm.tsx`, étape du code) affiche **toujours** l'encart « Prototype : aucun SMS n'est envoyé… Code de démonstration » ; il faut le rendre conditionnel à la présence de `demoCode`.

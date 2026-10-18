@@ -198,6 +198,16 @@ export interface WebhookRecord {
   note?: string;
 }
 
+/** A pending SMS sign-in code. Only a hash is stored (HMAC of phone + code). */
+export interface OtpRecord {
+  phone: string;
+  codeHash: string;
+  createdAt: string;
+  expiresAt: string;
+  attempts: number;
+  usedAt?: string;
+}
+
 export interface Db {
   version: 1;
   users: User[];
@@ -206,6 +216,8 @@ export interface Db {
   ledger: LedgerEvent[];
   anchors: Anchor[];
   webhooks: WebhookRecord[];
+  /** missing in databases created before real SMS codes existed */
+  otps?: OtpRecord[];
 }
 
 // ---- Derived helpers (pure) -------------------------------------------------
