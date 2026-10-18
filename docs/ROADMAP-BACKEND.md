@@ -146,7 +146,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Contrôler les **octets** (JPEG, PNG, WebP, PDF) au lieu de croire `file.type` ; refuser le reste. SVG : accepté seulement pour les démonstrations (`publicPath`), **pas** en dépôt utilisateur. Nettoyer le nom, limiter le nombre et le poids (déjà 6 × 8 Mo).
 - **Terminé quand :** un fichier `.exe` renommé en `.jpg` est refusé (415) ; test.
 
-### B1.7 Jeton de la personne de confiance  `P1 · M`
+### B1.7 Jeton de la personne de confiance  `P1 · M`  ✅ fait (CONTEXTE D13), choix : jeton signé et dérivé plutôt que haché, pour pouvoir réafficher le lien
 - Stocker **le hachage** du jeton (comparaison en temps constant), ajouter expiration (ex. 90 jours) et une route pour **régénérer** le lien (`POST /api/projects/:id/manager-token`). Option : code SMS envoyé au numéro du responsable avant le premier dépôt.
 - Attention : les jetons de démonstration (`demo-villa-thies`…) doivent rester valables en `ALLOW_DEMO=1`.
 

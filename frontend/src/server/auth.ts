@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
-import { getConfig, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
+import { getConfig } from './config';
+import { assertSessionSecret } from './secret';
 import { hmacHex, randomId, safeEqual } from './crypto';
 import { readDb, withDb } from './db';
 import { HttpError } from './http';
@@ -23,15 +24,7 @@ const COOKIE = 'nobpay_session';
 export const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const RENEW_AFTER_SECONDS = 60 * 60 * 24; // re-issue the cookie when it is more than a day old
 
-/** Throws when the configuration says the secret must be strong and it is not. */
-export function assertSessionSecret(): string {
-  const { sessionSecret } = getConfig();
-  if (sessionSecretMustBeStrong()) {
-    const problem = sessionSecretProblem(process.env.SESSION_SECRET);
-    if (problem) throw new HttpError(500, `Configuration refusée : ${problem}`, 'weak_session_secret');
-  }
-  return sessionSecret;
-}
+export { assertSessionSecret };
 
 const sign = (uid: string, version: number, exp: number) => hmacHex('sha256', assertSessionSecret(), `session:${uid}:${version}:${exp}`);
 

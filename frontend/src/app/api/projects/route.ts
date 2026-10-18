@@ -1,5 +1,6 @@
 import { enforce, LIMITS } from '@/server/rateLimit';
 import { requireUser } from '@/server/auth';
+import { managerLinkToken } from '@/server/managerToken';
 import { respond } from '@/server/http';
 import { createProject } from '@/server/services';
 
@@ -11,6 +12,6 @@ export async function POST(request: Request) {
     enforce(`project-create:${user.id}`, LIMITS.projectCreate.max, LIMITS.projectCreate.windowMs);
     const body = await request.json().catch(() => ({}));
     const project = await createProject(user, body);
-    return { id: project.id, managerToken: project.managerToken };
+    return { id: project.id, managerToken: managerLinkToken(project) };
   });
 }

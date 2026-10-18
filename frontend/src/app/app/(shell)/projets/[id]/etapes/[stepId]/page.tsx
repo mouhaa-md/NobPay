@@ -14,6 +14,7 @@ import { PROOF_LABEL } from '@/lib/templates';
 import { escrowCents } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject, findStep } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
@@ -106,8 +107,8 @@ export default async function StepPage({ params }: { params: { id: string; stepI
             <p className="font-body-sm text-body-sm text-on-surface-variant">
               L&apos;étape est financée. {project.managerName} doit maintenant envoyer les photos et la facture depuis son lien privé.
             </p>
-            <ShareManagerLink token={project.managerToken} managerName={project.managerName} projectName={project.name} />
-            <Link href={`/terrain/${project.managerToken}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
+            <ShareManagerLink token={managerLinkToken(project)} managerName={project.managerName} projectName={project.name} projectId={project.id} />
+            <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
               Ou envoyer la preuve moi-même
             </Link>
           </section>

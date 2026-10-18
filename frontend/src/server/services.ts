@@ -19,7 +19,8 @@ import { SECTORS } from '@/lib/templates';
 import { gatewayFor, getGateway } from './bitnob';
 import type { PayoutStart } from './bitnob/types';
 import { getConfig } from './config';
-import { randomId, randomToken } from './crypto';
+import { randomId } from './crypto';
+import { issueManagerToken, managerTokenMatches } from './managerToken';
 import { readDb, withDb } from './db';
 import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep } from './domain';
 import { HttpError } from './http';
@@ -95,7 +96,8 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
     coverImage: SECTORS[input.sector].cover,
     managerName,
     managerPhone: input.managerPhone?.trim() || undefined,
-    managerToken: randomToken(12),
+    managerTokenVersion: 1,
+    managerTokenExpiresAt: issueManagerToken(id, 1).expiresAt,
     approvalRule: 'owner',
     steps: steps.map((s, i) => ({
       id: `${id}_s${i + 1}`,
@@ -419,7 +421,7 @@ export async function assertProjectAccess(actor: Actor, projectId: string): Prom
   const db = await readDb();
   const project = findProject(db, projectId);
   if (!project) throw new HttpError(404, 'Projet introuvable');
-  if (actor.kind === 'owner' ? project.ownerId !== actor.user.id : project.managerToken !== actor.token) {
+  if (actor.kind === 'owner' ? project.ownerId !== actor.user.id : !managerTokenMatches(project, actor.token)) {
     throw new HttpError(403, "Vous n'avez pas accès à ce projet");
   }
   return project;

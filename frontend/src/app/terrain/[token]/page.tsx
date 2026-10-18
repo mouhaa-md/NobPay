@@ -9,13 +9,14 @@ import { Chip } from '@/components/ui/primitives';
 import { formatDateTime, formatUsdShort } from '@/lib/money';
 import { PROOF_LABEL, SECTORS } from '@/lib/templates';
 import { readDb } from '@/server/db';
+import { findProjectByManagerToken } from '@/server/managerToken';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Espace terrain', robots: { index: false, follow: false } };
 
 export default async function FieldPage({ params }: { params: { token: string } }) {
   const db = await readDb();
-  const project = db.projects.find((p) => p.managerToken === params.token);
+  const project = findProjectByManagerToken(db, params.token);
   if (!project) notFound();
   const owner = db.users.find((u) => u.id === project.ownerId);
   const sector = SECTORS[project.sector];
@@ -61,7 +62,7 @@ export default async function FieldPage({ params }: { params: { token: string } 
                 </p>
               )}
             </div>
-            <FieldProofForm token={project.managerToken} projectId={project.id} step={{ id: todo.id, index: todo.index, title: todo.title, proofKinds: todo.proofKinds }} previous={todo.proof?.supplier} />
+            <FieldProofForm token={params.token} projectId={project.id} step={{ id: todo.id, index: todo.index, title: todo.title, proofKinds: todo.proofKinds }} previous={todo.proof?.supplier} />
           </section>
         )}
 

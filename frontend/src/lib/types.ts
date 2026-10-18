@@ -118,7 +118,14 @@ export interface Project {
   coverImage: string;
   managerName: string;
   managerPhone?: string;
-  managerToken: string;
+  /**
+   * LEGACY plaintext link token (demo projects and projects created before signed tokens). New projects have none:
+   * their token is derived and signed, see server/managerToken.ts.
+   */
+  managerToken?: string;
+  /** signed link tokens carry this version; rotating raises it and kills every older link */
+  managerTokenVersion?: number;
+  managerTokenExpiresAt?: string;
   approvalRule: 'owner';
   steps: Step[];
   createdAt: string;
