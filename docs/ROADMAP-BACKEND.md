@@ -236,7 +236,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 | B4.4 | **Multi-pays** | Piloter le formulaire fournisseur par `supported-countries` ; `quotePayout` et `buildBeneficiary` supposent `SN` en dur. | L |
 | B4.5 | **Un client / sous-compte Bitnob par projet** (`POST /api/customers`) | Seul moyen de rendre vraie l'idée d'un « portefeuille par projet » ; aujourd'hui l'interface dit « comptés projet par projet ». | L |
 | B4.6 | **Lecture EXIF côté serveur** | Comparer date et position déclarées à l'EXIF ; signaler les écarts au financeur ; ne pas promettre plus que « déclaré par le téléphone » (D12). | M |
-| B4.7 | **Ancrage automatique** | Ancrer après chaque `payout_completed` ; tâche `upgrade` jusqu'à confirmation ; secours de recoupement de bloc (mempool.space) ; confirmer l'hypothèse d'ordre des octets (CONTEXTE § 7.4). | M |
+| B4.7 | **Ancrage automatique** ✅ fait (option `AUTO_ANCHOR=1`, CONTEXTE D14) ; reste le secours de recoupement (mempool.space) et l'ordre des octets | Ancrer après chaque `payout_completed` ; tâche `upgrade` jusqu'à confirmation ; secours de recoupement de bloc (mempool.space) ; confirmer l'hypothèse d'ordre des octets (CONTEXTE § 7.4). | M |
 | B4.8 | **Certificat PDF** | Export du dossier lisible, avec QR vers `/verifier/<id>`. | M |
 | B4.9 | **Back-office minimal** | Liste des payouts, états bloqués, webhooks reçus, rejouer / annuler. | L |
 | B4.10 | **Litiges et annulations d'étape** | Nouveaux états et évènements. | L |
