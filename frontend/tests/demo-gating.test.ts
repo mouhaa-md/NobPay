@@ -16,7 +16,7 @@ const STRONG = 'a-long-random-secret-of-more-than-32-characters';
 const post = (init?: { json?: unknown }) =>
   new Request('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(init?.json ?? {}) });
 // Next always hands a Request to a route; calls without one get a plain POST
-const withRequest = (fn: unknown) => (req?: Request) => (fn as (r: Request) => Promise<Response>)(req ?? post());
+const withRequest = (fn: unknown) => (req?: Request) => (fn as (r: Request) => Promise<Response>)(req ?? post({ json: { phone: '+33611223344' } }));
 
 let routes: Record<'demo' | 'otp' | 'login' | 'register' | 'reset' | 'health', (req?: Request) => Promise<Response>>;
 let services: typeof import('@/server/services');

@@ -57,7 +57,7 @@ export interface ProjectInput {
   budgetCents: number;
   managerName: string;
   managerPhone?: string;
-  steps: { title: string; amountCents: number; proofKinds: ProofKind[] }[];
+  steps: { title: string; amountCents: number; proofKinds?: ProofKind[] }[];
 }
 
 export async function createProject(owner: User, input: ProjectInput): Promise<Project> {

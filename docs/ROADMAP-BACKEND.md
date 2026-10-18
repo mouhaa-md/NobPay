@@ -138,7 +138,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - À protéger : `auth/otp` (par numéro **et** par IP), `login`/`register`, dépôt de preuves (par jeton), `POST /api/anchors/:id/refresh` (public, déclenche des appels sortants : par IP + délai minimal par ancrage), `anchors`, création de projets, `webhooks` (large).
 - **Terminé quand :** un script qui martèle une route reçoit des 429, un usage normal n'est jamais bloqué.
 
-### B1.5 Validation des entrées  `P1 · M`
+### B1.5 Validation des entrées  `P1 · M`  ✅ fait (CONTEXTE § 10, « Validation des entrées »)
 - Ajouter `zod` ; un schéma par route (corps, paramètres, longueurs maximales, énumérations). Rejeter les champs inconnus. Garder les messages d'erreur **en français** et la forme `{error, code?}`.
 - **Terminé quand :** chaque route valide son entrée au même endroit ; des tests envoient des corps absurdes (types faux, très longs, `NaN`).
 
