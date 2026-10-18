@@ -131,7 +131,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Cookie `Secure` quand `PUBLIC_BASE_URL` est en `https`. Durée 7 jours glissants. Ajouter une **version de session** par utilisateur pour pouvoir tout révoquer ; « se déconnecter » l'incrémente.
 - **Terminé quand :** démarrage refusé avec un secret faible ; cookie `Secure` visible derrière le tunnel.
 
-### B1.4 Limitation de débit  `P0 · M`
+### B1.4 Limitation de débit  `P0 · M`  ✅ fait (CONTEXTE D3)
 - Utilitaire `rateLimit(clé, max, fenêtre)` en mémoire (interface remplaçable par Redis plus tard), réponse **429** avec message français et en-tête `Retry-After`.
 - À protéger : `auth/otp` (par numéro **et** par IP), `login`/`register`, dépôt de preuves (par jeton), `POST /api/anchors/:id/refresh` (public, déclenche des appels sortants : par IP + délai minimal par ancrage), `anchors`, création de projets, `webhooks` (large).
 - **Terminé quand :** un script qui martèle une route reçoit des 429, un usage normal n'est jamais bloqué.

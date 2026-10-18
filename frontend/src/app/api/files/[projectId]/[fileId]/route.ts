@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { StoredFile } from '@/lib/types';
+import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { getSessionUser } from '@/server/auth';
 import { readDb } from '@/server/db';
 import { readUpload } from '@/server/files';
@@ -9,6 +10,11 @@ export const runtime = 'nodejs';
 
 /** Proof photos are private: the funder (session) or the field manager (link token `t`) only. */
 export async function GET(request: Request, { params }: { params: { projectId: string; fileId: string } }) {
+  try {
+    enforce(`file-read:${clientIp(request)}`, LIMITS.fileRead.max, LIMITS.fileRead.windowMs);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message, code: 'rate_limited' }, { status: 429, headers: { 'Retry-After': String((err as { retryAfter?: number }).retryAfter ?? 60) } });
+  }
   const db = await readDb();
   const project = db.projects.find((p) => p.id === params.projectId);
   if (!project) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });

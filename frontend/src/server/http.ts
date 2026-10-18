@@ -5,6 +5,8 @@ export class HttpError extends Error {
     public readonly status: number,
     message: string,
     public readonly code?: string,
+    /** seconds, sent as the Retry-After header (429) */
+    public readonly retryAfter?: number,
   ) {
     super(message);
     this.name = 'HttpError';
@@ -17,7 +19,8 @@ export async function respond<T>(fn: () => Promise<T>): Promise<NextResponse> {
     return NextResponse.json(await fn());
   } catch (err) {
     if (err instanceof HttpError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
+      const headers = err.retryAfter ? { 'Retry-After': String(err.retryAfter) } : undefined;
+      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status, headers });
     }
     console.error('[api]', err);
     const message = err instanceof Error ? err.message : 'Erreur interne';
