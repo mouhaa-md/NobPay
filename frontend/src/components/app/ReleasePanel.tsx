@@ -168,7 +168,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
 
             <p className={`mb-space-sm flex items-center justify-center gap-1.5 font-label-md text-label-md ${expired ? 'text-error' : 'text-on-surface-variant'}`} role="status">
               <Icon name={expired ? 'timer_off' : 'timer'} size={16} />
-              {expired ? 'Devis expiré' : `Devis garanti encore ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
+              {expired ? 'Devis expiré' : `Devis valable encore ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
               {quote.mode === 'mock' && ' · simulation'}
             </p>
 
