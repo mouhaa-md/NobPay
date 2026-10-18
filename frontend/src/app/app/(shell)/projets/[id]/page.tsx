@@ -15,7 +15,6 @@ import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
-import { reconcile } from '@/server/services';
 import { summarize } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +26,6 @@ const ROW = ['lg:row-start-1', 'lg:row-start-2', 'lg:row-start-3', 'lg:row-start
 export default async function ProjectPage({ params, searchParams }: { params: { id: string }; searchParams: { cree?: string } }) {
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
-  await reconcile();
   const db = await readDb();
   const project = findProject(db, params.id);
   if (!project || project.ownerId !== user.id) notFound();

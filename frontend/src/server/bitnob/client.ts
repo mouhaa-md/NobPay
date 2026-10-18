@@ -106,7 +106,9 @@ async function invoiceStatus(invoiceId: string): Promise<InvoiceStatus> {
   const d = unwrap(await request('GET', `/api/lightning/invoices/${encodeURIComponent(invoiceId)}`));
   const raw = String(pick(d, 'status') ?? '').toLowerCase();
   const preimage = pick(d, 'preimage') as string | undefined;
-  if (/(paid|settled|complete|success)/.test(raw)) return { status: 'paid', preimage };
+  const sats = Number(pick(d, 'amount_sat') ?? Number(pick(d, 'amount_msat')) / 1000);
+  const amountSats = Number.isFinite(sats) && sats > 0 ? sats : undefined;
+  if (/(paid|settled|complete|success)/.test(raw)) return { status: 'paid', preimage, amountSats };
   if (/(expire|cancel|fail)/.test(raw)) return { status: 'expired' };
   return { status: 'pending' };
 }

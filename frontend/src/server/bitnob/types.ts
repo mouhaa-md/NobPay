@@ -17,6 +17,8 @@ export interface InvoiceResult {
 export interface InvoiceStatus {
   status: 'pending' | 'paid' | 'expired';
   preimage?: string;
+  /** the invoice amount as Bitnob reports it, in satoshis */
+  amountSats?: number;
 }
 
 export interface ConversionResult {

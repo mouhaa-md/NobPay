@@ -4,7 +4,6 @@ import { FlowHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/ui/Icon';
 import { getSessionUser } from '@/server/auth';
 import { readDb } from '@/server/db';
-import { reconcile } from '@/server/services';
 import { buildActivity } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +12,6 @@ export const metadata = { title: 'Notifications' };
 export default async function Notifications() {
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
-  await reconcile();
   const db = await readDb();
   const items = buildActivity(db, user.id, 40);
   const waiting = items.filter((i) => i.kind === 'proof_pending');

@@ -9,7 +9,6 @@ import type { Sector } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
-import { reconcile } from '@/server/services';
 import { totalsOf, userProjects } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +26,6 @@ const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerC
 
 export default async function Projects({ searchParams }: { searchParams: { secteur?: string; q?: string } }) {
   const user = (await getSessionUser())!;
-  await reconcile();
   const db = await readDb();
   const all = userProjects(db, user.id);
   const totals = totalsOf(db, all);

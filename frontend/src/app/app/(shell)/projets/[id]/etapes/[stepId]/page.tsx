@@ -17,7 +17,6 @@ import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { findProject, findStep } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
-import { reconcile } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Étape' };
@@ -34,7 +33,6 @@ const STATUS = {
 export default async function StepPage({ params }: { params: { id: string; stepId: string } }) {
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
-  await reconcile();
   const db = await readDb();
   const project = findProject(db, params.id);
   if (!project || project.ownerId !== user.id) notFound();

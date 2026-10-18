@@ -9,13 +9,11 @@ import { Chip } from '@/components/ui/primitives';
 import { formatDateTime, formatUsdShort } from '@/lib/money';
 import { PROOF_LABEL, SECTORS } from '@/lib/templates';
 import { readDb } from '@/server/db';
-import { reconcile } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Espace terrain', robots: { index: false, follow: false } };
 
 export default async function FieldPage({ params }: { params: { token: string } }) {
-  await reconcile();
   const db = await readDb();
   const project = db.projects.find((p) => p.managerToken === params.token);
   if (!project) notFound();
