@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "data": {
+    "accounts": [
+      {
+        "account_id": "a",
+        "account_number": "0000000000",
+        "currency": "BTC",
+        "ledger_balance": "0",
+        "available_balance": "0",
+        "ledger_balance_formatted": "0.0 BTC",
+        "available_balance_formatted": "0.0 BTC"
+      },
+      {
+        "account_id": "a",
+        "account_number": "0000000000",
+        "currency": "USDC",
+        "ledger_balance": "0",
+        "available_balance": "0",
+        "ledger_balance_formatted": "0.0 USDC",
+        "available_balance_formatted": "0.0 USDC"
+      },
+      {
+        "account_id": "a",
+        "account_number": "0000000000",
+        "currency": "USDT",
+        "ledger_balance": "0",
+        "available_balance": "0",
+        "ledger_balance_formatted": "0.0 USDT",
+        "available_balance_formatted": "0.0 USDT"
+      }
+    ],
+    "company_id": "c"
+  }
+}

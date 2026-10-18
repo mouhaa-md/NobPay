@@ -251,9 +251,31 @@ describe('BTC -> stablecoin conversion', () => {
 describe('balances', () => {
   it('reads the available balance per currency as numbers', async () => {
     reply('balances-funded');
+    reply('trading-orders-empty'); // no usable transaction list: the endpoint answer stands
     expect(await sandboxGateway.balances()).toEqual({ BTC: 0.0012263, USDC: 10.5, USDT: 250.25 });
     reply('balances-empty');
+    reply('trading-orders-empty');
     expect(await sandboxGateway.balances()).toEqual({ BTC: 0, USDC: 0, USDT: 0 });
+  });
+
+  it('trusts the transactions when the balance endpoint is stale at 0 (seen in the sandbox): +20 -10 = 10 USDC, pending ones ignored', async () => {
+    reply('balances-stale-zero');
+    reply('transactions-list');
+    expect(await sandboxGateway.balances()).toMatchObject({ USDC: 10, BTC: 0, USDT: 0, NGN: 1000 });
+  });
+
+  it('reads minor units when no formatted amount comes with them (6 decimals for stablecoins, 8 for bitcoin)', async () => {
+    reply('balances-minor-units');
+    replies.push({ status: 500, json: {} }); // transactions unavailable: the endpoint answer stands
+    replies.push({ status: 500, json: {} });
+    replies.push({ status: 500, json: {} });
+    expect(await sandboxGateway.balances()).toEqual({ USDC: 10, BTC: 0.0015 });
+  });
+
+  it('keeps the endpoint answer when it is higher than what the transactions add up to', async () => {
+    reply('balances-funded');
+    reply('transactions-list');
+    expect((await sandboxGateway.balances()).USDT).toBe(250.25);
   });
 
   it('pays payouts from the configured stablecoin', async () => {

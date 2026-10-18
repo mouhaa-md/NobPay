@@ -603,12 +603,17 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     const project = findProject(db, projectId)!;
     const step = stepOf(project, stepId);
     if (step.payout) {
-      step.payout.payoutId = start.payoutId;
-      step.payout.status = start.status === 'initiated' ? 'pending' : start.status;
-      if (start.uncertain) step.payout.uncertain = true; // reconcile() decides, the funds stay reserved
+      step.payout.payoutId ??= start.payoutId;
+      // Bitnob can finish the payout and deliver its webhook BEFORE this answer is stored (in the sandbox a payout
+      // completes in under a second). Only a payout still in flight takes the status of this answer: a step that a
+      // webhook already paid or sent back must not be moved again.
+      if (step.status === 'releasing') {
+        step.payout.status = start.status === 'initiated' ? 'pending' : start.status;
+        if (start.uncertain) step.payout.uncertain = true; // reconcile() decides, the funds stay reserved
+        if (start.status === 'completed') applyPayoutCompleted(db, project, step, { payoutId: start.payoutId });
+        if (start.status === 'failed') applyPayoutFailed(db, project, step, 'Paiement refusé par le réseau');
+      }
     }
-    if (start.status === 'completed') applyPayoutCompleted(db, project, step, { payoutId: start.payoutId });
-    if (start.status === 'failed') applyPayoutFailed(db, project, step, 'Paiement refusé par le réseau');
     return structuredClone(step);
   });
 }

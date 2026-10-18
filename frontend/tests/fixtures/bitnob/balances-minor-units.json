@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "data": {
+    "accounts": [
+      {
+        "currency": "USDC",
+        "available_balance": "10000000"
+      },
+      {
+        "currency": "BTC",
+        "available_balance": "150000"
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "data": {
+    "address": "0xf03c076f666ce8f218d69ec62afd7dbb4db43214",
+    "amount": "20000000",
+    "chain": "ethereum",
+    "currency": "USDC",
+    "fee": "0",
+    "from_address": "0x0000000000000000000000000000000000000001",
+    "hash": "0xabababababababababababababababababababababababababababababababab",
+    "reference": "RCV_USDC_6bbb4dee4505",
+    "timestamp": "2026-10-18T04:54:36Z",
+    "transaction_id": "00000000-0000-4000-8000-0000000000f1"
+  },
+  "event": "deposit.success",
+  "event_id": "00000000-0000-4000-8000-0000000000f2"
+}
