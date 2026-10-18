@@ -49,6 +49,13 @@ export function extractEventId(payload: Json, rawBody: string): string {
   return `body:${createHash('sha256').update(rawBody).digest('hex')}`;
 }
 
+/** The payout id of a payouts.* event: `data.id` in the real deliveries (older docs mention `payout_id`). */
+function payoutIdOf(payload: Json): string | undefined {
+  const data = (payload.data ?? {}) as Json;
+  const id = data.payout_id ?? data.id;
+  return typeof id === 'string' && id ? id : undefined;
+}
+
 /** Outcomes that do not consume the event id: the same event may be processed again later. */
 const REPROCESSABLE = new Set(['unknown_invoice', 'unknown_payout', 'unknown_transfer', 'amount_mismatch']);
 
@@ -123,7 +130,7 @@ function route(db: Db, type: string, payload: Json): Routed {
         if (!p) continue;
         const match = ids.has(p.reference) || (p.payoutId && ids.has(p.payoutId)) || ids.has(p.quoteId);
         if (!match) continue;
-        if (succeeded) return { outcome: applyPayoutCompleted(db, project, step, { payoutId: [...collectValues(payload, ['payout_id'])][0] }) ? 'payout_completed' : 'payout_already_completed' };
+        if (succeeded) return { outcome: applyPayoutCompleted(db, project, step, { payoutId: payoutIdOf(payload) }) ? 'payout_completed' : 'payout_already_completed' };
         const reason = [...collectValues(payload, ['failure_reason', 'reason', 'message'])][0] ?? 'Paiement refusé par le réseau';
         return { outcome: applyPayoutFailed(db, project, step, reason) ? 'payout_failed' : 'payout_already_settled' };
       }

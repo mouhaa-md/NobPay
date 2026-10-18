@@ -4,17 +4,33 @@
   "data": {
     "accounts": [
       {
+        "account_id": "a",
+        "account_number": "0000000000",
         "currency": "BTC",
-        "available_balance": "0.0012263"
+        "ledger_balance": "122630",
+        "available_balance": "122630",
+        "ledger_balance_formatted": "0.0012263 BTC",
+        "available_balance_formatted": "0.0012263 BTC"
       },
       {
+        "account_id": "a",
+        "account_number": "0000000000",
         "currency": "USDC",
-        "available_balance": "10.5"
+        "ledger_balance": "10500000",
+        "available_balance": "10500000",
+        "ledger_balance_formatted": "10.5 USDC",
+        "available_balance_formatted": "10.5 USDC"
       },
       {
+        "account_id": "a",
+        "account_number": "0000000000",
         "currency": "USDT",
-        "available_balance": "250.25"
+        "ledger_balance": "250250000",
+        "available_balance": "250250000",
+        "ledger_balance_formatted": "250.25 USDT",
+        "available_balance_formatted": "250.25 USDT"
       }
-    ]
+    ],
+    "company_id": "c"
   }
 }

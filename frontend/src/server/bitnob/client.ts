@@ -195,12 +195,42 @@ async function convertBtcToStable(input: { sats: number; reference: string }): P
   }
 }
 
+const DECIMALS: Record<string, number> = { BTC: 8, USDT: 6, USDC: 6 };
+
+/** "10.0 USDC" / "-10.0 USDC" -> 10 / -10 (the API also sends every amount in minor units: 6 decimals for stablecoins). */
+function formattedAmount(value: unknown): number | undefined {
+  const m = /^\s*(-?\d+(?:\.\d+)?)\s/.exec(String(value ?? ''));
+  return m ? Number(m[1]) : undefined;
+}
+const minorUnits = (currency: string, raw: unknown): number => Number(raw) / 10 ** (DECIMALS[currency] ?? 6);
+
+/**
+ * Available balance per currency. In the sandbox GET /api/balances was seen swinging between the right amount and 0
+ * while the transaction list stayed correct (deposit +20 USDC, payout -10 USDC, payouts kept being accepted). So the
+ * answer is the HIGHER of: the balance endpoint, and the sum of the settled transactions. Units: both are read from
+ * the `*_formatted` fields (e.g. "10.0 USDC"), falling back to minor units (stablecoins 6 decimals, BTC 8).
+ */
 async function balances(): Promise<Balances> {
-  const accounts = (unwrap(await request('GET', '/api/balances')).accounts ?? []) as Json[];
   const out: Balances = {};
+  const accounts = (unwrap(await request('GET', '/api/balances')).accounts ?? []) as Json[];
   for (const a of accounts) {
-    const n = Number(pick(a, 'available_balance'));
-    if (typeof a.currency === 'string' && Number.isFinite(n)) out[a.currency.toUpperCase()] = n;
+    if (typeof a.currency !== 'string') continue;
+    const cur = a.currency.toUpperCase();
+    const v = formattedAmount(a.available_balance_formatted) ?? minorUnits(cur, a.available_balance);
+    if (Number.isFinite(v)) out[cur] = v;
+  }
+  try {
+    const txs = (unwrap(await request('GET', '/api/transactions?limit=200')).transactions ?? []) as Json[];
+    const sums: Balances = {};
+    for (const t of txs) {
+      if (typeof t.currency !== 'string' || String(t.state).toUpperCase() !== 'SETTLED') continue;
+      const cur = t.currency.toUpperCase();
+      const v = formattedAmount(t.amount_formatted) ?? minorUnits(cur, t.amount);
+      if (Number.isFinite(v)) sums[cur] = (sums[cur] ?? 0) + v;
+    }
+    for (const [cur, v] of Object.entries(sums)) out[cur] = Math.max(out[cur] ?? 0, v);
+  } catch {
+    /* the endpoint above is still a valid (if possibly stale) answer */
   }
   return out;
 }

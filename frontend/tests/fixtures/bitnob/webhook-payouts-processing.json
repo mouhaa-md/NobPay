@@ -1,0 +1,27 @@
+{
+  "data": {
+    "amount": "10",
+    "beneficiary": {
+      "account_name": "Test Fournisseur",
+      "account_number": "****4567",
+      "country": "SN"
+    },
+    "company_id": "00000000-0000-4000-8000-000000000001",
+    "created_at": "2026-10-18T05:07:26.996368Z",
+    "fee_currency": "USD",
+    "fees": "0",
+    "from_asset": "usdc",
+    "id": "00000000-0000-4000-8000-0000000000a1",
+    "payment_reason": "vendor_payment",
+    "quote_id": "QT2_21053114",
+    "reference": "nobpay:pay:p_villa_s3:real",
+    "settlement_amount": "5948",
+    "source_fee": "0",
+    "to_currency": "xof",
+    "total_amount": "10",
+    "status": "processing",
+    "updated_at": "2026-10-18T05:07:27.5Z"
+  },
+  "event": "payouts.processing",
+  "event_id": "00000000-0000-4000-8000-000000000018"
+}

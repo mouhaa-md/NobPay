@@ -1,0 +1,64 @@
+{
+  "success": true,
+  "message": "Transactions retrieved successfully",
+  "data": {
+    "transactions": [
+      {
+        "transaction_id": "t",
+        "account_number": "0000000000",
+        "currency": "USDC",
+        "type": "PAYOUT",
+        "state": "SETTLED",
+        "amount": "-10000000",
+        "fee": "0",
+        "reference": "nobpay:realtest:x",
+        "created_at": "2026-10-18T05:07:27+00:00",
+        "amount_formatted": "-10.0 USDC",
+        "fee_formatted": "0.0 USDC",
+        "side": "Debit"
+      },
+      {
+        "transaction_id": "t",
+        "account_number": "0000000000",
+        "currency": "USDC",
+        "type": "DEPOSIT_CONFIRMED",
+        "state": "SETTLED",
+        "amount": "20000000",
+        "fee": "0",
+        "reference": "RCV_USDC_x",
+        "created_at": "2026-10-18T05:07:27+00:00",
+        "amount_formatted": "20.0 USDC",
+        "fee_formatted": "0.0 USDC",
+        "side": "Credit"
+      },
+      {
+        "transaction_id": "t",
+        "account_number": "0000000000",
+        "currency": "USDC",
+        "type": "DEPOSIT",
+        "state": "PENDING",
+        "amount": "5000000",
+        "fee": "0",
+        "reference": "RCV_USDC_pending",
+        "created_at": "2026-10-18T05:07:27+00:00",
+        "amount_formatted": "5.0 USDC",
+        "fee_formatted": "0.0 USDC",
+        "side": "Credit"
+      },
+      {
+        "transaction_id": "t",
+        "account_number": "0000000000",
+        "currency": "NGN",
+        "type": "VIRTUAL_ACCOUNT_DEPOSIT",
+        "state": "SETTLED",
+        "amount": "100000",
+        "fee": "0",
+        "reference": "va_x",
+        "created_at": "2026-10-18T05:07:27+00:00",
+        "amount_formatted": "1000.0 NGN",
+        "fee_formatted": "0.0 NGN",
+        "side": "Credit"
+      }
+    ]
+  }
+}
