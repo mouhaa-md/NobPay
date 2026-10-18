@@ -17,6 +17,7 @@ export function getConfig() {
     usdXof: Number(process.env.USD_XOF_RATE) || 760,
     btcUsd: Number(process.env.BTC_USD_RATE) || 81500,
     dataDir: process.env.DATA_DIR || path.join(process.cwd(), '.data'),
+    captureWebhooks: process.env.CAPTURE_WEBHOOKS === '1',
   };
 }
 
