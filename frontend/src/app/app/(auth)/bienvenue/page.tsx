@@ -15,8 +15,8 @@ export default async function Welcome() {
   const mode = getConfig().mode;
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <section className="relative overflow-hidden bg-ocean px-6 pb-14 pt-6 text-on-primary pt-safe">
+    <main className="flex min-h-screen flex-col lg:min-h-0">
+      <section className="relative overflow-hidden bg-ocean px-6 pb-14 pt-6 text-on-primary pt-safe lg:hidden">
         <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-primary-container/30 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 top-1/3 h-64 w-64 rounded-full bg-[#F7931A]/20 blur-3xl" />
 
@@ -51,13 +51,13 @@ export default async function Welcome() {
         </div>
       </section>
 
-      <section className="relative z-20 -mt-8 flex flex-1 flex-col rounded-t-[32px] bg-surface-container-lowest px-6 pb-8 pt-7 shadow-[0_-8px_30px_rgba(10,15,36,0.12)] pb-safe">
-        <div className="mb-5 flex items-center justify-center gap-2" aria-hidden="true">
+      <section className="relative z-20 -mt-8 flex flex-1 flex-col rounded-t-[32px] bg-surface-container-lowest px-6 pb-8 pt-7 shadow-[0_-8px_30px_rgba(10,15,36,0.12)] pb-safe lg:mt-0 lg:flex-none lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
+        <div className="mb-5 flex items-center justify-center gap-2 lg:hidden" aria-hidden="true">
           <span className="h-1.5 w-7 rounded-full bg-primary" />
           <span className="h-1.5 w-1.5 rounded-full bg-surface-variant" />
           <span className="h-1.5 w-1.5 rounded-full bg-surface-variant" />
         </div>
-        <div className="mb-7 flex flex-col gap-2.5 text-center">
+        <div className="mb-7 flex flex-col gap-2.5 text-center lg:hidden">
           <h2 className="font-headline-xl-mobile text-headline-xl-mobile tracking-tight text-on-surface">
             Investissez au pays.
             <br />
@@ -66,6 +66,13 @@ export default async function Welcome() {
           <p className="mx-auto max-w-sm font-body-md text-body-md leading-relaxed text-on-surface-variant">
             Financez vos projets immobiliers, agricoles et commerciaux au pays. Vos fonds restent en séquestre et ne sont libérés que sur preuve.
           </p>
+        </div>
+
+        <div className="mb-8 hidden lg:block">
+          <h2 className="font-headline-xl text-headline-xl tracking-tight">
+            Commencer avec <span className="font-accent text-[1.12em] font-normal italic tracking-normal text-primary-container">NobPay</span>
+          </h2>
+          <p className="mt-1 font-body-lg text-body-lg text-on-surface-variant">Créez un compte, ou essayez le prototype avec le compte de démonstration.</p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -79,7 +86,7 @@ export default async function Welcome() {
           <DemoLoginButton />
         </div>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="mt-6 flex flex-col items-center gap-3 lg:mt-8 lg:items-start">
           <Link href="/verifier" className="inline-flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant underline decoration-outline-variant underline-offset-4 hover:text-primary">
             <Icon name="search_check" size={16} /> Vérifier un dossier sans compte
           </Link>

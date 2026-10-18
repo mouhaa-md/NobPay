@@ -33,7 +33,7 @@ export function AppHeader({ title, user }: { title: string; user: { firstName: s
 export function FlowHeader({ title, backHref, right, standalone = false }: { title: string; backHref: string; right?: React.ReactNode; standalone?: boolean }) {
   return (
     <>
-      <header className={`pt-safe sticky top-0 z-40 bg-surface-container-lowest/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl ${standalone ? '' : 'lg:hidden'}`}>
+      <header className={`pt-safe sticky top-0 z-40 bg-surface-container-lowest/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:hidden`}>
         <div className="flex h-16 items-center justify-between px-space-md">
           <Link href={backHref} aria-label="Retour" className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface hover:bg-surface-container">
             <Icon name="arrow_back" />
