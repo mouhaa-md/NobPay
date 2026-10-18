@@ -1,6 +1,6 @@
 import { getConfig } from './config';
 import { logger } from './logger';
-import { refreshPendingAnchors } from './anchors';
+import { autoAnchorProjects, refreshPendingAnchors } from './anchors';
 import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings, reconcile } from './services';
 
 /**
@@ -10,6 +10,7 @@ import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings
  *  - close invoices past their expiry
  *  - sandbox: poll pending invoices (fallback when a webhook is late or lost), convert paid bitcoin to the
  *    stablecoin (retried safely), and every minute check that what we owe is covered by the wallets
+ *  - AUTO_ANCHOR=1: anchor a project right after money moved (opt-in: it calls public calendars)
  *  - every 10 minutes: ask OpenTimestamps whether pending anchors reached a Bitcoin block
  * Pages and GET routes no longer do any of this while rendering.
  */
@@ -48,6 +49,7 @@ export async function tick(): Promise<void> {
   try {
     await safely(state, 'payouts', reconcile);
     await safely(state, 'expiry', expireFundings);
+    if (process.env.AUTO_ANCHOR === '1') await safely(state, 'auto-anchor', () => autoAnchorProjects());
     if (getConfig().mode === 'sandbox') {
       await safely(state, 'invoices', pollPendingFundings);
       await safely(state, 'conversion', convertPaidFundings);

@@ -12,9 +12,16 @@ import { checkBitcoinBlock, inspect, parseDetached, stamp, upgrade, type BlockCh
  */
 
 export async function createAnchor(owner: User, projectId: string): Promise<Anchor> {
+  const project = findProject(await readDb(), projectId);
+  if (!project || project.ownerId !== owner.id) throw new HttpError(404, 'Projet introuvable');
+  return anchorProject(projectId);
+}
+
+/** Anchors the current ledger state of a project (no ownership check: callers decide who may). Idempotent per state. */
+export async function anchorProject(projectId: string): Promise<Anchor> {
   const db = await readDb();
   const project = findProject(db, projectId);
-  if (!project || project.ownerId !== owner.id) throw new HttpError(404, 'Projet introuvable');
+  if (!project) throw new HttpError(404, 'Projet introuvable');
 
   const built = buildDossier(db, project);
   const existing = db.anchors.find((a) => a.projectId === projectId && a.upToSeq === built.upToSeq && a.status !== 'failed');
@@ -64,6 +71,28 @@ export function toView(anchor: Anchor): AnchorView {
     }
   }
   return { ...rest, hasOts: !!otsBase64, pendingCalendars, bitcoinBlocks };
+}
+
+/** Ledger events that are worth a public proof on their own: money in, money out. */
+const ANCHOR_AFTER = new Set(['payout_completed', 'funding_paid']);
+export const AUTO_ANCHOR_RETRY_MS = 10 * 60_000;
+
+/**
+ * AUTO_ANCHOR=1: anchors a project right after money moved (a payout completed or a funding was credited), so proofs
+ * start waiting for their Bitcoin block without anyone pressing a button. A failed attempt (calendar down) is retried
+ * at most every 10 minutes. Opt-in: anchoring calls public OpenTimestamps calendars over the network.
+ */
+export async function autoAnchorProjects(now = Date.now()): Promise<void> {
+  const db = await readDb();
+  for (const project of db.projects) {
+    const events = db.ledger.filter((e) => e.projectId === project.id);
+    const last = events.reduce<(typeof events)[number] | undefined>((a, e) => (!a || e.seq > a.seq ? e : a), undefined);
+    if (!last || !ANCHOR_AFTER.has(last.type)) continue;
+    const forThisState = db.anchors.filter((a) => a.projectId === project.id && a.upToSeq >= last.seq);
+    if (forThisState.some((a) => a.status !== 'failed')) continue;
+    if (forThisState.some((a) => now - Date.parse(a.submittedAt) < AUTO_ANCHOR_RETRY_MS)) continue;
+    await anchorProject(project.id);
+  }
 }
 
 /** Asks the calendars about every anchor still waiting for its Bitcoin block (background job, a few times an hour). */
