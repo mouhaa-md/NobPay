@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { getConfig } from './config';
+import { logger } from './logger';
 
 /**
  * Debug aid for the sandbox (CAPTURE_WEBHOOKS=1): keeps every webhook delivery on disk so the REAL payloads
@@ -52,7 +53,7 @@ export async function captureWebhook(input: CaptureInput): Promise<string | null
     await fs.writeFile(file, JSON.stringify(record, null, 2));
     return file;
   } catch (err) {
-    console.warn('[capture] webhook not saved:', (err as Error).message);
+    logger.warn('webhook_capture_failed', { error: err });
     return null;
   }
 }

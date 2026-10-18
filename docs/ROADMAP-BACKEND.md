@@ -154,7 +154,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Vérifier `Origin` / `Sec-Fetch-Site` sur les routes qui modifient (POST) ; en-têtes de sécurité dans `next.config.mjs` : `Content-Security-Policy` (polices et scripts propres, `connect-src 'self'`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (géolocalisation autorisée pour soi seulement), HSTS derrière HTTPS.
 - **Attention :** la page `/verifier` appelle uniquement `self`, mais la vitrine charge des polices locales et des images locales : la CSP doit rester compatible (tester dans le navigateur).
 
-### B1.9 Journaux et secrets  `P1 · S`
+### B1.9 Journaux et secrets  `P1 · S`  ✅ fait (CONTEXTE § 10, « Journaux et erreurs ») ; reste le contrôle de secrets en CI (B3.5)
 - Un seul journal structuré (`pino` ou équivalent) avec **masquage** : secrets, signatures, en-têtes d'autorisation, corps de webhook entier. Aucun `console.log` d'objet de requête. Les erreurs 500 ne renvoient pas la trace.
 - Ajouter un contrôle de secrets dans la CI (B3.5) et un `SECURITY.md` (B5.2).
 

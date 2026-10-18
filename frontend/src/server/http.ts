@@ -1,4 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
+import { GatewayError } from './bitnob/types';
+import { logger } from './logger';
 
 export class HttpError extends Error {
   constructor(
@@ -22,8 +25,17 @@ export async function respond<T>(fn: () => Promise<T>): Promise<NextResponse> {
       const headers = err.retryAfter ? { 'Retry-After': String(err.retryAfter) } : undefined;
       return NextResponse.json({ error: err.message, code: err.code }, { status: err.status, headers });
     }
-    console.error('[api]', err);
-    const message = err instanceof Error ? err.message : 'Erreur interne';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const requestId = randomUUID().slice(0, 8);
+    if (err instanceof GatewayError) {
+      // the payment provider refused or did not answer: say so, with the French message the gateway prepared
+      logger.warn('gateway_error', { requestId, status: err.status, code: err.code, message: err.message });
+      return NextResponse.json({ error: err.message, code: 'gateway_error', requestId }, { status: 502 });
+    }
+    // Anything else is OUR bug: the details (stack included) go to the logs, never to the browser.
+    logger.error('unhandled_error', { requestId, error: err });
+    return NextResponse.json(
+      { error: `Une erreur est survenue de notre côté. Réessayez dans un instant. (référence ${requestId})`, code: 'internal', requestId },
+      { status: 500 },
+    );
   }
 }

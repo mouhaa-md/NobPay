@@ -24,6 +24,7 @@ import { issueManagerToken, managerTokenMatches } from './managerToken';
 import { readDb, withDb } from './db';
 import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep } from './domain';
 import { HttpError } from './http';
+import { logger } from './logger';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
 import { amountMatches } from './webhooks';
@@ -192,7 +193,7 @@ export async function settleFromGateway(fundingId: string): Promise<void> {
   const status = await gatewayFor('sandbox').invoiceStatus(f.invoiceId);
   if (status.status !== 'paid') return;
   if (status.amountSats !== undefined && f.amountSats && !amountMatches(status.amountSats, f.amountSats)) {
-    console.warn(`[funding] amount mismatch on ${f.id}: expected ${f.amountSats} sats, Bitnob reports ${status.amountSats}`);
+    logger.warn('funding_amount_mismatch', { fundingId: f.id, expectedSats: f.amountSats, reportedSats: status.amountSats });
     await withDb((d) => {
       const x = d.fundings.find((y) => y.id === fundingId);
       if (x && x.status === 'pending') x.note = `Montant reçu différent : attendu ${f.amountSats} sats, reçu ${status.amountSats}.`;
@@ -362,8 +363,8 @@ export async function checkSolvency(): Promise<Solvency> {
   const violated = liabilityCents > assetsCents * 1.03 + 500;
   const was = gs.__nobpaySolvency?.violated ?? false;
   gs.__nobpaySolvency = { checkedAt: new Date().toISOString(), liabilityCents, assetsCents, violated };
-  if (violated && !was) console.error(`[solvency] ALERTE : NobPay doit ${liabilityCents / 100} $ mais les portefeuilles Bitnob en contiennent ${assetsCents / 100} $. Nouveaux paiements suspendus.`);
-  if (!violated && was) console.info('[solvency] retour à la normale : les paiements reprennent.');
+  if (violated && !was) logger.error('solvency_violated', { liabilityUsd: liabilityCents / 100, assetsUsd: assetsCents / 100, effect: 'nouveaux paiements suspendus' });
+  if (!violated && was) logger.info('solvency_restored', { liabilityUsd: liabilityCents / 100, assetsUsd: assetsCents / 100 });
   return gs.__nobpaySolvency;
 }
 

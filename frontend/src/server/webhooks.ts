@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Db } from '@/lib/types';
 import { getConfig } from './config';
+import { logger } from './logger';
 import { withDb } from './db';
 import { applyFundingPaid, applyPayoutCompleted, applyPayoutFailed } from './domain';
 import { verifyWebhookSignature } from './bitnob/sign';
@@ -103,7 +104,7 @@ function route(db: Db, type: string, payload: Json): Routed {
     if (funding) {
       if (funding.status !== 'paid' && checkReceivedAmount(payload, funding.amountSats) === 'mismatch') {
         const received = [...collectValues(payload, AMOUNT_KEYS)].join(', ');
-        console.warn(`[webhook] amount mismatch on ${funding.id}: expected ${funding.amountSats} sats, event carries ${received}`);
+        logger.warn('webhook_amount_mismatch', { fundingId: funding.id, expectedSats: funding.amountSats, received });
         return { outcome: 'amount_mismatch', note: `attendu ${funding.amountSats} sats, reçu ${received}` };
       }
       const preimage = [...collectValues(payload, ['preimage', 'payment_preimage'])][0];

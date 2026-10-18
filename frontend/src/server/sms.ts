@@ -16,6 +16,7 @@ export interface SmsProvider {
 export const logSmsProvider: SmsProvider = {
   name: 'log',
   async send(to, text) {
+    // Deliberate exception to the masking rules: this provider exists to PRINT the code, for local development.
     console.info(`[sms:log] to ${to}: ${text}`);
   },
 };
