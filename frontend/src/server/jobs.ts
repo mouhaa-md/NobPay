@@ -1,4 +1,5 @@
 import { getConfig } from './config';
+import { logger } from './logger';
 import { refreshPendingAnchors } from './anchors';
 import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings, reconcile } from './services';
 
@@ -34,7 +35,7 @@ async function safely(state: State, name: string, fn: () => Promise<void>): Prom
     const now = Date.now();
     if (now - (state.lastLogged.get(name) ?? 0) > 60_000) {
       state.lastLogged.set(name, now);
-      console.error(`[jobs] ${name} failed: ${(err as Error).message}`);
+      logger.error('job_failed', { job: name, error: err });
     }
   }
 }
