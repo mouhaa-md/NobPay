@@ -120,7 +120,7 @@ NobPay/
       components/                  interface
     motion/                        kit d'animations de la vitrine (hors backend)
     design-reference/              maquettes Stitch + COPY-RULES.md
-    tests/                         Vitest (45 tests)
+    tests/                         Vitest (102 tests)
     public/                        images, icônes PWA, manifest, sw.js
 ```
 
