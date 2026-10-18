@@ -9,7 +9,7 @@
 
 | | |
 |---|---|
-| Dépôt GitHub | `<URL>` (le dépôt n'est pas encore poussé : il n'existe qu'en local, sur la machine du chef de projet) |
+| Dépôt GitHub | https://github.com/mouhaa-md/NobPay (public ; branche `main` ; collaborateurs : `mouhaa-md`, `Pouye15`) |
 | Chef de projet / contact | `<nom, téléphone ou WhatsApp>` |
 | Responsable du frontend | `<nom>` (le chef de projet, avec l'aide de Claude) |
 | Mentor Bitnob joignable | `<nom ou canal>` |

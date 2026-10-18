@@ -2,7 +2,7 @@
 
 ## Mode d'emploi (30 secondes)
 
-1. Clonez le dépôt (ou recevez le dossier) et ouvrez **Claude Code à la racine** du projet (le dossier qui contient `docs/` et `frontend/`).
+1. Clonez le dépôt : `git clone https://github.com/mouhaa-md/NobPay.git` (vous y avez accès en écriture), puis ouvrez **Claude Code à la racine** du projet (le dossier qui contient `docs/` et `frontend/`). Travaillez sur une branche `backend/<sujet>`, pas directement sur `main`.
 2. Vérifiez que ces trois fichiers sont présents : `docs/CONTEXTE-PROJET.md`, `docs/ROADMAP-BACKEND.md`, `README.md`. Si vous ne recevez que des fichiers isolés, **collez leur contenu** dans la conversation avant le prompt.
 3. Copiez-collez le bloc « Prompt » ci-dessous comme **premier message**.
 4. Mettez vos clés Bitnob dans `frontend/.env.local` **vous-même** (jamais dans la conversation).
