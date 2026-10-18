@@ -76,7 +76,7 @@ export default async function Welcome() {
           <Link href="/app/connexion" className={buttonSecondary}>
             Connexion
           </Link>
-          <DemoLoginButton />
+          {getConfig().allowDemo && <DemoLoginButton />}
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-3">

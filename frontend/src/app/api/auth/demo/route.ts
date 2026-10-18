@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST() {
   return respond(async () => {
     const user = await demoUser();
-    startSession(user.id);
+    startSession(user);
     return { user: { id: user.id, firstName: user.firstName, lastName: user.lastName } };
   });
 }

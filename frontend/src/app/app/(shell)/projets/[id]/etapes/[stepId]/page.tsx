@@ -41,7 +41,7 @@ export default async function StepPage({ params }: { params: { id: string; stepI
   const step = findStep(project, params.stepId);
   if (!step) notFound();
 
-  const { usdXof, mode } = getConfig();
+  const { usdXof, mode, allowDemo } = getConfig();
   const escrow = escrowCents(db, project);
   const status = STATUS[step.status];
   const trail = ledgerFor(db, project.id).filter((e) => e.data.stepId === step.id);
@@ -146,6 +146,7 @@ export default async function StepPage({ params }: { params: { id: string; stepI
                 escrowCents={escrow}
                 supplier={step.proof.supplier}
                 mode={mode}
+                allowDemo={allowDemo}
               />
               </div>
             )}

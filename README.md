@@ -59,7 +59,7 @@ npm run dev          # http://localhost:3000
 
 En production locale : `npm run build && npm start`. Le service worker (installation sur l'écran d'accueil) ne s'active qu'en production.
 
-- Compte de démonstration : bouton « Essayer avec le compte démo » sur l'écran d'accueil de l'application. Le code SMS de démonstration est `123456`.
+- Compte de démonstration : bouton « Essayer avec le compte démo » sur l'écran d'accueil de l'application. Le code SMS de démonstration est `123456`. En mode `sandbox`, ces facilités sont fermées par défaut : mettez `ALLOW_DEMO=1` dans `.env.local` pour les rouvrir (voir ci-dessous).
 - Réinitialiser les données : Profil → « Réinitialiser les données » (mode `mock` seulement).
 - Affichage : sur ordinateur (1024 px et plus) l'application a une barre latérale et des écrans en colonnes ; sur téléphone, une colonne avec barre du bas. Les écrans de connexion restent en colonne étroite.
 - Installer sur un téléphone : ouvrez l'URL sur le téléphone puis « Ajouter à l'écran d'accueil » (Chrome et Edge proposent aussi un bouton « Installer »). Hors `localhost`, HTTPS est nécessaire.
@@ -79,7 +79,7 @@ En production locale : `npm run build && npm start`. Le service worker (installa
 1. Copiez `frontend/.env.example` en `frontend/.env.local`.
 2. Dans le tableau de bord Bitnob (mode Sandbox) : créez une clé API et notez `CLIENT_ID` et `CLIENT_SECRET`.
 3. Exposez l'application en HTTPS (par exemple `cloudflared tunnel --url http://localhost:3000`) et créez un webhook vers `https://<votre-url>/api/webhooks/bitnob` avec un secret de signature de votre choix.
-4. Renseignez dans `.env.local` : `BITNOB_MODE=sandbox`, `BITNOB_CLIENT_ID`, `BITNOB_CLIENT_SECRET`, `BITNOB_WEBHOOK_SECRET`, `PUBLIC_BASE_URL`, et un `SESSION_SECRET` long.
+4. Renseignez dans `.env.local` : `BITNOB_MODE=sandbox`, `BITNOB_CLIENT_ID`, `BITNOB_CLIENT_SECRET`, `BITNOB_WEBHOOK_SECRET`, `PUBLIC_BASE_URL`, et un `SESSION_SECRET` d'au moins 32 caractères (`openssl rand -hex 32`) : **le serveur refuse de démarrer sans**. Il n'y a pas encore de vrai envoi de SMS : pour pouvoir vous connecter pendant une démonstration, ajoutez aussi `ALLOW_DEMO=1` (le code SMS est alors le même pour tout le monde : à réserver à des personnes de confiance). N'utilisez que des clés **sandbox** : le serveur refuse les clés qui ressemblent à des clés de production (`prd:live_…`).
 5. Relancez. Le profil indique « Sandbox Bitnob ». Si le devis de paiement échoue chez Bitnob, l'application propose de continuer en simulation, clairement étiquetée.
 
 Vérifiez `GET /api/health` : il indique le mode, la présence des clés et l'URL de webhook attendue.

@@ -223,6 +223,7 @@ export async function refreshFunding(owner: User, fundingId: string): Promise<Fu
 /** Mock mode only: pays the invoice by sending a signed event to the real webhook handler. */
 export async function simulateFundingPaid(owner: User, fundingId: string): Promise<Funding> {
   if (getConfig().mode !== 'mock') throw new HttpError(403, 'La simulation est désactivée en mode sandbox');
+  if (!getConfig().allowDemo) throw new HttpError(403, 'Le mode démonstration est désactivé sur cette instance', 'demo_disabled');
   const db = await readDb();
   const funding = db.fundings.find((f) => f.id === fundingId);
   if (!funding) throw new HttpError(404, 'Versement introuvable');
@@ -329,6 +330,9 @@ export async function quoteRelease(owner: User, projectId: string, stepId: strin
   const escrow = escrowCents(db, project);
   if (escrow < step.amountCents) {
     throw new HttpError(409, `Le séquestre (${formatUsdShort(escrow)}) ne couvre pas cette étape (${formatUsdShort(step.amountCents)}). Financez le projet.`, 'insufficient_escrow');
+  }
+  if (opts.simulate && !getConfig().allowDemo) {
+    throw new HttpError(403, 'Le mode démonstration est désactivé sur cette instance', 'demo_disabled');
   }
   const gateway = getGateway(opts.simulate);
   const reference = `nobpay:pay:${step.id}:${Date.now().toString(36)}`;

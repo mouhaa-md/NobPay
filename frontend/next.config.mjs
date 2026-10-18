@@ -6,6 +6,8 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
+  // runs src/instrumentation.ts at server start (needed on Next 14; stable from Next 15)
+  experimental: { instrumentationHook: true },
   async headers() {
     return [
       {

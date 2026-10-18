@@ -17,6 +17,8 @@ interface Props {
   escrowCents: number;
   supplier: Supplier;
   mode: 'mock' | 'sandbox';
+  /** the instance accepts the simulated-payment fallback (ALLOW_DEMO) */
+  allowDemo: boolean;
 }
 
 const REASONS = ['Photos floues', 'Facture illisible', 'Montant incorrect', 'Ce n’est pas le bon chantier'];
@@ -26,7 +28,7 @@ function secondsLeft(iso: string): number {
 }
 
 /** Approve (quote -> confirm) or refuse the proof of a step. */
-export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrowCents, supplier, mode }: Props) {
+export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrowCents, supplier, mode, allowDemo }: Props) {
   const router = useRouter();
   const base = `/api/projects/${projectId}/steps/${stepId}`;
   const [quote, setQuote] = useState<PayoutQuote | null>(null);
@@ -63,7 +65,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
       setQuote(json.quote);
     } catch (e) {
       setError((e as Error).message);
-      if ((e as { code?: string }).code === 'gateway_error' && mode === 'sandbox') setCanSimulate(true);
+      if ((e as { code?: string }).code === 'gateway_error' && mode === 'sandbox' && allowDemo) setCanSimulate(true);
     } finally {
       setBusy(null);
     }

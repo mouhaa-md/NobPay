@@ -1,7 +1,10 @@
 import { AuthForm } from '@/components/app/AuthForm';
 import { FlowHeader } from '@/components/app/AppHeader';
+import { getConfig } from '@/server/config';
 import { DemoLoginButton } from '@/components/app/DemoLoginButton';
 
+// read at request time: the demo button depends on ALLOW_DEMO, which must not be frozen at build time
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Connexion' };
 
 export default function Login() {
@@ -12,9 +15,11 @@ export default function Login() {
         <h2 className="mb-1 font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">Bon retour</h2>
         <p className="mb-space-lg font-body-md text-body-md text-on-surface-variant">Entrez votre numéro pour retrouver vos projets.</p>
         <AuthForm mode="login" />
-        <div className="mt-space-lg border-t border-outline-variant/40 pt-space-lg">
-          <DemoLoginButton />
-        </div>
+        {getConfig().allowDemo && (
+          <div className="mt-space-lg border-t border-outline-variant/40 pt-space-lg">
+            <DemoLoginButton />
+          </div>
+        )}
       </section>
     </main>
   );

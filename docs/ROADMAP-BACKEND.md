@@ -116,17 +116,17 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 
 **Objectif :** qu'on ne puisse pas entrer chez quelqu'un d'autre, ni abuser des routes publiques. Détail des failles : CONTEXTE § 14, D1 à D5.
 
-### B1.1 OTP réel par utilisateur  `P1 · M`
+### B1.1 OTP réel par utilisateur  `P1 · M`  (**devient bloquant** : sans `ALLOW_DEMO=1`, personne ne peut se connecter en sandbox)
 - Aujourd'hui : un code unique `DEMO_OTP` pour tous (CONTEXTE § 10). À faire : code à 6 chiffres **aléatoire par demande**, stocké **haché** avec expiration (5 min), 5 essais maximum, délai de renvoi, invalidé après usage. Nouvelle collection `otps` (ou table).
 - Interface `SmsProvider` avec deux implémentations : « journal » (écrit le code dans la console, pour le développement) et un fournisseur réel (choix à faire avec le chef de projet : Africa's Talking, Twilio, Vonage, ou WhatsApp Business).
 - Le code de démonstration n'est accepté que si `ALLOW_DEMO=1` (B1.2). `POST /api/auth/otp` renvoie `demo:true` + `demoCode` **seulement** dans ce cas. Attention : l'écran (`AuthForm.tsx`, étape du code) affiche **toujours** l'encart « Prototype : aucun SMS n'est envoyé… Code de démonstration » ; il faut le rendre conditionnel à la présence de `demoCode`.
 - **Terminé quand :** deux comptes différents ne peuvent pas se connecter l'un chez l'autre ; tests : code faux, code expiré, 6e essai, réutilisation.
 
-### B1.2 Mode démonstration explicite  `P0 · S`
+### B1.2 Mode démonstration explicite  `P0 · S`  ✅ fait (`ALLOW_DEMO`, CONTEXTE § 10). Écart voulu : absent = autorisé en `mock` (pas « interdit en production »), pour que `npm start` en simulation marche sans réglage
 - Variable `ALLOW_DEMO` (défaut **absent = interdit** en `sandbox` et en production). Conditionne : `POST /api/auth/demo`, `DEMO_OTP`, `POST /api/dev/reset`, `POST /api/fundings/:id/simulate`, le bouton « compte démo » (afficher selon `GET /api/health`).
 - **Terminé quand :** avec `BITNOB_MODE=sandbox` et sans `ALLOW_DEMO`, ces quatre points renvoient 403 / sont masqués ; avec `ALLOW_DEMO=1`, le comportement actuel revient.
 
-### B1.3 Sessions  `P0 · S`
+### B1.3 Sessions  `P0 · S`  ✅ fait (CONTEXTE § 10). Refus de démarrer : en `sandbox`, ou en production avec `ALLOW_DEMO=0` ; renouvellement du cookie via les routes d'API
 - En production (`NODE_ENV=production`) : refuser de démarrer si `SESSION_SECRET` est absent, par défaut, ou de moins de 32 caractères.
 - Cookie `Secure` quand `PUBLIC_BASE_URL` est en `https`. Durée 7 jours glissants. Ajouter une **version de session** par utilisateur pour pouvoir tout révoquer ; « se déconnecter » l'incrémente.
 - **Terminé quand :** démarrage refusé avec un secret faible ; cookie `Secure` visible derrière le tunnel.

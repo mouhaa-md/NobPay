@@ -22,6 +22,8 @@ export interface User {
   phone: string;
   createdAt: string;
   demo?: boolean;
+  /** raised to sign the user out everywhere (cookies carry the version they were issued with); missing = 0 */
+  sessionVersion?: number;
 }
 
 export interface Supplier {

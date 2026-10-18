@@ -255,18 +255,18 @@ Erreurs : `{ "error": "message en français", "code"?: "…" }` avec le statut H
 
 | Méthode et chemin | Accès | Corps → réponse |
 |---|---|---|
-| `POST /api/auth/otp` | public | `{phone}` → `{sent, demo:true, demoCode}` (**aucun SMS**, ne valide rien) |
+| `POST /api/auth/otp` | public | `{phone}` → `{sent, demo:true, demoCode}` (**aucun SMS**, ne valide rien). **503** `sms_unavailable` si `ALLOW_DEMO` est refusé (aucun code n'existe) |
 | `POST /api/auth/register` | public | `{firstName,lastName,country,phone,otp}` → cookie + `{user}` |
 | `POST /api/auth/login` | public | `{phone, otp}` → cookie + `{user}` |
-| `POST /api/auth/demo` | public | → cookie du compte démo `u_aminata` |
-| `POST /api/auth/logout` | public | → `{ok}` |
+| `POST /api/auth/demo` | public | → cookie du compte démo `u_aminata`. **403** `demo_disabled` si `ALLOW_DEMO` est refusé |
+| `POST /api/auth/logout` | public | → `{ok}` ; déconnecte l'utilisateur **partout** (version de session), sauf le compte démo partagé |
 | `POST /api/projects` | session | `{name,sector,city,budgetCents,managerName,managerPhone?,steps[{title,amountCents,proofKinds[]}]}` → `{id, managerToken}` (somme des étapes = budget ; 1 à 12 étapes ; budget 100 $ à 500 000 $) |
 | `GET /api/projects/:id/state` | session | → `{escrowCents, releasedCents, steps[{id,status,payoutStatus,payoutError,paidAt}]}` (appelle `reconcile()`) |
 | `POST /api/projects/:id/fundings` | session | `{amountCents, method:'lightning'}` → `{funding}` |
 | `GET /api/fundings/:id` | session | → `{funding}` (interroge Bitnob en sandbox, puis tente la conversion BTC→USDT) |
-| `POST /api/fundings/:id/simulate` | session, **mock seulement** (403 sinon) | → `{funding}` |
+| `POST /api/fundings/:id/simulate` | session, **mock seulement** et `ALLOW_DEMO` (403 sinon) | → `{funding}` |
 | `POST /api/projects/:id/steps/:stepId/proof` | champ `token` (personne de confiance) **ou** session | `multipart` : `photos[]` (6 max), `photoMeta` (JSON : `takenAt`, `lat`, `lng`, `accuracy`), `invoice`, `invoiceAmountFcfa`, `supplierName`, `supplierPhone`, `supplierNetwork`, `note` → `{step}` |
-| `POST /api/projects/:id/steps/:stepId/quote` | session | `{simulate?}` → `{quote}` |
+| `POST /api/projects/:id/steps/:stepId/quote` | session | `{simulate?}` → `{quote}` ; `simulate:true` (repli « Continuer en simulation ») : **403** `demo_disabled` sans `ALLOW_DEMO` |
 | `POST /api/projects/:id/steps/:stepId/release` | session | → `{step:{id,status,payout}}` |
 | `POST /api/projects/:id/steps/:stepId/reject` | session | `{note?}` → `{step}` |
 | `GET /api/files/:projectId/:fileId?t=<token>` | session du propriétaire **ou** `t` = jeton de la personne de confiance | octets ; CSP stricte, `nosniff` |
@@ -274,16 +274,18 @@ Erreurs : `{ "error": "message en français", "code"?: "…" }` avec le statut H
 | `POST /api/anchors/:id/refresh` | **public** (id non devinable) | → `{anchor}` (appelle les calendriers OTS et blockstream.info) |
 | `GET /api/anchors/:id/ots` · `/dossier` | **public** | fichier `.ots` · JSON canonique exact |
 | `POST /api/webhooks/bitnob` | signature | § 8.3 |
-| `GET /api/health` | public | `{mode, bitnobKeys, webhookSecret, webhookUrl}` (aucun secret) |
-| `POST /api/dev/reset` | session **compte démo**, mock seulement | remet les données de démonstration |
+| `GET /api/health` | public | `{mode, demo, bitnobKeys, webhookSecret, webhookUrl}` (aucun secret) |
+| `POST /api/dev/reset` | session **compte démo**, mock seulement, `ALLOW_DEMO` | remet les données de démonstration |
 
 Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `readDb()` et `views.ts` et appellent `reconcile()` : **il n'y a pas d'API de lecture générique**. Quand le backend change de forme de stockage, on garde l'interface `readDb()` / `withDb()` / `resetDb()` (voir roadmap, Phase 3).
 
-## 10. Authentification actuelle (prototype, **à remplacer**)
+## 10. Authentification actuelle (prototype, **à remplacer en partie**)
 
-- Cookie `nobpay_session` = `<userId>.<HMAC-SHA256(userId)[0..40]>`, `httpOnly`, `sameSite=lax`, **non `Secure`**, 30 jours. Secret = `SESSION_SECRET` (valeur par défaut de développement si absent).
-- **Code SMS = valeur unique `DEMO_OTP` (123456)** pour tout le monde. `POST /api/auth/otp` ne vérifie ni ne mémorise rien. **N'importe qui connaissant un numéro peut se connecter à ce compte.** Acceptable en démonstration, **inacceptable** dès qu'une URL est publique avec de vraies données.
-- `POST /api/auth/demo` ouvre le compte démo **dans tous les modes**, y compris `sandbox`.
+- Cookie `nobpay_session` = `<userId>.<version>.<expiration>.<HMAC-SHA256>` (HMAC complet, sur les trois champs), `httpOnly`, `sameSite=lax`, **`Secure` quand `PUBLIC_BASE_URL` est en https**, **7 jours**, renouvelé à l'usage (dans les routes d'API, seules à pouvoir écrire un cookie : un utilisateur qui ne ferait que lire des pages sans appeler l'API serait déconnecté au bout de 7 jours). `version` doit égaler `user.sessionVersion` : « Se déconnecter » l'incrémente, ce qui invalide tous les cookies de l'utilisateur sur tous ses appareils (sauf pour le compte démo, partagé). Secret = `SESSION_SECRET`.
+- **`SESSION_SECRET` faible refusé** (absent, valeur par défaut, `change-me`, moins de 32 caractères) : le serveur **refuse de démarrer** en `sandbox`, ou en production avec `ALLOW_DEMO=0` (`src/instrumentation.ts` → `server/startup.ts`) ; en pratique Next répond alors 500 à toute requête, webhooks compris. Un second contrôle a lieu à chaque signature de cookie. En `mock` (y compris `npm start`), la valeur par défaut est tolérée avec un avertissement : c'est le plan B de la démonstration.
+- **`ALLOW_DEMO`** : `1` autorise, `0` refuse, absent = autorisé **en `mock` seulement**. Conditionne : le compte démo, le code SMS unique `DEMO_OTP`, `POST /api/dev/reset`, `POST /api/fundings/:id/simulate` et le paiement « Continuer en simulation ». Les boutons correspondants sont masqués. **Conséquence : sans `ALLOW_DEMO=1`, en `sandbox`, personne ne peut se connecter**, car il n'existe pas encore de vrai envoi de SMS (B1.1). Avec `ALLOW_DEMO=1` en sandbox, un avertissement est affiché au démarrage.
+- **Reste faux :** le code SMS est la valeur unique `DEMO_OTP` (123456) pour tout le monde et `POST /api/auth/otp` ne mémorise rien : **n'importe qui connaissant un numéro peut ouvrir ce compte** dès que `ALLOW_DEMO` est autorisé. Acceptable en démonstration devant des personnes de confiance, **inacceptable** avec de vraies données (B1.1).
+- Garde-fou « jamais de clés live » : en `sandbox`, le démarrage est refusé si `BITNOB_CLIENT_ID` ou `BITNOB_CLIENT_SECRET` ressemble à une clé de production (`prd:…`, `live_…`). C'est une heuristique sur le préfixe, pas une preuve.
 - La personne de confiance n'a pas de compte : elle possède un **jeton** (`managerToken`, 24 caractères hex, aussi dans l'URL `/terrain/<jeton>`), valable indéfiniment, qui donne accès aux fichiers du projet et au dépôt de preuves.
 
 ## 11. Configuration (`frontend/.env.example` → `frontend/.env.local`, jamais committé)
@@ -295,8 +297,9 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `BITNOB_CLIENT_ID`, `BITNOB_CLIENT_SECRET` | clés API (sandbox) | vide |
 | `BITNOB_WEBHOOK_SECRET` | secret de signature des webhooks (celui choisi dans le tableau de bord) | vide ; en mock : `nobpay-mock-webhook-secret` |
 | `PUBLIC_BASE_URL` | URL publique (webhook, liens) | `http://localhost:3000` |
-| `SESSION_SECRET` | signe le cookie de session ; aussi graine des préimages simulées | valeur de dev (**dangereux hors dev**) |
-| `DEMO_OTP` | code SMS unique de démonstration | `123456` |
+| `SESSION_SECRET` | signe le cookie de session ; aussi graine des préimages simulées. **32 caractères au moins, obligatoire en sandbox** (§ 10) | valeur de dev publique, tolérée en `mock` seulement |
+| `ALLOW_DEMO` | `1` / `0` / absent : facilités de démonstration (§ 10) | absent = autorisé en `mock` seulement |
+| `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement si `ALLOW_DEMO` autorise) | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |
 | `CAPTURE_WEBHOOKS` | `1` : enregistre chaque webhook reçu dans `.data/webhook-captures/` (débogage sandbox) | absent |
@@ -340,8 +343,8 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 
 | # | Gravité | Problème |
 |---|---|---|
-| D1 | S1 | **OTP unique global** ; `/api/auth/otp` ne valide rien (§ 10). |
-| D2 | S1 | `/api/auth/demo` actif dans tous les modes ; `SESSION_SECRET` par défaut ; cookie non `Secure` ; pas de révocation de session. |
+| D1 | S1 | **OTP unique global** ; `/api/auth/otp` ne valide rien (§ 10). Atténué : fermé hors `mock` sans `ALLOW_DEMO=1`. **Reste ouvert** tant que B1.1 n'est pas fait. |
+| D2 | S1 | ~~`/api/auth/demo` actif dans tous les modes ; `SESSION_SECRET` par défaut ; cookie non `Secure` ; pas de révocation de session.~~ **Corrigé** (B1.2, B1.3, § 10). Reste : renouvellement du cookie seulement via les routes d'API. |
 | D3 | S1 | **Aucune limitation de débit** (connexion, dépôt de fichiers, `/api/anchors/:id/refresh` public qui déclenche des appels sortants). |
 | D4 | S1 | Base = **un fichier JSON** (`db.ts`) : un seul processus, réécriture complète à chaque écriture, pas de sauvegarde, pas de migration. Inadapté aux hébergements sans disque partagé. |
 | D5 | S1 | Dépôts de fichiers : type MIME **fourni par le client**, pas de contrôle des octets (magic bytes) ; stockage sur disque local. |
