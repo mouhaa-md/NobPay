@@ -231,6 +231,8 @@ Détail, écarts et hypothèses restantes : **`docs/BITNOB-SANDBOX-REPORT.md`**.
 
 Statuts de payout vus : `QUOTE`, `INITIATED` ; documentés : `initiated`, `processing`, `success`, `expired` (webhooks), `PENDING`/`COMPLETED`/`FAILED` acceptés par notre correspondance. **Limite : 200 000 XOF par paiement mobile money au Sénégal** (devis refusé au-delà, ≈ 336 $). Endpoints existants non utilisés : `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`, `GET /api/payouts/limits`.
 
+> **État au 18 oct. (testé en vrai) :** la spécification OpenAPI marque `customer_id` (facture) et `callback_url` (`initialize`) comme obligatoires, mais l'API réelle accepte une facture sans `customer_id` et un `initialize` sans `callback_url` (essayé en sandbox). `payment_reason` est bien obligatoire pour un devis (corrigé dans le client). Un paiement Lightning reçu peut arriver sous le nom `transfer.success` : le routage des webhooks se fait par identifiants (§ 8.3). Lecture de la spec : `docs/BITNOB-SANDBOX-NOTES.md` ; observations en sandbox : `docs/BITNOB-SANDBOX-REPORT.md`.
+
 Les analyseurs restent **tolérants** là où rien n'a été observé. Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Orange Money, Free Money, Expresso, Wave), Côte d'Ivoire, Niger ; GHS MTN MoMo ; KES M-Pesa ; NGN NIP ; RWF/UGX MTN-Airtel ; XAF Cameroun et Gabon ; USD ACH/wire/SWIFT. **Toujours vérifier `GET /api/payouts/supported-countries` avant de promettre un corridor.**
 
 ### 8.3 Récepteur de webhooks (`webhooks.ts`, route `POST /api/webhooks/bitnob`, testé)
@@ -387,6 +389,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 ## 17. Autres fichiers à lire
 
 - `docs/ROADMAP-BACKEND.md` : le plan de travail complet, tâche par tâche.
+- `docs/BITNOB-SANDBOX-NOTES.md` : ce que dit la spécification officielle de Bitnob, écarts avec notre code, comment alimenter la sandbox.
 - `docs/PROMPT-CLAUDE-BACKEND.md` : le message à donner à Claude pour démarrer.
 - `README.md` : démarrage, parcours de démonstration, passage en sandbox.
 - `frontend/design-reference/COPY-RULES.md` : règles de rédaction et jeu de données de démonstration.
