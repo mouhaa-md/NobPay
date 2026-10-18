@@ -41,6 +41,14 @@ Stitch invente des affirmations fausses ou invérifiables. Chaque texte affiché
 | « Fonds protégés en Bitcoin multi-sig », « validation de livrable certifiée » | Pas de multisig, aucune certification | « Chaque libération exige une preuve que vous validez » |
 | Dates figées (« 14 Mai 2024 ») | Année passée | Dates générées (« il y a 3 jours ») |
 
+| « Supervision Séquestre Multi-Signature », « Multi-Sig 2/3 » (écrans ordinateur) | Pas de multisig | « Fonds en séquestre, libérés sur preuve » |
+| « Protocole Anchor V3 », « IoT Timestamp », « Agronome certifié », « Actif commercial » | Inventés | (supprimer) |
+| « 100% audité Bitcoin » | Aucun audit | « n sur m ancrages confirmés sur Bitcoin » (chiffres réels) |
+| « Garantie de non-dispersion des capitaux » | Promesse absolue | « Chaque paiement exige une preuve que vous validez » |
+| « Bloqué smart-contract » | Il n'y a pas de smart contract | « Libéré sur preuve » |
+| « Registres On-Chain », « Inspecter médias on-chain », « Jalon validé on-chain (bloc #971 182) », « tx: 8a4d…f02e » | Le registre n'est pas sur la chaîne ; blocs et transactions inventés | « Certificat de preuve », vrai numéro de bloc seulement s'il existe |
+| « Contrat #THS-2024-09 », « Fandène, Lot 42 », « Marché Sandaga, Allée C », « Terminal Diaspora », badge « Pro » | Numéros, adresses et statuts inventés | (supprimer) |
+| Drapeau emoji dans les pastilles de ville | S'affiche en lettres sous Windows | Drapeau SVG |
 Phrase d'appui validée : « Vos fonds restent en séquestre et ne sont libérés que sur preuve. »
 
 ## Données d'exemple (source unique)
@@ -67,6 +75,7 @@ pour les chiffres). Les montants affichés sont toujours recalculés depuis la b
 
 ## Technique
 
+- Version ordinateur (1024 px et plus) : barre latérale de 260 px, barre du haut de 64 px, contenu de 1 100 px au plus, d'après les exports Stitch projets et ccueil en version ordinateur. En dessous de 1024 px : colonne de téléphone avec barre du bas.
 - Pas de `user-scalable=no` ni `maximum-scale=1` (bloque le zoom, nuit à l'accessibilité).
 - Ne pas enfermer une mise en page desktop dans `max-w-[480px]` (les exports « web » de Stitch le font).
 - Ne pas référencer les images `lh3.googleusercontent.com` (liens Stitch qui peuvent expirer) :

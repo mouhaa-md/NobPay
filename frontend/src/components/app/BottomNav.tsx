@@ -34,7 +34,7 @@ export function BottomNav() {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-on-surface/40 backdrop-blur-sm" onClick={() => setOpen(false)} role="presentation">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-on-surface/40 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)} role="presentation">
           <div
             role="dialog"
             aria-label="Actions rapides"
@@ -64,7 +64,7 @@ export function BottomNav() {
       )}
       <nav
         aria-label="Navigation principale"
-        className="pb-safe fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 bg-surface-container-lowest/90 shadow-[0_-4px_20px_-2px_rgba(10,15,36,0.08)] backdrop-blur-xl"
+        className="pb-safe fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 bg-surface-container-lowest/90 shadow-[0_-4px_20px_-2px_rgba(10,15,36,0.08)] backdrop-blur-xl lg:hidden"
       >
         <div className="relative flex h-16 items-center justify-around px-space-xs">
           {tab(TABS[0])}

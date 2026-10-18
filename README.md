@@ -61,6 +61,7 @@ En production locale : `npm run build && npm start`. Le service worker (installa
 
 - Compte de démonstration : bouton « Essayer avec le compte démo » sur l'écran d'accueil de l'application. Le code SMS de démonstration est `123456`.
 - Réinitialiser les données : Profil → « Réinitialiser les données » (mode `mock` seulement).
+- Affichage : sur ordinateur (1024 px et plus) l'application a une barre latérale et des écrans en colonnes ; sur téléphone, une colonne avec barre du bas. Les écrans de connexion restent en colonne étroite.
 - Installer sur un téléphone : ouvrez l'URL sur le téléphone puis « Ajouter à l'écran d'accueil » (Chrome et Edge proposent aussi un bouton « Installer »). Hors `localhost`, HTTPS est nécessaire.
 
 ### Parcours de démonstration (5 minutes)

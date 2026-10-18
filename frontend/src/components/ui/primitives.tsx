@@ -19,7 +19,7 @@ export function Avatar({ first, last = '', size = 'md', status }: { first: strin
         {initials(first, last)}
       </span>
       {status && (
-        <span className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full ring-2 ring-white ${status === 'online' ? 'bg-[#16A34A]' : 'bg-[#F59E0B]'}`} />
+        <span className={`absolute rounded-full ring-2 ring-white ${size === 'sm' ? '-bottom-0.5 -right-0.5 h-2.5 w-2.5' : 'bottom-0 right-0 h-3.5 w-3.5'} ${status === 'online' ? 'bg-[#16A34A]' : 'bg-[#F59E0B]'}`} />
       )}
     </span>
   );

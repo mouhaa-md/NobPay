@@ -160,7 +160,7 @@ export function FundingFlow({ projectId, projectName, mode, btcUsd, usdXof, sugg
   const bolt11 = funding?.bolt11 ?? '';
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col lg:mx-auto lg:my-8 lg:min-h-[680px] lg:w-full lg:max-w-[560px] lg:overflow-hidden lg:rounded-3xl lg:bg-surface-container-lowest lg:shadow-xl">
       <header className="pt-safe sticky top-0 z-40 bg-surface-container-lowest/85 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-space-md">
           {stage === 'paid' ? (

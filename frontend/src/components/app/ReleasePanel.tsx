@@ -138,8 +138,8 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
 
       {/* Quote sheet */}
       {quote && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm" role="presentation" onClick={() => busy !== 'pay' && setQuote(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Confirmer le paiement" className="nob-rise pb-safe max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm lg:items-center" role="presentation" onClick={() => busy !== 'pay' && setQuote(null)}>
+          <div role="dialog" aria-modal="true" aria-label="Confirmer le paiement" className="nob-rise pb-safe max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-outline-variant" />
             <h3 className="font-headline-md text-headline-md font-bold">Confirmer le paiement</h3>
             <p className="mb-space-md font-body-sm text-body-sm text-on-surface-variant">{stepTitle}</p>
@@ -192,8 +192,8 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
 
       {/* Reject sheet */}
       {rejecting && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm" role="presentation" onClick={() => busy !== 'reject' && setRejecting(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Refuser la preuve" className="nob-rise pb-safe w-full max-w-[480px] rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm lg:items-center" role="presentation" onClick={() => busy !== 'reject' && setRejecting(false)}>
+          <div role="dialog" aria-modal="true" aria-label="Refuser la preuve" className="nob-rise pb-safe w-full max-w-[480px] rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-outline-variant" />
             <h3 className="font-headline-md text-headline-md font-bold">Refuser cette preuve</h3>
             <p className="mb-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucun argent ne bouge. L&apos;équipe sur place devra renvoyer une preuve.</p>

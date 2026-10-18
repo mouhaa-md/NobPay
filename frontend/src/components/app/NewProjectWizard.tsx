@@ -141,7 +141,7 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
     'h-12 w-full rounded-2xl bg-surface-container-low px-space-md font-body-md text-on-surface outline-none transition placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container';
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col lg:mx-auto lg:my-8 lg:min-h-[680px] lg:w-full lg:max-w-[560px] lg:overflow-hidden lg:rounded-3xl lg:bg-surface-container-lowest lg:shadow-xl">
       <header className="pt-safe sticky top-0 z-40 bg-surface-container-lowest/85 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-space-md">
           <button type="button" onClick={back} aria-label="Retour" className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface hover:bg-surface-container">
@@ -167,7 +167,7 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
         </div>
       </header>
 
-      <main className="flex-1 px-space-md pb-40 pt-space-md" key={stage}>
+      <main className="flex-1 px-space-md pb-40 pt-space-md lg:pb-6" key={stage}>
         <div className="nob-rise flex flex-col gap-space-md">
           {stage === 0 && (
             <>
@@ -438,7 +438,7 @@ export function NewProjectWizard({ usdXof }: { usdXof: number }) {
         </div>
       </main>
 
-      <footer className="pb-safe fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 bg-surface-container-lowest/90 px-space-md pt-3 shadow-[0_-4px_20px_-2px_rgba(10,15,36,0.08)] backdrop-blur-xl">
+      <footer className="pb-safe fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 bg-surface-container-lowest/90 px-space-md pt-3 shadow-[0_-4px_20px_-2px_rgba(10,15,36,0.08)] backdrop-blur-xl lg:static lg:max-w-none lg:translate-x-0 lg:bg-transparent lg:pb-6 lg:shadow-none lg:backdrop-blur-none">
         <button
           type="button"
           onClick={next}
