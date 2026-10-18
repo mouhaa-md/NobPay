@@ -10,3 +10,6 @@ desktop.ini
 
 # logs
 *.log
+
+# local launcher
+start-demo.bat
