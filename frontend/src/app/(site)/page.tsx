@@ -24,7 +24,7 @@ const SECTOR_NOTE: Record<Sector, string> = {
 const FAQ = [
   {
     q: 'Où est mon argent pendant le projet ?',
-    a: "Dans un portefeuille Bitnob lié à votre projet. NobPay est la couche de règles : rien n'en sort sans votre validation. Ce n'est pas un compte bancaire.",
+    a: "Dans un portefeuille Bitnob. NobPay est la couche de règles : il compte l'argent projet par projet et ne libère rien sans votre validation. Ce n'est pas un compte bancaire.",
   },
   {
     q: "Est-ce que cela fonctionne vraiment aujourd'hui ?",
@@ -46,7 +46,7 @@ const FAQ = [
 
 const RAILS = [
   { tag: 'Entrée', title: 'Bitcoin Lightning', text: 'Le financeur paie une facture depuis n’importe quel portefeuille.', icon: 'bolt' },
-  { tag: 'Garde', title: 'Séquestre Bitnob', text: 'Les fonds restent dans un portefeuille lié au projet.', icon: 'lock' },
+  { tag: 'Garde', title: 'Séquestre Bitnob', text: 'Les fonds restent dans un portefeuille Bitnob, comptés projet par projet.', icon: 'lock' },
   { tag: 'Sortie', title: 'Mobile money', text: 'Wave, Orange Money ou Free Money : le fournisseur est payé directement.', icon: 'smartphone' },
   { tag: 'Preuve', title: 'Ancrage Bitcoin', text: 'L’empreinte du dossier est publiée avec OpenTimestamps.', icon: 'currency_bitcoin' },
 ];
@@ -184,7 +184,7 @@ export default function Landing() {
                   </div>
                   <ul className="nm-tab-list">
                     <li>Un paiement Lightning depuis n&apos;importe quel portefeuille.</li>
-                    <li>Les fonds restent en séquestre, dans un portefeuille Bitnob lié au projet.</li>
+                    <li>Les fonds restent en séquestre dans un portefeuille Bitnob, comptés projet par projet.</li>
                   </ul>
                   <span className="nm-tab-progress">
                     <i />

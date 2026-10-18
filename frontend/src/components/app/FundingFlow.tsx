@@ -247,7 +247,7 @@ export function FundingFlow({ projectId, projectName, mode, btcUsd, usdXof, sugg
               </div>
               <div className="mt-space-md flex items-start gap-3 rounded-2xl bg-surface-container-low p-3.5">
                 <Icon name="shield_lock" size={22} className="mt-0.5 text-primary" />
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Les fonds arrivent dans un portefeuille Bitnob lié à ce projet. Ils ne sont libérés qu&apos;à votre validation.</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">Les fonds arrivent dans un portefeuille Bitnob et sont comptés pour ce projet. Ils ne sont libérés qu&apos;à votre validation.</p>
               </div>
               <div className="mt-auto flex flex-col gap-3 pt-space-md">
                 <ErrorNote>{error}</ErrorNote>

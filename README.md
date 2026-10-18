@@ -127,6 +127,12 @@ frontend/
   tests/              tests Vitest
 ```
 
+## Reprendre le projet (backend)
+
+- `docs/CONTEXTE-PROJET.md` : contexte complet (produit, architecture, règles métier, état de vérification, dette technique).
+- `docs/ROADMAP-BACKEND.md` : feuille de route par phases, avec critères d'acceptation.
+- `docs/PROMPT-CLAUDE-BACKEND.md` : prompt de démarrage pour un assistant Claude.
+
 ## Crédits
 
 Code et illustrations CSS originaux. Bibliothèques : Next.js, React, Tailwind CSS, [Lenis](https://github.com/darkroomengineering/lenis) (MIT), qrcode.react (ISC). Polices Bricolage Grotesque, Figtree et Instrument Serif (accents en italique), icônes Material Symbols (licences libres, via Fontsource). Photos de couverture (immobilier, agricole, commerce) : images fournies par l'équipe ; photos de preuve de démonstration : images d'illustration. Le kit d'animations reprend des durées et des courbes mesurées sur un site public, sans en copier le code ni les ressources.
