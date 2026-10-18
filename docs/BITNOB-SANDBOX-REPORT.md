@@ -2,15 +2,30 @@
 
 > Observé le **18 octobre 2026** avec une clé **sandbox** (`GET /api/whoami` → `environment: "sandbox"`, `auth_method: "hmac"`), depuis un Codespace GitHub. Aucun argent réel, aucune facture mainnet : les factures commencent par `lntb` (testnet).
 > Les réponses rejouées par les tests sont dans `frontend/tests/fixtures/bitnob/` (identifiants remplacés, facture masquée). Aucun secret n'est enregistré.
-> **Reste à observer :** le paiement d'une facture Lightning, le webhook réel de réception, `finalize` réussi, le webhook `payouts.*` réel, la conversion BTC→USDT. Tout cela demande un **solde** en sandbox (voir « Bloquant »).
+> **Mise à jour : la sandbox a maintenant des fonds** (voir « Financer le sandbox ») et **un paiement mobile money réel a été exécuté de bout en bout**, par un appel direct puis par l'application. **Reste à observer :** le paiement d'une facture Lightning (aucun moyen trouvé), le nom réel de l'évènement de réception Lightning, la vente BTC→stablecoin (pas de BTC), un paiement en échec (`payouts.withdrawal.expired`).
 
-## Bloquant : aucun solde, aucun moyen documenté d'en créer
+## Financer le sandbox (résolu pour les stablecoins)
 
-- `GET /api/balances` : trois comptes (BTC, USDC, USDT), tous à **0**.
-- `POST /api/payouts/:quoteId/finalize` sans fonds → **422 `INSUFFICIENT_FUNDS`** (« Insufficient funds to complete the transaction »).
-- L'OpenAPI (`/api-collections/swagger/bitnob-api-v2.openapi.json`, 74 chemins) ne contient **aucun simulateur Lightning**. Seuls existent `POST /api/virtual-accounts/{id}/simulate-deposit` (comptes bancaires **nigérians** NGN, client avec BVN : inutilisable pour nous) et `POST /api/cards/{cardId}/simulate-webhook`.
-- `POST /api/lightning/pay` exige un `customer_id` et un solde BTC.
-- **Question à poser à un mentor Bitnob :** « Comment créditer du BTC ou de l'USDT en sandbox, ou payer une facture `lntb` créée par l'API ? Y a-t-il un bouton de simulation dans le tableau de bord (Lightning → factures) ? »
+1. `GET /api/stablecoins/supported-chains` donne la liste des chaînes du sandbox. Table de la doc ([Receiving Stablecoin Deposits](https://bitnob.dev/docs/stablecoins/receiving-stablecoin-deposits)) : `ethereum`→**Sepolia**, `polygon`→Amoy, `avalanche`→Fuji, `base`→Base Sepolia, `solana`→Devnet, `stellar`→Testnet.
+2. `POST /api/addresses` (`chain` en lettres et chiffres, ex. `ethereum`) crée une adresse de dépôt **par chaîne**. Le faucet [Circle](https://faucet.circle.com/) envoie 20 USDC de test.
+3. **Piège :** une adresse `0x…` est identique sur tous les réseaux EVM, mais Bitnob ne surveille une adresse que **sur sa chaîne**. Envoyer sur Avalanche Fuji vers l'adresse créée pour `polygon` ne crédite rien. Il faut le même réseau que la chaîne de l'adresse.
+4. **Délai observé : ~10 minutes** entre la transaction (52 confirmations) et le crédit. Bitnob envoie alors `deposit.success` et crée une transaction `DEPOSIT_CONFIRMED` / `SETTLED`.
+5. Il n'existe toujours **aucun moyen de payer une facture Lightning `lntb`** ni de créditer du BTC : la réception Lightning n'a pas pu être vue en vrai. (Le crédit du séquestre, dans les tests de bout en bout, a été fait avec **notre propre évènement signé**, clairement distinct d'une livraison Bitnob.)
+
+## Webhooks réels capturés (18 oct. 2026)
+
+- En-têtes : `x-bitnob-signature` (**128 caractères hexadécimaux : HMAC-SHA512 du corps brut, vérifié par notre récepteur**, donc le secret et l'algorithme sont bons), `x-bitnob-event-id` (= `event_id`), `user-agent: Wand-Webhook-Delivery/1.0`, `x-delivery-service: wand`, `content-type: application/json, application/json` (dupliqué), adresse source `18.135.67.154`. Les deux pages de la doc qui se contredisaient (SHA-256 ou SHA-512) : **SHA-512 est le bon**.
+- `deposit.success` : `data.{address, amount (unités minimales : 20000000 = 20 USDC), chain, currency, fee, from_address, hash, reference "RCV_USDC_…", timestamp, transaction_id}`. Non utilisé comme source de séquestre (les dépôts stablecoin ne sont pas encore pris en charge, B4.1) : réponse 200, résultat `unknown_transfer`.
+- `payouts.initialized`, `payouts.processing`, `payouts.withdrawal.success` : `data.{id (id du payout), quote_id, reference (la nôtre), status (initiated / processing / success), amount, from_asset ("usdc"), to_currency, settlement_amount, fees, beneficiary (numéro masqué ****4567), created_at, updated_at, completed_at}`. **Pas de `payout_id`** : l'identifiant est `data.id`.
+- **Rapidité :** les 3 évènements arrivent dans la **même seconde** que la réponse de `finalize`, et `completed_at` est à ~0,6 s de `created_at`. Le webhook de succès peut donc précéder l'enregistrement de la réponse de `finalize` (défaut corrigé, voir `tests/payout-race.test.ts`).
+
+## Paiement réel de bout en bout (observé)
+
+`quotes` (10 $ USDC → 5 948 XOF, taux effectif 594,8, frais 0) → `initialize` (`INITIATED`) → `finalize` (**200 `PENDING`**, `provider_settlement_id: sandbox_txn_…`) → `GET /api/payouts/:id` = `SUCCESS` en quelques secondes. Transaction de débit `PAYOUT` / `SETTLED` (`-10.0 USDC`). Même parcours **par l'application** : projet, vraie facture `lntb`, preuve (photo + PDF), devis, paiement 5 $ → étape `paid`, séquestre et registre cohérents.
+
+## `GET /api/balances` n'est pas fiable en sandbox
+
+Après un dépôt de 20 USDC et un paiement de 10, l'endpoint a affiché tantôt `0`, tantôt `10000000`, tantôt `0` de nouveau, alors que la liste des transactions (+20, −10) et le fait que `finalize` ait été accepté montraient un solde réel de 10. Les montants sont en **unités minimales** (USDC/USDT : 6 décimales), avec des champs `*_formatted` ("10.0 USDC"). Notre `balances()` lit les champs formatés et prend le **plus élevé** entre l'endpoint et la somme des transactions réglées. **Question pour Bitnob :** pourquoi le solde est-il instable ?
 
 ## Appels observés
 
@@ -36,7 +51,9 @@
 
 `https://bitnob.dev/api-reference/payouts/webhooks` : en-tête `x-bitnob-signature` (HMAC-SHA512 de la charge), `x-bitnob-event-id` (= `event_id` du corps), 200 attendu sinon **3 nouvelles tentatives**. Évènements : `payouts.initialized`, `payouts.processing`, `payouts.withdrawal.success`, `payouts.withdrawal.expired` (pas d'évènement « failed » documenté). `data` : `id` (payout), `quote_id`, `reference`, `status` (`initiated`, `processing`, `success`, `expired`), `amount` (**dans `from_asset`**, donc USDT), `settlement_amount` (devise d'arrivée), `fees`, `beneficiary` (numéro masqué `****7654`). Notre routage par expressions régulières et `collectValues` couvre ces noms. À confirmer avec une vraie livraison (capture : `CAPTURE_WEBHOOKS=1`).
 
-## Hypothèses restantes
+## Hypothèses restantes (mises à jour)
+
+_Résolues le 18 oct. : réponse de `finalize` (`PENDING` puis `SUCCESS`), forme des webhooks `payouts.*` et `deposit.success`, algorithme de signature (SHA-512), `GET /api/payouts/:id` avec l'id du payout._
 
 1. Valeur de `status` d'une facture payée, et nom/forme du webhook de réception Lightning (`btc.lightning.received.success` ?). Unité du champ montant de ce webhook (le contrôle de montant est tolérant en attendant).
 2. Réponse de `finalize` réussi, et délai de passage à `COMPLETED` en sandbox.

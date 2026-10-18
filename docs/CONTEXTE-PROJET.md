@@ -220,13 +220,13 @@ Détail, écarts et hypothèses restantes : **`docs/BITNOB-SANDBOX-REPORT.md`**.
 | Facture | `POST /api/lightning/invoices` | `{amount (sats), description, reference, expiry (s)}` | `data.{id, payment_hash, request, expires_at}` | **Confirmé** (facture `lntb…`, testnet) |
 | Statut facture | `GET /api/lightning/invoices/:id` | | `data.status`, `preimage` (déjà visible avant paiement) | **Partiel** : valeur de `status` payée non observée |
 | Prix BTC | `GET /api/trading/prices` | | `data.prices[]` (`BTC/USDT`) | **Confirmé** |
-| Soldes | `GET /api/balances` | | `data.accounts[].{currency, available_balance}` | **Confirmé** (`Gateway.balances()`, utilisé pour les paiements et la solvabilité ; unité du BTC supposée en BTC) |
+| Soldes | `GET /api/balances` | | `data.accounts[].{currency, available_balance}` | **Confirmé mais instable en sandbox** (unités minimales + champs `*_formatted` ; `Gateway.balances()` prend le plus élevé entre l'endpoint et la somme des transactions réglées, voir le rapport) |
 | Conversion BTC→USDT | `POST /api/trading/quotes` puis `/api/trading/orders` | devis `{base_currency:'BTC', quote_currency:<PAYOUT_ASSET>, side:'sell', quantity (en BTC)}` ; ordre : mêmes champs + `quote_id` + `reference` | devis : `data.quote.{id, price, expires_at, exchange.receive_quantity}` (valable 5 min) ; ordre : **non observé** | **Devis confirmé**, ordre **non testé** (503 sans solde) |
 | Pays supportés | `GET /api/payouts/supported-countries/SN` | | champs sous `data.destination_types.mobile_money.fields` ; limites 100–200 000 XOF | **Confirmé** (n'est plus appelé à chaque paiement) |
 | Devis payout | `POST /api/payouts/quotes` | `{amount, country:'SN', from_asset:'USDT', to_currency:'XOF', source:'offchain', payment_reason, reference}` | `data.payout.{quote_id, settlement_amount, fees, exchange_rate.effective_rate, expires_at}` | **Confirmé** (devis valable ~16 min) |
 | Initialiser | `POST /api/payouts/:quoteId/initialize` | `{quote_id, reference, payment_reason, callback_url?, beneficiary{destination_type, country, account_name, account_number, network, sender{account_name, country}}}` | `data.payout.{id, status:'INITIATED'}` | **Confirmé** (`sender` obligatoire ; réseaux `wave`/`orange`/`free`) |
-| Finaliser | `POST /api/payouts/:quoteId/finalize` | (vide) | succès : **non observé** ; sans fonds : `422 INSUFFICIENT_FUNDS` | **Partiel** |
-| Statut payout | `GET /api/payouts/:payoutId` | | `data.payout.{status, provider_settlement_id}` | **Confirmé** (id du payout) |
+| Finaliser | `POST /api/payouts/:quoteId/finalize` | (vide) | succès : `200`, `data.payout.status:'PENDING'` puis `SUCCESS` en moins d'une seconde ; sans fonds : `422 INSUFFICIENT_FUNDS` | **Confirmé** |
+| Statut payout | `GET /api/payouts/:payoutId` | | `data.payout.{status (`INITIATED`, `PENDING`, `SUCCESS`), provider_settlement_id}` | **Confirmé** (id du payout) |
 | Retrouver un payout | `GET /api/payouts?limit=100` | | `data.items[].{id, reference, status}` (un simple devis y figure avec notre `reference`), pagination `total_count/limit/offset/has_more` | **Confirmé** (utilisé pour reprendre un paiement ambigu) |
 
 Statuts de payout vus : `QUOTE`, `INITIATED` ; documentés : `initiated`, `processing`, `success`, `expired` (webhooks), `PENDING`/`COMPLETED`/`FAILED` acceptés par notre correspondance. **Limite : 200 000 XOF par paiement mobile money au Sénégal** (devis refusé au-delà, ≈ 336 $). Endpoints existants non utilisés : `POST /api/customers`, `POST /api/lightning/decode`, `POST /api/lightning/pay`, `GET /api/payouts/limits`.
@@ -357,8 +357,8 @@ npm run build && npm start # production locale
 | Parcours complet financeur + terrain + vérification | **Testé** en mode `mock`, Edge, téléphone et ordinateur |
 | Dépôt d'une empreinte chez un vrai calendrier OpenTimestamps | **Testé** (statut `pending` atteint) |
 | Confirmation Bitcoin d'un ancrage, recoupement de bloc | **Non vérifié** (attendre quelques heures) |
-| Appels à l'API Bitnob sandbox : facture, prix, soldes, pays, devis, initialisation | **Testés en vrai le 18 oct. 2026** (rapport + tests rejoués). **Jamais vus** : paiement d'une facture, `finalize` réussi, webhooks réels, conversion BTC→USDT (aucun solde en sandbox). |
-| Charges utiles réelles des webhooks Bitnob | **Jamais vues** (formes documentées dans le rapport) |
+| Appels à l'API Bitnob sandbox : facture, prix, soldes, pays, devis, initialisation, `finalize`, statut | **Testés en vrai le 18 oct. 2026**, y compris un **paiement mobile money de bout en bout par l'application** (preuve, devis, paiement, webhooks `payouts.*`, étape payée, registre). **Jamais vus** : paiement d'une facture Lightning (aucun moyen), évènement de réception Lightning, vente BTC→stablecoin, paiement en échec. |
+| Charges utiles réelles des webhooks Bitnob | **Vues** pour `payouts.*` et `deposit.success`, signature SHA-512 vérifiée ; **jamais vues** pour la réception Lightning et les échecs de paiement |
 | Safari / Firefox / iOS / installation PWA sur téléphone | **Non testé** |
 | Charge, concurrence multi-processus, sécurité en production | **Non évalué** |
 
