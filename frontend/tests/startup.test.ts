@@ -51,7 +51,7 @@ describe('startup configuration check', () => {
     vi.stubEnv('BITNOB_CLIENT_ID', 'some-id');
     vi.stubEnv('BITNOB_CLIENT_SECRET', 'prd:live_' + 'ab'.repeat(8));
     expect(checkStartupConfig().fatal.join(' ')).toMatch(/production/);
-    vi.stubEnv('BITNOB_CLIENT_SECRET', 'sbx:test_' + 'ab'.repeat(8));
+    vi.stubEnv('BITNOB_CLIENT_SECRET', 'prd:sandbox_' + 'ab'.repeat(8)); // a sandbox key shares the prd: prefix
     expect(checkStartupConfig().fatal).toEqual([]);
   });
 });
