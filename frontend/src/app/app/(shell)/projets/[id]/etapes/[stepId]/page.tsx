@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AutoRefresh } from '@/components/app/AutoRefresh';
 import { FlowHeader } from '@/components/app/AppHeader';
 import { PayoutTracker } from '@/components/app/PayoutTracker';
+import { ReceiptCard } from '@/components/app/ReceiptCard';
 import { ProofView } from '@/components/app/ProofView';
 import { ReleasePanel } from '@/components/app/ReleasePanel';
 import { ShareManagerLink } from '@/components/app/ShareManagerLink';
@@ -18,6 +19,7 @@ import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject, findStep } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
+import { receiptToken } from '@/server/receipt';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Étape' };
@@ -46,6 +48,7 @@ export default async function StepPage({ params }: { params: { id: string; stepI
   const trail = ledgerFor(db, project.id).filter((e) => e.data.stepId === step.id);
   const lastFailure = step.status === 'proof_submitted' && step.payout?.status === 'failed' ? step.payout : undefined;
   const previous = project.steps.find((s) => s.index === step.index - 1);
+  const receipt = receiptToken(step);
   const hasProof = step.status === 'proof_submitted' || ((step.status === 'releasing' || step.status === 'paid') && !!step.payout);
   const blockedBy = step.status === 'upcoming' ? (previous && previous.status !== 'paid' ? previous : undefined) : undefined;
 
@@ -154,8 +157,9 @@ export default async function StepPage({ params }: { params: { id: string; stepI
 
         {(step.status === 'releasing' || step.status === 'paid') && step.payout && (
           <>
-            <div className="lg:col-start-2 lg:row-start-2">
+            <div className="flex flex-col gap-space-md lg:col-start-2 lg:row-start-2">
               <PayoutTracker step={step} />
+              {receipt && <ReceiptCard token={receipt} supplierName={step.payout.supplier.name} />}
             </div>
             {step.proof && (
               <div className="lg:col-start-1 lg:row-span-4 lg:row-start-2">

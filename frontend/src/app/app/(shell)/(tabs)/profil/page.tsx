@@ -7,6 +7,7 @@ import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, Chip, SectionTitle } from '@/components/ui/primitives';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
+import { isAdmin } from '@/server/admin';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { managerLinkToken } from '@/server/managerToken';
@@ -93,6 +94,22 @@ export default async function Profile() {
             <Icon name="chevron_right" className="text-on-surface-variant" />
           </Link>
         </section>
+
+        {isAdmin(user) && (
+          <section>
+            <SectionTitle>Administration</SectionTitle>
+            <Link href="/app/admin" className="flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-3.5 shadow-sm transition hover:shadow-md">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container text-primary">
+                <Icon name="admin_panel_settings" size={22} />
+              </span>
+              <span className="flex-1">
+                <span className="block font-title-md text-title-md">Tableau de bord administrateur</span>
+                <span className="block font-body-sm text-body-sm text-on-surface-variant">Paiements, versements, ancrages et alertes. Lecture seule.</span>
+              </span>
+              <Icon name="chevron_right" className="text-on-surface-variant" />
+            </Link>
+          </section>
+        )}
 
         <InstallCard />
 
