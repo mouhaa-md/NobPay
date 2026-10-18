@@ -118,7 +118,7 @@ export const SymbolDollar = (
   <g fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round">
     <path d="M -58 -34 A 66 66 0 0 0 -58 34" opacity="0.9" />
     <path d="M 58 -34 A 66 66 0 0 1 58 34" opacity="0.9" />
-    <text x="0" y="4" textAnchor="middle" dominantBaseline="central" fontFamily="'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif" fontWeight="700" fontSize="104" fill="currentColor" stroke="none">
+    <text x="0" y="4" textAnchor="middle" dominantBaseline="central" fontFamily="'Bricolage Grotesque Variable', 'Figtree Variable', sans-serif" fontWeight="700" fontSize="104" fill="currentColor" stroke="none">
       $
     </text>
   </g>

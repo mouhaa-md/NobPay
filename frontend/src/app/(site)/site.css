@@ -20,7 +20,10 @@ html:has(.site) {
   --grey: #566177;
   --line: #e3e9f6;
   --paper: #f8f9ff;
-  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+  --font-body: 'Figtree Variable', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-family: var(--font-body);
   color: var(--dark);
   background: #fff;
   line-height: 1.45;
@@ -29,13 +32,30 @@ html:has(.site) {
 .site h1,
 .site h2,
 .site h3 {
-  font-family: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Inter Variable', sans-serif;
-  font-weight: 400;
-  letter-spacing: -0.035em;
+  font-family: var(--font-display);
+  font-weight: 480;
+  font-stretch: 100%;
+  letter-spacing: -0.022em;
   margin: 0;
-  line-height: 1.04;
+  line-height: 1.06;
   color: var(--navy);
   text-wrap: balance;
+}
+.site h1 em,
+.site h2 em,
+.site h3 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-size: 1.08em;
+  letter-spacing: -0.01em;
+  color: var(--blue);
+  padding-right: 0.04em;
+}
+.how h2 em,
+.final h2 em {
+  color: #cfe0ff;
 }
 .site p {
   margin: 0;
@@ -53,7 +73,7 @@ html:has(.site) {
 }
 .site .eyebrow {
   display: inline-block;
-  font: 600 1.3rem 'Inter Variable', sans-serif;
+  font: 600 1.3rem var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--blue);
@@ -100,7 +120,8 @@ html:has(.site) {
   padding: 1.5rem 2.8rem;
   border-radius: 99px;
   font-size: 1.7rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   text-decoration: none;
   box-shadow: 0 1rem 2.4rem rgba(29, 78, 216, 0.3);
 }
@@ -150,7 +171,7 @@ html:has(.site) {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
-  font: 600 2.3rem 'Plus Jakarta Sans Variable', sans-serif;
+  font: 600 2.3rem var(--font-display);
   letter-spacing: -0.04em;
   text-decoration: none;
 }
@@ -271,7 +292,7 @@ html:has(.site) {
   border-radius: 99px;
   background: #fff;
   color: var(--navy);
-  font: 700 22cqw 'Inter Variable', sans-serif;
+  font: 700 22cqw var(--font-body);
   box-shadow: 0 0.4rem 1rem rgba(8, 24, 120, 0.25);
 }
 .hero-text {
@@ -285,8 +306,9 @@ html:has(.site) {
   justify-items: center;
 }
 .hero h1 {
-  font-size: clamp(3.4rem, 6.2rem, 9rem);
-  font-weight: 450;
+  font-size: clamp(3.4rem, 6.4rem, 9rem);
+  font-weight: 500;
+  letter-spacing: -0.028em;
   color: var(--navy);
 }
 .site .hero-sub {
@@ -338,8 +360,9 @@ html:has(.site) {
   border-bottom: 1px solid var(--line);
 }
 .stat dt strong {
-  font: 500 7.6rem/1 'Plus Jakarta Sans Variable', sans-serif;
-  letter-spacing: -0.045em;
+  font: 500 7.6rem/1 var(--font-display);
+  font-stretch: 96%;
+  letter-spacing: -0.035em;
   color: var(--blue-deep);
 }
 .stat dt strong small {
@@ -406,7 +429,7 @@ html:has(.site) {
   outline-offset: 4px;
 }
 .tab .nm-tab-title {
-  font: 500 2.8rem 'Plus Jakarta Sans Variable', sans-serif;
+  font: 500 2.8rem var(--font-display);
   letter-spacing: -0.03em;
   margin-bottom: 1rem;
   display: flex;
@@ -414,7 +437,7 @@ html:has(.site) {
   gap: 1.4rem;
 }
 .tab .nm-tab-title span {
-  font: 600 1.3rem 'Inter Variable', sans-serif;
+  font: 600 1.3rem var(--font-body);
   letter-spacing: 0.1em;
   opacity: 0.7;
 }
@@ -717,7 +740,7 @@ html:has(.site) {
 }
 .rail-tag {
   display: block;
-  font: 600 1.15rem 'Inter Variable', sans-serif;
+  font: 600 1.15rem var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--grey);
@@ -843,7 +866,7 @@ html:has(.site) {
   cursor: pointer;
   list-style: none;
   padding: 2.4rem 0;
-  font: 500 2rem 'Plus Jakarta Sans Variable', sans-serif;
+  font: 500 2rem var(--font-display);
   letter-spacing: -0.02em;
   display: flex;
   justify-content: space-between;

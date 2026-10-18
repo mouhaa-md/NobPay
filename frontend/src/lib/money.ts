@@ -2,7 +2,7 @@
 
 const NBSP = ' ';
 
-// fr-FR groups digits with a narrow no-break space (U+202F). The app fonts (Inter, Plus Jakarta Sans)
+// fr-FR groups digits with a narrow no-break space (U+202F). The app fonts (Figtree, Bricolage Grotesque)
 // have no glyph for it, so large amounts would render glued together: use a plain no-break space instead.
 const groups = (s: string) => s.replace(/ /g, NBSP);
 

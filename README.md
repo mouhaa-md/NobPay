@@ -129,4 +129,4 @@ frontend/
 
 ## Crédits
 
-Code et illustrations CSS originaux. Bibliothèques : Next.js, React, Tailwind CSS, [Lenis](https://github.com/darkroomengineering/lenis) (MIT), qrcode.react (ISC). Polices Inter et Plus Jakarta Sans, icônes Material Symbols (licences libres, via Fontsource). Photos de couverture (immobilier, agricole, commerce) : images fournies par l'équipe ; photos de preuve de démonstration : images d'illustration. Le kit d'animations reprend des durées et des courbes mesurées sur un site public, sans en copier le code ni les ressources.
+Code et illustrations CSS originaux. Bibliothèques : Next.js, React, Tailwind CSS, [Lenis](https://github.com/darkroomengineering/lenis) (MIT), qrcode.react (ISC). Polices Bricolage Grotesque, Figtree et Instrument Serif (accents en italique), icônes Material Symbols (licences libres, via Fontsource). Photos de couverture (immobilier, agricole, commerce) : images fournies par l'équipe ; photos de preuve de démonstration : images d'illustration. Le kit d'animations reprend des durées et des courbes mesurées sur un site public, sans en copier le code ni les ressources.

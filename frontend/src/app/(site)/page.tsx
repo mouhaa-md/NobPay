@@ -89,7 +89,7 @@ export default function Landing() {
           <h1 data-nm-reveal="words">
             Investissez au pays.
             <br />
-            Avec preuve.
+            <em>Avec preuve.</em>
           </h1>
           <p className="hero-sub" data-nm-reveal="lines">
             L&apos;argent de la diaspora reste en séquestre. Il n&apos;est libéré qu&apos;étape par étape, sur preuve, directement au fournisseur.
@@ -115,7 +115,7 @@ export default function Landing() {
             <div className="why-copy">
               <div className="eyebrow">Le constat</div>
               <h2 id="constat" data-nm-reveal="words">
-                Un transfert déplace l&apos;argent. Il n&apos;en contrôle pas l&apos;usage.
+                Un transfert déplace l&apos;argent. <em>Il n&apos;en contrôle pas l&apos;usage.</em>
               </h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
                 Une maison, un champ, une boutique : on finance à distance, sur la parole d&apos;un proche. NobPay remplace cette confiance aveugle par des preuves, étape après étape.
@@ -170,7 +170,7 @@ export default function Landing() {
               <div className="chip chip--dark">
                 Comment ça marche <i>⚡</i>
               </div>
-              <h2 data-nm-reveal="words">Financez, prouvez, libérez, vérifiez.</h2>
+              <h2 data-nm-reveal="words">Financez, prouvez, libérez, <em>vérifiez.</em></h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
                 Quatre gestes, tous dans l&apos;application. Ces écrans sont ceux du prototype, avec des données de démonstration.
               </p>
@@ -250,7 +250,7 @@ export default function Landing() {
         <section className="wrap sectors" id="secteurs">
           <div className="section-head">
             <div className="eyebrow">Trois secteurs</div>
-            <h2 data-nm-reveal="words">Un même moteur pour vos projets au pays</h2>
+            <h2 data-nm-reveal="words">Un même moteur pour <em>vos projets au pays</em></h2>
             <p data-nm-reveal="lines" data-nm-margin="10">
               Chaque secteur a ses étapes types. Vous les ajustez, puis chaque paiement dépend d&apos;une preuve.
             </p>
@@ -287,7 +287,7 @@ export default function Landing() {
           <div className="wrap peek-grid">
             <div className="peek-copy">
               <div className="eyebrow">Côté financeur</div>
-              <h2 data-nm-reveal="words">Tout le projet, sur un écran.</h2>
+              <h2 data-nm-reveal="words">Tout le projet, <em>sur un écran.</em></h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
                 Le séquestre, ce qui est libéré, l&apos;étape en cours, la preuve qui attend votre décision : rien n&apos;est caché derrière un relevé.
               </p>
@@ -321,7 +321,7 @@ export default function Landing() {
         <section className="wrap rails" id="rails">
           <div className="section-head">
             <div className="eyebrow">Sous le capot</div>
-            <h2 data-nm-reveal="words">Des rails ouverts, de bout en bout</h2>
+            <h2 data-nm-reveal="words">Des rails ouverts, <em>de bout en bout</em></h2>
             <p data-nm-reveal="lines" data-nm-margin="10">
               Lightning pour entrer, Bitnob pour garder et payer, Bitcoin pour prouver. Les secrets restent côté serveur, les états viennent de webhooks signés.
             </p>
@@ -346,7 +346,7 @@ export default function Landing() {
           <div className="verify-grid">
             <div>
               <div className="eyebrow">Verify, don&apos;t trust</div>
-              <h2 data-nm-reveal="words">Ne nous croyez pas. Vérifiez.</h2>
+              <h2 data-nm-reveal="words">Ne nous croyez pas. <em>Vérifiez.</em></h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
                 Un dossier NobPay se contrôle sans compte et sans nous : votre navigateur recalcule l&apos;empreinte, relit tout le registre et interroge Bitcoin.
               </p>
@@ -390,7 +390,7 @@ export default function Landing() {
         {/* ============ FAQ ============ */}
         <section className="wrap faq" id="faq">
           <div className="section-head">
-            <h2 data-nm-reveal="words">Questions franches</h2>
+            <h2 data-nm-reveal="words">Questions <em>franches</em></h2>
           </div>
           <div className="faq-list">
             {FAQ.map((item) => (
@@ -423,7 +423,7 @@ export default function Landing() {
           <h2 data-nm-reveal="words">
             Investissez au pays.
             <br />
-            Avec preuve.
+            <em>Avec preuve.</em>
           </h2>
           <p data-nm-reveal="lines" data-nm-margin="10">
             Essayez le parcours complet : créer un projet, le financer, valider une preuve, puis vérifier le dossier.

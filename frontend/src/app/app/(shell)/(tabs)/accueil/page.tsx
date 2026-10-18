@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ActivityList } from '@/components/app/ActivityList';
-import { AppHeader } from '@/components/app/AppHeader';
+import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { BalanceCard } from '@/components/app/BalanceCard';
 import { InstallCard } from '@/components/app/InstallCard';
 import { ProjectCardWide } from '@/components/app/ProjectCardWide';
@@ -34,7 +34,7 @@ export default async function Home() {
 
   return (
     <>
-      <AppHeader title="Accueil" user={user} />
+      <DesktopTopbar title="Accueil" />
 
       {/* ---------- phone ---------- */}
       <main className="pb-24 lg:hidden">
@@ -157,7 +157,7 @@ export default async function Home() {
               <div className="flex items-center gap-3">
                 <Avatar first={user.firstName} last={user.lastName} size="lg" />
                 <div>
-                  <p className="font-headline-lg text-headline-lg tracking-tight">Bonjour, {user.firstName}</p>
+                  <p className="font-headline-lg text-headline-lg tracking-tight">Bonjour, <span className="font-accent text-[1.15em] font-normal italic tracking-normal text-[#b7c4ff]">{user.firstName}</span></p>
                   <p className="font-body-md text-body-md text-surface-variant/80">
                     {country} · {user.demo ? 'Compte de démonstration' : 'Diaspora'}
                   </p>
