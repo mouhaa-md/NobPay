@@ -32,15 +32,15 @@ export default async function Welcome() {
         <div className="relative z-10 mx-auto my-6 h-[290px] w-full max-w-[320px]">
           <div data-nm-float="a" className="absolute left-0 top-6 h-[190px] w-[170px] -rotate-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/villa-thies.jpg" alt="Chantier de villa à Thiès" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/immobilier.jpg" alt="Projet immobilier" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <div data-nm-float="b" className="absolute right-0 top-0 h-[140px] w-[150px] rotate-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/champ-kaolack.jpg" alt="Champ de mil à Kaolack" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/agricole.jpg" alt="Pépinière, projet agricole" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <div data-nm-float="a" className="absolute bottom-0 right-3 h-[120px] w-[190px] -rotate-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/boutique-sandaga.jpg" alt="Boutique à Sandaga, Dakar" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/commerce.jpg" alt="Port et conteneurs, projet de commerce" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <span className="absolute -left-1 bottom-6 flex -rotate-3 items-center gap-1.5 rounded-full bg-surface-container-lowest/95 px-3 py-1.5 font-label-md text-label-md text-on-surface shadow-lg backdrop-blur-md">
             <Icon name="verified" filled size={18} className="text-[#F7931A]" /> Preuve ancrée sur Bitcoin

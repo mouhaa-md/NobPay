@@ -168,7 +168,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
           </p>
           <div className="grid grid-cols-3 gap-2">
             {photos.map((p) => (
-              <div key={p.id} className="relative aspect-square overflow-hidden rounded-xl bg-surface-container">
+              <div key={p.id} className="relative aspect-square overflow-hidden rounded-2xl bg-surface-container">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.preview} alt="Photo ajoutée" className="h-full w-full object-cover" />
                 <button type="button" aria-label="Retirer la photo" onClick={() => removePhoto(p.id)} className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white">
@@ -177,7 +177,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               </div>
             ))}
             {photos.length < MAX_PHOTOS && (
-              <button type="button" onClick={() => camera.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-primary-container/50 bg-primary/5 text-primary transition active:scale-95">
+              <button type="button" onClick={() => camera.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-primary-container/50 bg-primary/5 text-primary transition active:scale-95">
                 <Icon name="photo_camera" size={28} />
                 <span className="font-label-sm text-label-sm font-semibold">Photographier</span>
               </button>

@@ -53,16 +53,16 @@ pour les chiffres). Les montants affichés sont toujours recalculés depuis la b
 
 | Projet | Secteur | Budget | Libérés | En séquestre | Étape | Responsable |
 |---|---|---|---|---|---|---|
-| Villa à Thiès | Immobilier | 24 000 $ | 6 000 $ | 18 000 $ | 3 sur 6 : Élévation des murs (preuve à valider) | Mamadou Diop |
-| Champ de mil à Kaolack | Agricole | 9 000 $ | 5 400 $ | 3 600 $ | 4 sur 5 : Récolte et stockage | Ousmane Ba |
-| Boutique à Sandaga | Commerce | 5 000 $ | 1 000 $ | 4 000 $ | 2 sur 4 : Livraison du stock | Aïcha Fall |
+| Résidence à Thiès | Immobilier | 24 000 $ | 6 000 $ | 18 000 $ | 3 sur 6 : Élévation des murs (preuve à valider) | Mamadou Diop |
+| Pépinière à Kaolack | Agricole | 9 000 $ | 5 400 $ | 3 600 $ | 4 sur 5 : Récolte et stockage | Ousmane Ba |
+| Import de stock à Dakar | Commerce | 5 000 $ | 1 000 $ | 4 000 $ | 2 sur 4 : Livraison du stock | Aïcha Fall |
 
 - Totaux calculés : 25 600 $ en séquestre, 12 400 $ libérés, 38 000 $ de budget, 6 étapes payées sur 15.
 - Progression = libérés ÷ budget (Villa 25 %, Champ 60 %, Boutique 20 %).
 - Taux indicatif : 1 $ = 760 FCFA (25 600 $ ≈ 19 456 000 FCFA) ; 1 BTC ≈ 81 500 $ (réglables dans `.env`).
   Les entrées se font en Bitcoin Lightning ; le dépôt USDT/USDC est affiché « Bientôt ».
 - Utilisatrice : Aminata Sow, France. Fournisseur : Quincaillerie Ndiaye, payé par Wave.
-- Photos de couverture : `public/covers/*.jpg` (images générées, présentées comme exemples) ; titre foncier
+- Photos de couverture : `public/covers/*.jpg` (fournies par l'équipe) ; photos de preuve de démonstration : `public/demo/proof-*.jpg` ; titre foncier
   et facture de démonstration : `public/demo/*.svg`.
 
 ## Technique

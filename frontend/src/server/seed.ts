@@ -224,18 +224,18 @@ export function buildSeed(nowMs: number = Date.now()): Db {
   const geometre: Supplier = { name: 'Cabinet Fall, géomètre', network: 'orange_money', phone: '+221771234567' };
   const ndiaye: Supplier = { name: 'Quincaillerie Ndiaye', network: 'wave', phone: '+221776543210' };
 
-  // ---- 1. Villa à Thiès (Immobilier) ---------------------------------------
+  // ---- 1. Résidence à Thiès (Immobilier) ---------------------------------------
   const villaId = 'p_villa';
   const villa = createProject(
     {
       id: villaId,
       ownerId: DEMO_USER_ID,
-      name: 'Villa à Thiès',
+      name: 'Résidence à Thiès',
       sector: 'immobilier',
       city: 'Thiès',
       country: 'SN',
       budgetCents: 2_400_000,
-      coverImage: '/covers/villa-thies.jpg',
+      coverImage: '/covers/immobilier.jpg',
       managerName: 'Mamadou Diop',
       managerPhone: '+221770001122',
       managerToken: 'demo-villa-thies',
@@ -254,7 +254,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
   addFunding(villa, 1, 1_500_000, 'lightning', 12, 15, 10);
   payStep(villa, villa.steps[0], geometre, 10, 10, 15, 'demo/titre-foncier.svg');
   addFunding(villa, 2, 400_000, 'lightning', 6, 11, 40);
-  payStep(villa, villa.steps[1], ndiaye, 4, 14, 20, 'covers/villa-thies.jpg');
+  payStep(villa, villa.steps[1], ndiaye, 4, 14, 20, 'demo/proof-immobilier.jpg');
   addFunding(villa, 3, 500_000, 'lightning', 1, 18, 30);
   // Step 3: proof submitted yesterday, waiting for the funder's decision.
   const s3 = villa.steps[2];
@@ -262,7 +262,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
   s3.proof = {
     photos: [
       {
-        ...seedFile('seed-villa-s3-1', 'murs-facade.jpg', 'covers/villa-thies.jpg', 'image/jpeg'),
+        ...seedFile('seed-villa-s3-1', 'murs-facade.jpg', 'demo/proof-immobilier.jpg', 'image/jpeg'),
         takenAt: at(1, 19, 5),
         gps: { lat: 14.7886, lng: -16.9262, accuracy: 9 },
       },
@@ -288,18 +288,18 @@ export function buildSeed(nowMs: number = Date.now()): Db {
     s3.proof.submittedAt,
   );
 
-  // ---- 2. Champ de mil à Kaolack (Agricole) --------------------------------
+  // ---- 2. Pépinière à Kaolack (Agricole) --------------------------------
   const champId = 'p_champ';
   const champ = createProject(
     {
       id: champId,
       ownerId: DEMO_USER_ID,
-      name: 'Champ de mil à Kaolack',
+      name: 'Pépinière à Kaolack',
       sector: 'agricole',
       city: 'Kaolack',
       country: 'SN',
       budgetCents: 900_000,
-      coverImage: '/covers/champ-kaolack.jpg',
+      coverImage: '/covers/agricole.jpg',
       managerName: 'Ousmane Ba',
       managerPhone: '+221770003344',
       managerToken: 'demo-champ-kaolack',
@@ -315,24 +315,24 @@ export function buildSeed(nowMs: number = Date.now()): Db {
   );
   const intrants: Supplier = { name: 'Coopérative Sine-Saloum', network: 'wave', phone: '+221779998877' };
   addFunding(champ, 1, 400_000, 'lightning', 38, 10, 5);
-  payStep(champ, champ.steps[0], intrants, 33, 9, 30, 'covers/champ-kaolack.jpg');
+  payStep(champ, champ.steps[0], intrants, 33, 9, 30, 'demo/proof-agricole.jpg');
   addFunding(champ, 2, 500_000, 'lightning', 30, 16, 45);
-  payStep(champ, champ.steps[1], intrants, 24, 11, 0, 'covers/champ-kaolack.jpg');
-  payStep(champ, champ.steps[2], intrants, 11, 15, 20, 'covers/champ-kaolack.jpg');
+  payStep(champ, champ.steps[1], intrants, 24, 11, 0, 'demo/proof-agricole.jpg');
+  payStep(champ, champ.steps[2], intrants, 11, 15, 20, 'demo/proof-agricole.jpg');
   champ.steps[3].status = 'active';
 
-  // ---- 3. Boutique à Sandaga (Commerce) ------------------------------------
+  // ---- 3. Import de stock à Dakar (Commerce) ------------------------------------
   const boutiqueId = 'p_boutique';
   const boutique = createProject(
     {
       id: boutiqueId,
       ownerId: DEMO_USER_ID,
-      name: 'Boutique à Sandaga',
+      name: 'Import de stock à Dakar',
       sector: 'commerce',
       city: 'Dakar',
       country: 'SN',
       budgetCents: 500_000,
-      coverImage: '/covers/boutique-sandaga.jpg',
+      coverImage: '/covers/commerce.jpg',
       managerName: 'Aïcha Fall',
       managerPhone: '+221770005566',
       managerToken: 'demo-boutique-sandaga',

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Coin, PALETTES, SymbolBitcoin, SymbolDollar } from '@/components/site/Coin';
+import { HeroArt } from '@/components/site/HeroArt';
 import { MotionProvider } from '@/components/site/MotionProvider';
+import { Phone } from '@/components/site/Phone';
 import { Icon } from '@/components/ui/Icon';
 import { SECTORS, STEP_TEMPLATES } from '@/lib/templates';
 import type { Sector } from '@/lib/types';
@@ -12,6 +15,11 @@ export const metadata: Metadata = {
 };
 
 const SECTOR_ORDER: Sector[] = ['immobilier', 'agricole', 'commerce'];
+const SECTOR_NOTE: Record<Sector, string> = {
+  immobilier: 'Titre foncier vérifié avant le premier paiement, puis chaque phase du chantier sur photos datées.',
+  agricole: 'Intrants, semis, récolte : chaque achat est prouvé par une facture et une photo du terrain.',
+  commerce: 'Du premier achat de stock à la mise en rayon : le fournisseur est payé quand la marchandise arrive.',
+};
 
 const FAQ = [
   {
@@ -28,12 +36,19 @@ const FAQ = [
   },
   {
     q: 'Dans quels pays ?',
-    a: "Le prototype paie au Sénégal, par Wave, Orange Money ou Free Money. Les autres pays dépendront des réseaux que Bitnob permet de payer.",
+    a: 'Le prototype paie au Sénégal, par Wave, Orange Money ou Free Money. Les autres pays dépendront des réseaux que Bitnob permet de payer.',
   },
   {
     q: 'Le code est-il ouvert ?',
     a: "Oui, sous licence MIT. La vérification d'un dossier se fait dans votre navigateur et peut être relue ligne par ligne.",
   },
+];
+
+const RAILS = [
+  { tag: 'Entrée', title: 'Bitcoin Lightning', text: 'Le financeur paie une facture depuis n’importe quel portefeuille.', icon: 'bolt' },
+  { tag: 'Garde', title: 'Séquestre Bitnob', text: 'Les fonds restent dans un portefeuille lié au projet.', icon: 'lock' },
+  { tag: 'Sortie', title: 'Mobile money', text: 'Wave, Orange Money ou Free Money : le fournisseur est payé directement.', icon: 'smartphone' },
+  { tag: 'Preuve', title: 'Ancrage Bitcoin', text: 'L’empreinte du dossier est publiée avec OpenTimestamps.', icon: 'currency_bitcoin' },
 ];
 
 export default function Landing() {
@@ -56,6 +71,9 @@ export default function Landing() {
             <a href="#how" className="hide-sm">
               Comment ça marche
             </a>
+            <a href="#secteurs" className="hide-sm">
+              Secteurs
+            </a>
             <Link href="/verifier" className="hide-sm">
               Vérifier un dossier
             </Link>
@@ -65,26 +83,7 @@ export default function Landing() {
           </nav>
         </header>
 
-        <div className="coin-wrap c1" data-nm-parallax="-20">
-          <div className="coin coin--green" data-nm-float="a">
-            <Icon name="home" filled />
-          </div>
-        </div>
-        <div className="coin-wrap c2" data-nm-parallax="-40">
-          <div className="coin coin--btc" data-nm-float="b">
-            <Icon name="currency_bitcoin" />
-          </div>
-        </div>
-        <div className="coin-wrap c3" data-nm-parallax="-10">
-          <div className="coin" data-nm-float="a">
-            <Icon name="agriculture" />
-          </div>
-        </div>
-        <div className="coin-wrap c4" data-nm-parallax="-80">
-          <div className="coin coin--light" data-nm-float="b">
-            <Icon name="storefront" />
-          </div>
-        </div>
+        <HeroArt />
 
         <div className="hero-text">
           <h1 data-nm-reveal="words">
@@ -110,159 +109,147 @@ export default function Landing() {
       </section>
 
       <main>
-        {/* ============ INTRO ============ */}
-        <section className="wrap intro">
-          <div className="chip">
-            Bienvenue sur NobPay <i>✦</i>
+        {/* ============ WHY ============ */}
+        <section className="wrap why" aria-labelledby="constat">
+          <div className="why-grid">
+            <div className="why-copy">
+              <div className="eyebrow">Le constat</div>
+              <h2 id="constat" data-nm-reveal="words">
+                Un transfert déplace l&apos;argent. Il n&apos;en contrôle pas l&apos;usage.
+              </h2>
+              <p data-nm-reveal="lines" data-nm-margin="10">
+                Une maison, un champ, une boutique : on finance à distance, sur la parole d&apos;un proche. NobPay remplace cette confiance aveugle par des preuves, étape après étape.
+              </p>
+            </div>
+            <div>
+              <dl className="stats">
+                <div className="stat">
+                  <dt>
+                    <strong>
+                      124,2<small> Md$</small>
+                    </strong>
+                  </dt>
+                  <dd>envoyés par des migrants à leurs familles en Afrique en 2025.</dd>
+                </div>
+                <div className="stat">
+                  <dt>
+                    <strong>
+                      1 $<small> sur 3</small>
+                    </strong>
+                  </dt>
+                  <dd>des envois vers les pays à revenu faible ou intermédiaire arrive en zone rurale, près de 233 Md$ en 2025.</dd>
+                </div>
+                <div className="stat">
+                  <dt>
+                    <strong>
+                      22<small> Md$ par an</small>
+                    </strong>
+                  </dt>
+                  <dd>investis par les familles bénéficiaires dans l&apos;agriculture et l&apos;alimentation rurales (estimation, mêmes pays).</dd>
+                </div>
+              </dl>
+              <p className="sources">
+                Source : IFAD, 14 septembre 2026, relayé par{' '}
+                <a href="https://news.un.org/en/story/2026/09/1168330" target="_blank" rel="noopener noreferrer">
+                  ONU Info
+                </a>{' '}
+                et{' '}
+                <a href="https://www.ifad.org/en/w/news/remittances-nearly-doubled-in-a-decade-to-reach-us-729-billion-in-2025-new-ifad-report-finds" target="_blank" rel="noopener noreferrer">
+                  l&apos;IFAD
+                </a>
+                . Ces chiffres décrivent le marché, pas les résultats de NobPay.
+              </p>
+            </div>
           </div>
-          <h2 data-nm-reveal="words">L&apos;argent de la diaspora, enfin vérifiable</h2>
-          <p data-nm-reveal="lines" data-nm-margin="10">
-            Pour que l&apos;argent envoyé au pays serve vraiment à ce pour quoi il a été envoyé.
-          </p>
         </section>
 
-        {/* ============ SOURCED FIGURES ============ */}
-        <section className="wrap figures" aria-labelledby="chiffres">
-          <h2 id="chiffres" className="sr-only">
-            Le marché en chiffres
-          </h2>
-          <div className="figure-grid">
-            <div className="figure">
-              <strong>
-                124,2<small>Md$</small>
-              </strong>
-              <p>envoyés par des migrants à leurs familles en Afrique en 2025.</p>
-            </div>
-            <div className="figure">
-              <strong>
-                1 $<small>sur 3</small>
-              </strong>
-              <p>des envois vers les pays à revenu faible ou intermédiaire arrive en zone rurale : près de 233 Md$ en 2025.</p>
-            </div>
-            <div className="figure">
-              <strong>
-                22<small>Md$ par an</small>
-              </strong>
-              <p>sont investis par les familles bénéficiaires dans l&apos;agriculture et l&apos;alimentation rurales (estimation, mêmes pays).</p>
-            </div>
-          </div>
-          <p className="sources">
-            Source : IFAD, nouveau rapport sur les envois de fonds, 14 septembre 2026, relayé par{' '}
-            <a href="https://news.un.org/en/story/2026/09/1168330" target="_blank" rel="noopener noreferrer">
-              ONU Info
-            </a>{' '}
-            et{' '}
-            <a href="https://www.ifad.org/en/w/news/remittances-nearly-doubled-in-a-decade-to-reach-us-729-billion-in-2025-new-ifad-report-finds" target="_blank" rel="noopener noreferrer">
-              l&apos;IFAD
-            </a>
-            . Ces chiffres décrivent le marché, pas les résultats de NobPay.
-          </p>
-        </section>
-
-        {/* ============ BENTO ============ */}
-        <section className="wrap bento">
-          <div className="pair">
-            <article className="card">
-              <div className="art">
-                <div className="nm-pucks" style={{ width: '100%' }}>
-                  <span className="nm-puck puck pk-a" style={{ '--i': 0 } as React.CSSProperties}>
-                    <Icon name="bolt" filled />
-                  </span>
-                  <span className="nm-puck puck pk-b" style={{ '--i': 1 } as React.CSSProperties}>
-                    <Icon name="currency_bitcoin" />
-                  </span>
-                  <span className="nm-puck puck pk-c" style={{ '--i': 2 } as React.CSSProperties}>
-                    <Icon name="check" />
-                  </span>
-                </div>
+        {/* ============ HOW (blue, real screens) ============ */}
+        <section className="how nm-grain" id="how">
+          <div className="wrap">
+            <div className="how-head">
+              <div className="chip chip--dark">
+                Comment ça marche <i>⚡</i>
               </div>
-              <div>
-                <h3 data-nm-reveal="words" data-nm-margin="10">
-                  Au-delà du simple transfert
-                </h3>
-                <p data-nm-reveal="lines">Un transfert déplace l&apos;argent. NobPay en contrôle l&apos;usage : fonds en séquestre, libérés étape par étape, sur preuve.</p>
-              </div>
-            </article>
-            <article className="card">
-              <p className="dark" data-nm-reveal="lines">
-                Des rails ouverts : Lightning pour entrer, mobile money pour payer, Bitcoin pour prouver.
+              <h2 data-nm-reveal="words">Financez, prouvez, libérez, vérifiez.</h2>
+              <p data-nm-reveal="lines" data-nm-margin="10">
+                Quatre gestes, tous dans l&apos;application. Ces écrans sont ceux du prototype, avec des données de démonstration.
               </p>
-              <div className="art">
-                <div className="nm-swing" style={{ width: '100%', height: '16rem' }}>
-                  <div className="nm-swing-arm" style={{ '--a': '9deg', '--d': '5.2s', '--delay': '-1s' } as React.CSSProperties}>
-                    <span className="tile t1" style={{ left: '12%', top: '8%' }}>
-                      <Icon name="bolt" filled />
-                    </span>
-                  </div>
-                  <div className="nm-swing-arm" style={{ '--a': '7deg', '--d': '4.8s', '--delay': '-2.4s' } as React.CSSProperties}>
-                    <span className="tile t4" style={{ left: '68%', top: '2%' }}>
-                      <Icon name="currency_bitcoin" />
-                    </span>
-                  </div>
-                  <div className="nm-swing-arm" style={{ '--a': '14deg', '--d': '5.6s', '--delay': '-3.2s' } as React.CSSProperties}>
-                    <span className="tile t3" style={{ left: '48%', top: '58%' }}>
-                      <Icon name="smartphone" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
+            </div>
 
-          <div className="pair flip">
-            <article className="card">
-              <p className="dark" data-nm-reveal="lines">
-                Notre mission : redonner à chaque famille de la diaspora le contrôle de ce qu&apos;elle finance.
-              </p>
-              <div className="art">
-                <div className="nm-orbits" style={{ width: 'min(100%, 24rem)' }}>
-                  <div className="nm-orbit" style={{ '--inset': '2%', '--d': '17s' } as React.CSSProperties}>
+            <div className="tabs" data-nm-tabs data-nm-delay="5000" role="tablist">
+              <div className="tab-list">
+                <div className="tab" data-nm-tab role="tab">
+                  <div className="nm-tab-title">
+                    <span>01</span> Financer
+                  </div>
+                  <ul className="nm-tab-list">
+                    <li>Un paiement Lightning depuis n&apos;importe quel portefeuille.</li>
+                    <li>Les fonds restent en séquestre, dans un portefeuille Bitnob lié au projet.</li>
+                  </ul>
+                  <span className="nm-tab-progress">
                     <i />
+                  </span>
+                </div>
+                <div className="tab" data-nm-tab role="tab">
+                  <div className="nm-tab-title">
+                    <span>02</span> Prouver
                   </div>
-                  <div className="nm-orbit" style={{ '--inset': '17%', '--d': '13s', '--delay': '-4s' } as React.CSSProperties}>
-                    <i className="nm-blink" />
-                  </div>
-                  <div className="nm-orbit" style={{ '--inset': '32%', '--d': '11s', '--delay': '-2s' } as React.CSSProperties}>
+                  <ul className="nm-tab-list">
+                    <li>La personne de confiance sur place ouvre un lien privé, sans compte.</li>
+                    <li>Photos datées et localisées, facture, titre foncier, et qui doit être payé.</li>
+                  </ul>
+                  <span className="nm-tab-progress">
                     <i />
+                  </span>
+                </div>
+                <div className="tab" data-nm-tab role="tab">
+                  <div className="nm-tab-title">
+                    <span>03</span> Libérer
                   </div>
-                  <div className="orbit-btn">
-                    <Link className="btn nm-btn nm-btn--swap" href="/app">
-                      Essayer la démo
-                    </Link>
+                  <ul className="nm-tab-list">
+                    <li>Vous regardez la preuve, puis vous validez.</li>
+                    <li>Le devis affiche le taux, les frais et ce que reçoit le fournisseur, avant confirmation.</li>
+                  </ul>
+                  <span className="nm-tab-progress">
+                    <i />
+                  </span>
+                </div>
+                <div className="tab" data-nm-tab role="tab">
+                  <div className="nm-tab-title">
+                    <span>04</span> Vérifier
                   </div>
+                  <ul className="nm-tab-list">
+                    <li>Chaque événement s&apos;ajoute à un registre enchaîné.</li>
+                    <li>Son empreinte est ancrée sur Bitcoin : n&apos;importe qui peut la contrôler.</li>
+                  </ul>
+                  <span className="nm-tab-progress">
+                    <i />
+                  </span>
                 </div>
               </div>
-            </article>
-            <article className="card">
-              <div className="art">
-                <div className="nm-stack" style={{ width: '100%', '--u': '1.1rem' } as React.CSSProperties}>
-                  {['photo_camera', 'receipt_long', 'verified', 'payments'].map((name, i) => (
-                    <div key={name} className="nm-stack-card row" style={{ '--i': i } as React.CSSProperties}>
-                      <b>
-                        <Icon name={name} />
-                      </b>
-                      <span />
-                      <em />
-                    </div>
-                  ))}
+
+              <div className="panels" data-nm-panels>
+                <div className="nm-panel" data-nm-panel>
+                  <Phone src="/site/phone-financer.webp" alt="Écran de financement : facture Lightning et code QR" />
+                </div>
+                <div className="nm-panel" data-nm-panel>
+                  <Phone src="/site/phone-preuve.webp" alt="Écran terrain : photos, facture et fournisseur à payer" />
+                </div>
+                <div className="nm-panel" data-nm-panel>
+                  <Phone src="/site/phone-liberer.webp" alt="Écran de confirmation du paiement avec taux et frais" />
+                </div>
+                <div className="nm-panel" data-nm-panel>
+                  <Phone src="/site/phone-verifier.webp" alt="Page publique de vérification d'un dossier" />
                 </div>
               </div>
-              <div>
-                <h3 data-nm-reveal="words" data-nm-margin="10">
-                  Chaque étape laisse une trace
-                </h3>
-                <p data-nm-reveal="lines">Photos datées et localisées, facture, fournisseur payé directement : tout est inscrit dans un registre ancré sur Bitcoin.</p>
-              </div>
-            </article>
+            </div>
           </div>
         </section>
 
         {/* ============ SECTORS ============ */}
         <section className="wrap sectors" id="secteurs">
           <div className="section-head">
-            <div className="chip">
-              Trois secteurs <i>⌂</i>
-            </div>
+            <div className="eyebrow">Trois secteurs</div>
             <h2 data-nm-reveal="words">Un même moteur pour vos projets au pays</h2>
             <p data-nm-reveal="lines" data-nm-margin="10">
               Chaque secteur a ses étapes types. Vous les ajustez, puis chaque paiement dépend d&apos;une preuve.
@@ -273,156 +260,93 @@ export default function Landing() {
               const s = SECTORS[id];
               return (
                 <article key={id} className="sector">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={s.cover} alt="" loading="lazy" />
-                  <div>
-                    <h3>
-                      <Icon name={s.icon} /> {s.label}
-                    </h3>
-                    <p>{s.tagline}</p>
+                  <div className="sector-photo">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={s.cover} alt="" loading="lazy" />
+                    <span className="sector-tag">
+                      <Icon name={s.icon} size={18} /> {s.label}
+                    </span>
+                  </div>
+                  <div className="sector-body">
+                    <h3>{s.tagline}</h3>
+                    <p>{SECTOR_NOTE[id]}</p>
                     <ol>
                       {STEP_TEMPLATES[id].map((t) => (
                         <li key={t.title}>{t.title}</li>
                       ))}
                     </ol>
                   </div>
-                  <small>Image d&apos;illustration générée. Étapes modifiables dans l&apos;application.</small>
                 </article>
               );
             })}
           </div>
         </section>
 
-        {/* ============ HOW IT WORKS (blue) ============ */}
-        <section className="solution nm-grain" id="how">
-          <div className="wrap">
-            <div className="chip">
-              Comment ça marche <i>⚡</i>
-            </div>
-            <h2 data-nm-reveal="words">Financez, validez, payez, vérifiez.</h2>
-
-            <div className="duo">
+        {/* ============ DASHBOARD ============ */}
+        <section className="peek">
+          <div className="wrap peek-grid">
+            <div className="peek-copy">
+              <div className="eyebrow">Côté financeur</div>
+              <h2 data-nm-reveal="words">Tout le projet, sur un écran.</h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
-                Financez en Bitcoin Lightning. Vos fonds restent en séquestre, étape par étape.
+                Le séquestre, ce qui est libéré, l&apos;étape en cours, la preuve qui attend votre décision : rien n&apos;est caché derrière un relevé.
               </p>
-              <div className="toggle-art nm-toggle" data-nm-float="a">
-                <div className="nm-toggle-platform" />
-                <div className="nm-toggle-coin coin coin--btc">
-                  <Icon name="currency_bitcoin" />
-                </div>
-                <div className="nm-toggle-arrow">
-                  <Icon name="arrow_forward" />
-                </div>
-              </div>
-              <p data-nm-reveal="lines" data-nm-margin="10">
-                Chaque étape validée déclenche un paiement direct au fournisseur par mobile money, et laisse une preuve que n&apos;importe qui peut vérifier.
-              </p>
+              <ul className="ticks">
+                <li>
+                  <Icon name="check_circle" filled size={22} /> Montants en dollars et en FCFA, au taux affiché avant chaque paiement
+                </li>
+                <li>
+                  <Icon name="check_circle" filled size={22} /> Une seule étape ouverte à la fois, et seulement si le séquestre la couvre
+                </li>
+                <li>
+                  <Icon name="check_circle" filled size={22} /> Lien privé pour la personne sur place : elle ne voit ni votre solde ni vos fonds
+                </li>
+              </ul>
+              <Link href="/app" className="btn nm-btn">
+                Essayer la démo <Icon name="arrow_forward" size={22} />
+              </Link>
             </div>
-
-            <div className="tabs" data-nm-tabs data-nm-delay="4000" role="tablist">
-              <div>
-                <div className="tab" data-nm-tab role="tab">
-                  <div className="nm-tab-title">1 · Financer</div>
-                  <ul className="nm-tab-list">
-                    <li>Un paiement Lightning depuis n&apos;importe quel portefeuille.</li>
-                    <li>Les fonds restent en séquestre dans un portefeuille Bitnob lié au projet.</li>
-                  </ul>
-                  <span className="nm-tab-progress">
-                    <i />
-                  </span>
-                </div>
-                <div className="tab" data-nm-tab role="tab">
-                  <div className="nm-tab-title">2 · Prouver</div>
-                  <ul className="nm-tab-list">
-                    <li>La personne de confiance sur place ouvre un lien privé.</li>
-                    <li>Photos datées et localisées, facture, titre foncier.</li>
-                  </ul>
-                  <span className="nm-tab-progress">
-                    <i />
-                  </span>
-                </div>
-                <div className="tab" data-nm-tab role="tab">
-                  <div className="nm-tab-title">3 · Libérer</div>
-                  <ul className="nm-tab-list">
-                    <li>Vous regardez la preuve, puis vous validez.</li>
-                    <li>Le fournisseur est payé en mobile money, au taux affiché avant confirmation.</li>
-                  </ul>
-                  <span className="nm-tab-progress">
-                    <i />
-                  </span>
-                </div>
-                <div className="tab" data-nm-tab role="tab">
-                  <div className="nm-tab-title">4 · Vérifier</div>
-                  <ul className="nm-tab-list">
-                    <li>Chaque événement s&apos;ajoute à un registre enchaîné.</li>
-                    <li>Son empreinte est ancrée sur Bitcoin : n&apos;importe qui peut la contrôler.</li>
-                  </ul>
-                  <span className="nm-tab-progress">
-                    <i />
-                  </span>
-                </div>
+            <div className="peek-phones" aria-hidden="false">
+              <div className="peek-a" data-nm-float="b">
+                <Phone src="/site/phone-accueil.webp" alt="Tableau de bord : total en séquestre et équipes sur place" />
               </div>
-              <div data-nm-panels>
-                <div className="nm-panel" data-nm-panel>
-                  <div className="panel-art">
-                    <div className="nm-ripple" data-glyph="₿">
-                      {[0, 1, 2, 3].map((i) => (
-                        <span key={i} className="nm-ripple-ring" style={{ '--i': i } as React.CSSProperties} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="nm-panel" data-nm-panel>
-                  <div className="panel-art">
-                    <div className="nm-orbits">
-                      <div className="nm-orbit" style={{ '--inset': '6%', '--d': '15s' } as React.CSSProperties}>
-                        <i />
-                      </div>
-                      <div className="nm-orbit" style={{ '--inset': '24%', '--d': '11s', '--delay': '-3s' } as React.CSSProperties}>
-                        <i />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="nm-panel" data-nm-panel>
-                  <div className="panel-art">
-                    <div className="nm-pucks" style={{ width: '80%', '--nm-puck': '6rem' } as React.CSSProperties}>
-                      <span className="nm-puck puck pk-a" style={{ '--i': 0 } as React.CSSProperties}>
-                        <Icon name="photo_camera" />
-                      </span>
-                      <span className="nm-puck puck pk-b" style={{ '--i': 1 } as React.CSSProperties}>
-                        <Icon name="verified" />
-                      </span>
-                      <span className="nm-puck puck pk-c" style={{ '--i': 2 } as React.CSSProperties}>
-                        <Icon name="payments" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="nm-panel" data-nm-panel>
-                  <div className="panel-art">
-                    <div className="nm-ripple" data-glyph="✓" style={{ color: '#0defd1' }}>
-                      {[0, 1, 2].map((i) => (
-                        <span key={i} className="nm-ripple-ring" style={{ '--i': i } as React.CSSProperties} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div className="peek-b" data-nm-float="a">
+                <Phone src="/site/phone-projet.webp" alt="Projet : séquestre, avancement et étapes" />
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ============ RAILS ============ */}
+        <section className="wrap rails" id="rails">
+          <div className="section-head">
+            <div className="eyebrow">Sous le capot</div>
+            <h2 data-nm-reveal="words">Des rails ouverts, de bout en bout</h2>
+            <p data-nm-reveal="lines" data-nm-margin="10">
+              Lightning pour entrer, Bitnob pour garder et payer, Bitcoin pour prouver. Les secrets restent côté serveur, les états viennent de webhooks signés.
+            </p>
+          </div>
+          <ol className="rail-flow">
+            {RAILS.map((r, i) => (
+              <li key={r.title} className="rail">
+                <span className="rail-icon">
+                  <Icon name={r.icon} filled={r.icon !== 'currency_bitcoin'} />
+                </span>
+                <span className="rail-tag">{r.tag}</span>
+                <h3>{r.title}</h3>
+                <p>{r.text}</p>
+                {i < RAILS.length - 1 && <span className="rail-link" aria-hidden="true" />}
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* ============ VERIFY ============ */}
         <section className="wrap verify" id="verifier">
           <div className="verify-grid">
             <div>
-              <div className="chip">
-                Verify, don&apos;t trust <i>✓</i>
-              </div>
-              <h2 data-nm-reveal="words" style={{ marginTop: '2rem' }}>
-                Ne nous croyez pas. Vérifiez.
-              </h2>
+              <div className="eyebrow">Verify, don&apos;t trust</div>
+              <h2 data-nm-reveal="words">Ne nous croyez pas. Vérifiez.</h2>
               <p data-nm-reveal="lines" data-nm-margin="10">
                 Un dossier NobPay se contrôle sans compte et sans nous : votre navigateur recalcule l&apos;empreinte, relit tout le registre et interroge Bitcoin.
               </p>
@@ -481,21 +405,26 @@ export default function Landing() {
 
       {/* ============ FINAL CALL ============ */}
       <footer className="final nm-grain" id="cta">
-        <div className="coin-wrap c5">
-          <div className="coin coin--light" data-nm-float="a">
-            <Icon name="attach_money" />
+        <div className="final-coin fc-a" data-nm-parallax="-30">
+          <div data-nm-float="a">
+            <Coin id="f-dollar" palette={PALETTES.pearl} squash={0.72} tilt={-12} edge="right" thickness={22}>
+              {SymbolDollar}
+            </Coin>
           </div>
         </div>
-        <div className="coin-wrap c6">
-          <div className="coin coin--btc" data-nm-float="b">
-            <Icon name="currency_bitcoin" />
+        <div className="final-coin fc-b" data-nm-parallax="-50">
+          <div data-nm-float="b">
+            <Coin id="f-btc" palette={PALETTES.azure} squash={0.76} tilt={10} edge="left" thickness={24}>
+              {SymbolBitcoin}
+            </Coin>
           </div>
         </div>
         <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
-          <div className="logo-tile">
-            <Icon name="bolt" filled />
-          </div>
-          <h2 data-nm-reveal="words">Investissez au pays. Avec preuve.</h2>
+          <h2 data-nm-reveal="words">
+            Investissez au pays.
+            <br />
+            Avec preuve.
+          </h2>
           <p data-nm-reveal="lines" data-nm-margin="10">
             Essayez le parcours complet : créer un projet, le financer, valider une preuve, puis vérifier le dossier.
           </p>

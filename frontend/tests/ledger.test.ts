@@ -57,7 +57,7 @@ describe('demo data', () => {
   const db = buildSeed(Date.UTC(2026, 9, 17, 12));
 
   it('has three consistent projects with valid ledgers', () => {
-    expect(db.projects.map((p) => p.name)).toEqual(['Villa à Thiès', 'Champ de mil à Kaolack', 'Boutique à Sandaga']);
+    expect(db.projects.map((p) => p.name)).toEqual(['Résidence à Thiès', 'Pépinière à Kaolack', 'Import de stock à Dakar']);
     for (const p of db.projects) {
       expect(verifyChain(ledgerFor(db, p.id)).ok).toBe(true);
       expect(p.steps.reduce((s, x) => s + x.amountCents, 0)).toBe(p.budgetCents);

@@ -66,7 +66,7 @@ En production locale : `npm run build && npm start`. Le service worker (installa
 ### Parcours de démonstration (5 minutes)
 
 1. `/` : la vitrine, puis « Essayer la démo ».
-2. Compte démo → **Villa à Thiès** : une preuve attend votre décision (étape 3).
+2. Compte démo → **Résidence à Thiès** : une preuve attend votre décision (étape 3).
 3. Ouvrez l'étape, regardez photos géolocalisées et facture, **Valider et payer** : devis, confirmation, suivi du paiement (reçu par webhook signé).
 4. Étape 4 débloquée → ouvrez `/terrain/demo-villa-thies` (vue de la personne sur place) et envoyez une preuve avec une photo et une facture.
 5. Revenez côté financeur, validez à nouveau.
@@ -128,4 +128,4 @@ frontend/
 
 ## Crédits
 
-Code et illustrations CSS originaux. Bibliothèques : Next.js, React, Tailwind CSS, [Lenis](https://github.com/darkroomengineering/lenis) (MIT), qrcode.react (ISC). Polices Inter et Plus Jakarta Sans, icônes Material Symbols (licences libres, via Fontsource). Photos de couverture : images générées, présentées comme exemples. Le kit d'animations reprend des durées et des courbes mesurées sur un site public, sans en copier le code ni les ressources.
+Code et illustrations CSS originaux. Bibliothèques : Next.js, React, Tailwind CSS, [Lenis](https://github.com/darkroomengineering/lenis) (MIT), qrcode.react (ISC). Polices Inter et Plus Jakarta Sans, icônes Material Symbols (licences libres, via Fontsource). Photos de couverture (immobilier, agricole, commerce) : images fournies par l'équipe ; photos de preuve de démonstration : images d'illustration. Le kit d'animations reprend des durées et des courbes mesurées sur un site public, sans en copier le code ni les ressources.

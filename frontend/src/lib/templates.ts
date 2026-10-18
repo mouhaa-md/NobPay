@@ -18,7 +18,7 @@ export const SECTORS: Record<Sector, SectorMeta> = {
     icon: 'apartment',
     chip: 'bg-surface-container text-primary',
     iconColor: 'text-primary',
-    cover: '/covers/villa-thies.jpg',
+    cover: '/covers/immobilier.jpg',
   },
   agricole: {
     id: 'agricole',
@@ -27,7 +27,7 @@ export const SECTORS: Record<Sector, SectorMeta> = {
     icon: 'potted_plant',
     chip: 'bg-secondary-container text-on-secondary-container',
     iconColor: 'text-tertiary',
-    cover: '/covers/champ-kaolack.jpg',
+    cover: '/covers/agricole.jpg',
   },
   commerce: {
     id: 'commerce',
@@ -36,7 +36,7 @@ export const SECTORS: Record<Sector, SectorMeta> = {
     icon: 'storefront',
     chip: 'bg-secondary-fixed text-on-secondary-fixed',
     iconColor: 'text-secondary',
-    cover: '/covers/boutique-sandaga.jpg',
+    cover: '/covers/commerce.jpg',
   },
 };
 
