@@ -5,6 +5,7 @@ import { getConfig, sessionSecretMustBeStrong, sessionSecretProblem } from './co
 import { hmacHex, randomId, safeEqual } from './crypto';
 import { readDb, withDb } from './db';
 import { HttpError } from './http';
+import { startJobs } from './jobs';
 import { smsUnavailable as smsUnavailableError, verifyOtp } from './otp';
 
 export const smsUnavailable = smsUnavailableError;
@@ -60,6 +61,7 @@ export function parseSession(value: string | undefined, now = Date.now()): Sessi
 }
 
 async function readSession(): Promise<{ user: User; token: SessionToken } | null> {
+  startJobs(); // fallback: the first request starts the background loop if the startup hook did not
   const token = parseSession(cookies().get(COOKIE)?.value);
   if (!token) return null;
   const db = await readDb();

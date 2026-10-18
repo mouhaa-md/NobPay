@@ -1,3 +1,4 @@
+import { startJobs } from './server/jobs';
 import { checkStartupConfig } from './server/startup';
 
 /**
@@ -7,3 +8,4 @@ import { checkStartupConfig } from './server/startup';
 const { fatal, warnings } = checkStartupConfig();
 for (const w of warnings) console.warn(`[nobpay] ATTENTION : ${w}`);
 if (fatal.length) throw new Error(`[nobpay] Démarrage refusé :\n- ${fatal.join('\n- ')}`);
+startJobs();

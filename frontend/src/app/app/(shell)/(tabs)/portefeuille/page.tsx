@@ -7,7 +7,6 @@ import type { Funding } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
-import { reconcile } from '@/server/services';
 import { totalsOf, userProjects } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +33,6 @@ const OUTCOME: Record<string, string> = {
 
 export default async function Wallet() {
   const user = (await getSessionUser())!;
-  await reconcile();
   const db = await readDb();
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);

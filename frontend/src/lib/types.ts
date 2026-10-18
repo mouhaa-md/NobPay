@@ -148,6 +148,8 @@ export interface Funding {
   paidAt?: string;
   preimage?: string;
   conversion?: { status: 'done' | 'skipped' | 'failed'; detail?: string };
+  /** why a payment seen at Bitnob was not credited (e.g. different amount); never contains secrets */
+  note?: string;
   demo?: boolean;
 }
 

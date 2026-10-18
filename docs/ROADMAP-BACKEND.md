@@ -164,12 +164,12 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 
 **Objectif :** qu'un incident (coupure, doublon, désordre) ne puisse ni perdre ni inventer d'argent. Détail : CONTEXTE § 14, D6 à D11.
 
-### B2.1 Tâche de fond de rapprochement  `P1 · M`
+### B2.1 Tâche de fond de rapprochement  `P1 · M`  ✅ fait (CONTEXTE D11), testé dans Chromium
 - Retirer `reconcile()` du rendu des pages et de `GET /api/projects/:id/state` (écritures dans des GET, appels Bitnob à chaque rendu). Le remplacer par une **tâche périodique** (toutes les 5 à 10 s en démonstration) : paiements en cours, factures en attente, ancrages en attente.
 - Tant que la base est un fichier JSON (un seul processus), exécuter la tâche **dans le même processus** (`src/instrumentation.ts`, option `experimental.instrumentationHook`, ou un `setInterval` initialisé une seule fois via `globalThis`). Un processus séparé exige la Phase 3.
 - **Terminé quand :** les pages sont en lecture seule ; le mode `mock` termine toujours un paiement en ~3 s ; le sandbox n'est plus interrogé à chaque rendu.
 
-### B2.2 Reprise des états bloqués  `P0 · M`  ◐ paiements faits (`finalize` ambigu, arrêt entre les deux écritures, état périmé : `tests/payout-recovery.test.ts`) ; reste les factures `pending` expirées par une tâche de fond (B2.1)
+### B2.2 Reprise des états bloqués  `P0 · M`  ✅ fait : paiements (`finalize` ambigu, arrêt entre les deux écritures, état périmé : `tests/payout-recovery.test.ts`) et factures expirées par la boucle de fond
 - Cas D9 : étape en `releasing` **sans `payoutId`** depuis plus de N minutes (arrêt entre les phases 1 et 3). Rechercher le payout chez Bitnob par `reference` si l'API le permet ; sinon revenir à `proof_submitted` en écrivant `payout_failed` avec la raison « interrompu », **après** avoir vérifié qu'aucun payout n'existe.
 - Factures `pending` dont `expiresAt` est passé → `expired` par la tâche (aujourd'hui seulement quand l'écran interroge).
 - **Terminé quand :** un test coupe volontairement le processus entre deux phases (simulé) et l'étape se rétablit seule.

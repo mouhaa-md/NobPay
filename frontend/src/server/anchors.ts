@@ -66,6 +66,18 @@ export function toView(anchor: Anchor): AnchorView {
   return { ...rest, hasOts: !!otsBase64, pendingCalendars, bitcoinBlocks };
 }
 
+/** Asks the calendars about every anchor still waiting for its Bitcoin block (background job, a few times an hour). */
+export async function refreshPendingAnchors(minAgeMs = 5 * 60_000): Promise<void> {
+  for (const a of (await readDb()).anchors) {
+    if (a.status !== 'pending' || !a.otsBase64 || Date.now() - Date.parse(a.submittedAt) < minAgeMs) continue;
+    try {
+      await refreshAnchor(a.id);
+    } catch {
+      /* a calendar being down is normal: try again at the next round */
+    }
+  }
+}
+
 /** Looks for the Bitcoin attestation; updates the stored file when the calendar has one. */
 export async function refreshAnchor(anchorId: string, opts: { verifyBlock?: boolean } = {}): Promise<AnchorView> {
   const db = await readDb();

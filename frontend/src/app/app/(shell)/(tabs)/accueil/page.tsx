@@ -11,7 +11,6 @@ import { RESIDENCE_COUNTRIES, SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
-import { reconcile } from '@/server/services';
 import { buildActivity, totalsOf, userProjects } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +18,6 @@ export const metadata = { title: 'Accueil' };
 
 export default async function Home() {
   const user = (await getSessionUser())!;
-  await reconcile();
   const db = await readDb();
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);

@@ -25,6 +25,7 @@ import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFaile
 import { HttpError } from './http';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
+import { amountMatches } from './webhooks';
 
 const MAX_LIGHTNING_SATS = 20_000_000; // per-invoice limit documented by Bitnob
 
@@ -179,6 +180,59 @@ export async function createFunding(
   return funding;
 }
 
+/**
+ * Asks Bitnob whether a pending sandbox invoice was paid and credits it. The webhook is the main path; this is the
+ * polling fallback. The amount Bitnob reports must match the invoice, like for webhooks (a mismatch credits nothing).
+ */
+export async function settleFromGateway(fundingId: string): Promise<void> {
+  const f = (await readDb()).fundings.find((x) => x.id === fundingId);
+  if (!f || f.status !== 'pending' || f.mode !== 'sandbox' || !f.invoiceId) return;
+  const status = await gatewayFor('sandbox').invoiceStatus(f.invoiceId);
+  if (status.status !== 'paid') return;
+  if (status.amountSats !== undefined && f.amountSats && !amountMatches(status.amountSats, f.amountSats)) {
+    console.warn(`[funding] amount mismatch on ${f.id}: expected ${f.amountSats} sats, Bitnob reports ${status.amountSats}`);
+    await withDb((d) => {
+      const x = d.fundings.find((y) => y.id === fundingId);
+      if (x && x.status === 'pending') x.note = `Montant reçu différent : attendu ${f.amountSats} sats, reçu ${status.amountSats}.`;
+    });
+    return;
+  }
+  await withDb((d) => {
+    const x = d.fundings.find((y) => y.id === fundingId);
+    if (x) applyFundingPaid(d, x, { preimage: status.preimage });
+  });
+}
+
+/** Invoices that went past their expiry are closed. Called by the background job and by the funding screen. */
+export async function expireFundings(): Promise<void> {
+  const now = Date.now();
+  const late = (await readDb()).fundings.filter((f) => f.status === 'pending' && f.expiresAt && Date.parse(f.expiresAt) < now);
+  if (late.length === 0) return;
+  await withDb((d) => {
+    for (const f of d.fundings) if (f.status === 'pending' && f.expiresAt && Date.parse(f.expiresAt) < now) f.status = 'expired';
+  });
+}
+
+const lastPolled = new Map<string, number>();
+export const POLL_FUNDING_EVERY_MS = 10_000;
+
+/** Polling fallback for every pending sandbox invoice, at most once every 10 s each. */
+export async function pollPendingFundings(): Promise<void> {
+  const now = Date.now();
+  let firstError: unknown;
+  for (const f of (await readDb()).fundings) {
+    if (f.status !== 'pending' || f.mode !== 'sandbox' || !f.invoiceId) continue;
+    if (now - (lastPolled.get(f.id) ?? 0) < POLL_FUNDING_EVERY_MS) continue;
+    lastPolled.set(f.id, now);
+    try {
+      await settleFromGateway(f.id);
+    } catch (err) {
+      firstError ??= err; // one failing invoice must not stop the others; the caller logs the error
+    }
+  }
+  if (firstError) throw firstError;
+}
+
 /** Current state of a funding. In sandbox mode a still-pending invoice is also checked on the API (polling fallback). */
 export async function refreshFunding(owner: User, fundingId: string): Promise<Funding> {
   let db = await readDb();
@@ -187,23 +241,11 @@ export async function refreshFunding(owner: User, fundingId: string): Promise<Fu
   ownedProject(db, owner, funding.projectId);
 
   if (funding.status === 'pending') {
-    if (funding.expiresAt && Date.parse(funding.expiresAt) < Date.now()) {
-      await withDb((d) => {
-        const f = d.fundings.find((x) => x.id === fundingId);
-        if (f && f.status === 'pending') f.status = 'expired';
-      });
-    } else if (funding.mode === 'sandbox' && funding.invoiceId) {
-      try {
-        const status = await gatewayFor('sandbox').invoiceStatus(funding.invoiceId);
-        if (status.status === 'paid') {
-          await withDb((d) => {
-            const f = d.fundings.find((x) => x.id === fundingId);
-            if (f) applyFundingPaid(d, f, { preimage: status.preimage });
-          });
-        }
-      } catch {
-        /* the webhook remains the source of truth; try again on the next poll */
-      }
+    await expireFundings();
+    try {
+      await settleFromGateway(fundingId);
+    } catch {
+      /* the webhook remains the source of truth; try again on the next poll */
     }
     db = await readDb();
     funding = db.fundings.find((f) => f.id === fundingId)!;
