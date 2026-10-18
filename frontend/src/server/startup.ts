@@ -24,8 +24,8 @@ export function checkStartupConfig(): StartupCheck {
         "N'importe qui qui connaît un numéro peut ouvrir ce compte. À réserver à une démonstration devant des personnes de confiance.",
     );
   }
-  // Heuristic for the "never live" rule: production keys are recognisable by their prefix (prd:live_...).
-  const LIVE_KEY = /^(prd|live)[:_]|[:_]live[:_]/i;
+  // Heuristic for the "never live" rule: live keys carry a `live` marker (prd:live_...).
+  const LIVE_KEY = /(^|[:_])live[:_]/i; // prd:live_... is live, prd:sandbox_... is not
   if (process.env.BITNOB_MODE === 'sandbox' && [process.env.BITNOB_CLIENT_ID, process.env.BITNOB_CLIENT_SECRET].some((k) => LIVE_KEY.test(k ?? ''))) {
     fatal.push("Les clés Bitnob ressemblent à des clés de production (live). NobPay ne s'utilise qu'avec des clés sandbox : révoquez-les et créez-en en mode Sandbox.");
   }
