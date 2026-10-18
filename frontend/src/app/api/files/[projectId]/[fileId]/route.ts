@@ -3,7 +3,7 @@ import type { StoredFile } from '@/lib/types';
 import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { getSessionUser } from '@/server/auth';
 import { readDb } from '@/server/db';
-import { readUpload } from '@/server/files';
+import { readUpload, sniffMime } from '@/server/files';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -34,13 +34,16 @@ export async function GET(request: Request, { params }: { params: { projectId: s
   const bytes = await readUpload(project.id, file);
   if (!bytes) return NextResponse.json({ error: 'Fichier absent' }, { status: 404 });
 
+  // Bundled demo images are ours; anything uploaded is served with the type its BYTES show, whatever was stored.
+  const mime = file.publicPath ? file.mime : (sniffMime(bytes)?.mime ?? null);
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
-      'Content-Type': file.mime,
+      'Content-Type': mime ?? 'application/octet-stream',
+      ...(mime ? {} : { 'Content-Disposition': 'attachment' }),
       'Cache-Control': 'private, max-age=3600',
       'X-Content-Type-Options': 'nosniff',
-      // an uploaded SVG must never run scripts
-      'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'",
+      // a file must never run scripts or load anything, even if it is an SVG that slipped in
+      'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
     },
   });
 }

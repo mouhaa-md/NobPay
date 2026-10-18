@@ -15,6 +15,8 @@ interface PhotoMeta {
   accuracy?: number;
 }
 
+const MAX_REQUEST_BYTES = 60 * 1024 * 1024;
+
 const isFile = (v: FormDataEntryValue | null): v is File => typeof v === 'object' && v !== null && 'arrayBuffer' in v && v.size > 0;
 
 /**
@@ -23,6 +25,8 @@ const isFile = (v: FormDataEntryValue | null): v is File => typeof v === 'object
  */
 export async function POST(request: Request, { params }: { params: { id: string; stepId: string } }) {
   return respond(async () => {
+    // up to 6 photos + 1 invoice of 8 MB each, plus form fields: refuse anything larger before reading it
+    if (Number(request.headers.get('content-length') ?? 0) > MAX_REQUEST_BYTES) throw new HttpError(413, 'Envoi trop volumineux (8 Mo par fichier, 6 photos au plus)', 'too_large');
     const form = await request.formData();
     const token = String(form.get('token') ?? '').trim();
     const actor: Actor = token ? { kind: 'manager', token } : { kind: 'owner', user: await requireUser() };
