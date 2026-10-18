@@ -30,19 +30,24 @@ Sources : [ONU Info](https://news.un.org/en/story/2026/09/1168330) · [IFAD](htt
 
 | Brique | Mode `mock` (défaut) | Mode `sandbox` |
 |---|---|---|
-| Facture Lightning | simulée (`lndemo1…`, non payable) ; bouton « Simuler le paiement » | `POST /api/lightning/invoices` chez Bitnob |
-| Événement de paiement reçu | **vrai** chemin : le simulateur signe l'évènement (HMAC-SHA512) et appelle le même récepteur que Bitnob | webhook signé de Bitnob + repli par interrogation |
-| Devis et paiement mobile money | simulés (taux indicatif, validation après ~2,5 s) | `POST /api/payouts/quotes`, `initialize`, `finalize` |
+| Facture Lightning | simulée (`lndemo1…`, non payable) ; bouton « Simuler le paiement » | **testé en vrai** : facture `lntb…` (testnet) créée par `POST /api/lightning/invoices` |
+| Événement de paiement reçu | **vrai** chemin : le simulateur signe l'évènement (HMAC-SHA512) et appelle le même récepteur que Bitnob | webhook signé de Bitnob + repli par interrogation (**jamais vu en vrai** : le portefeuille sandbox est vide) |
+| Conversion BTC → stablecoin | simulée | devis **testé en vrai** ; l'ordre n'a pas pu être passé (pas de solde) |
+| Devis et paiement mobile money | simulés (taux indicatif, validation après ~2,5 s) | devis et `initialize` **testés en vrai** (Wave, Orange, Free) ; `finalize` refusé sans solde (`INSUFFICIENT_FUNDS`) |
 | Registre enchaîné, états, preuves | réels | réels |
 | Ancrage Bitcoin (OpenTimestamps) | **réel** : calendriers publics, preuve `.ots` téléchargeable | réel |
 | Vérification publique | réelle, dans le navigateur | réelle |
 
+Détail de ce qui a été observé chez Bitnob : [`docs/BITNOB-SANDBOX-REPORT.md`](docs/BITNOB-SANDBOX-REPORT.md).
+
 Limites à connaître :
 
-- Aucun argent réel n'est géré. Le code de connexion SMS est un code de démonstration (`DEMO_OTP`).
-- Le mode `sandbox` a été écrit d'après la documentation publique de Bitnob (bitnob.dev) et le workshop du hackathon. Les formes exactes de certaines réponses et des webhooks n'y sont pas toutes documentées : les analyseurs sont tolérants, mais le mode doit être validé avec vos clés avant la démonstration.
-- Pas de limitation de débit ni de protection anti-abus : ne mettez pas ce prototype en accès public durable.
-- La base est un fichier JSON local (`.data/db.json`) : parfait pour une démonstration, inadapté à un hébergement sans disque partagé (serverless).
+- Aucun argent réel n'est géré. En sandbox, **aucun moyen documenté de créditer le portefeuille de test** : le parcours complet jusqu'au paiement mobile money terminé n'a donc pas été vu en vrai (le code est écrit et testé avec des réponses rejouées, pas validé de bout en bout).
+- **Un paiement mobile money au Sénégal est limité à 200 000 FCFA (environ 336 $)** par Bitnob : les étapes de démonstration plus grandes seraient refusées en sandbox. Le taux réel observé est d'environ 593 FCFA pour 1 $.
+- La base est un fichier JSON local (`.data/db.json`), un seul processus : parfait pour une démonstration, inadapté à un hébergement sans disque partagé (serverless).
+- La limitation de débit est en mémoire (un seul processus). Le prototype n'a pas été audité : lisez [`SECURITY.md`](SECURITY.md) avant toute exposition publique.
+- Le code de connexion SMS est par utilisateur avec un fournisseur SMS configuré (`SMS_PROVIDER`) ; sans fournisseur, seul existe un code de démonstration partagé (`DEMO_OTP`), fermé hors mode simulé sauf `ALLOW_DEMO=1`.
+- La position GPS et l'heure d'une photo sont déclarées par le téléphone (falsifiables).
 - Les dépôts USDT/USDC et l'approbation « 2 personnes sur 3 » sont affichés « Bientôt ».
 - Un ancrage n'est confirmé sur Bitcoin qu'au bout de quelques heures : il apparaît d'abord « en attente ».
 - L'ancrage prouve qu'un dossier n'a pas changé ; il ne prouve pas qu'une photo montre le bon chantier. C'est le financeur qui en juge avant de payer.
@@ -77,12 +82,12 @@ En production locale : `npm run build && npm start`. Le service worker (installa
 ## Passer en sandbox Bitnob
 
 1. Copiez `frontend/.env.example` en `frontend/.env.local`.
-2. Dans le tableau de bord Bitnob (mode Sandbox) : créez une clé API et notez `CLIENT_ID` et `CLIENT_SECRET`.
+2. Dans le tableau de bord Bitnob (mode Sandbox) : créez une clé API (**liste d'adresses IP vide** si votre hébergement n'a pas d'IP fixe, sinon l'API répond `403 IP address not whitelisted`). Le tableau de bord n'affiche qu'**un seul jeton** `prd:sandbox_…` : c'est le **secret** (`BITNOB_CLIENT_SECRET`) ; le `BITNOB_CLIENT_ID` est un UUID donné séparément. Contrôle : `GET /api/whoami` doit répondre `environment: "sandbox"`.
 3. Exposez l'application en HTTPS (par exemple `cloudflared tunnel --url http://localhost:3000`) et créez un webhook vers `https://<votre-url>/api/webhooks/bitnob` avec un secret de signature de votre choix.
 4. Renseignez dans `.env.local` : `BITNOB_MODE=sandbox`, `BITNOB_CLIENT_ID`, `BITNOB_CLIENT_SECRET`, `BITNOB_WEBHOOK_SECRET`, `PUBLIC_BASE_URL`, et un `SESSION_SECRET` d'au moins 32 caractères (`openssl rand -hex 32`) : **le serveur refuse de démarrer sans**. Pour vous connecter : soit `SMS_PROVIDER=twilio` avec les trois variables `TWILIO_*` (vrais SMS), soit `SMS_PROVIDER=log` (le code s'écrit dans la console du serveur : développement seulement), soit `ALLOW_DEMO=1` sans fournisseur (le code est alors le même pour tout le monde, `123456` : à réserver à des personnes de confiance). N'utilisez que des clés **sandbox** : le serveur refuse les clés qui ressemblent à des clés de production (`prd:live_…`).
 5. Relancez. Le profil indique « Sandbox Bitnob ». Si le devis de paiement échoue chez Bitnob, l'application propose de continuer en simulation, clairement étiquetée.
 
-Vérifiez `GET /api/health` : il indique le mode, la présence des clés et l'URL de webhook attendue.
+Vérifiez `GET /api/health` : il indique le mode, la présence des clés et l'URL de webhook attendue (avec une session démo, `?detail=1` ajoute les soldes Bitnob et le contrôle de solvabilité). Pour débogger les webhooks reçus : `CAPTURE_WEBHOOKS=1` les écrit dans `frontend/.data/webhook-captures/` (signature masquée). Sur un Codespace GitHub, le port 3000 doit être en visibilité *Public* pour que Bitnob atteigne le webhook, et il repasse en privé à chaque redémarrage du serveur.
 
 ## Architecture
 
@@ -111,8 +116,10 @@ Règles qui comptent :
 ```bash
 cd frontend
 npm run typecheck
-npm test            # signatures, registre, webhooks, OpenTimestamps, vérification navigateur
+npm test            # ~280 tests, quelques secondes, sans réseau ni clé
 ```
+
+Ils couvrent : signatures Bitnob, récepteur de webhooks (forgé, rejeu, montant, nom d'évènement), client Bitnob (réponses réelles rejouées, reprises), paiements et reprises après réponse perdue, conversion, solvabilité, sessions, codes SMS, limitation de débit, validation des entrées, fichiers, jeton de la personne de confiance, en-têtes, journaux, registre, OpenTimestamps, vérification navigateur, et des **séquences aléatoires d'évènements** qui vérifient que l'argent ne peut être ni compté ni payé deux fois. La CI GitHub (`.github/workflows/ci.yml`) les lance avec le build et un contrôle de secrets.
 
 ## Structure
 
@@ -129,9 +136,11 @@ frontend/
 
 ## Reprendre le projet (backend)
 
-- `docs/CONTEXTE-PROJET.md` : contexte complet (produit, architecture, règles métier, état de vérification, dette technique).
-- `docs/ROADMAP-BACKEND.md` : feuille de route par phases, avec critères d'acceptation.
-- `docs/PROMPT-CLAUDE-BACKEND.md` : prompt de démarrage pour un assistant Claude.
+- [`docs/CONTEXTE-PROJET.md`](docs/CONTEXTE-PROJET.md) : contexte complet (produit, architecture, règles métier, état de vérification, dette technique).
+- [`docs/ROADMAP-BACKEND.md`](docs/ROADMAP-BACKEND.md) : feuille de route par phases, avec ce qui est fait.
+- [`docs/BITNOB-SANDBOX-REPORT.md`](docs/BITNOB-SANDBOX-REPORT.md) : ce qui a été observé en vrai chez Bitnob.
+- [`docs/PROMPT-CLAUDE-BACKEND.md`](docs/PROMPT-CLAUDE-BACKEND.md) : prompt de démarrage pour un assistant Claude.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md), [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md).
 
 ## Crédits
 
