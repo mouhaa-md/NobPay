@@ -120,7 +120,7 @@ NobPay/
       components/                  interface
     motion/                        kit d'animations de la vitrine (hors backend)
     design-reference/              maquettes Stitch + COPY-RULES.md
-    tests/                         Vitest (32 tests)
+    tests/                         Vitest (45 tests)
     public/                        images, icônes PWA, manifest, sw.js
 ```
 
@@ -234,11 +234,14 @@ Rails de payout vus dans la doc (instantané à revalider) : XOF Sénégal (Oran
 Ordre **obligatoire** des contrôles, avant tout crédit :
 
 1. **Signature** : en-tête `x-bitnob-signature` = HMAC-SHA512 du **corps brut** (hex ; base64 et préfixe `sha512=` acceptés), comparaison en temps constant, sur le texte lu **avant** tout `JSON.parse` → sinon **401**. Sans `BITNOB_WEBHOOK_SECRET` : 503.
-2. **Rejeu** : l'`event_id` (sinon le SHA-256 du corps) est déjà dans `db.webhooks` → **200** sans rien faire.
-3. **Ressource connue** : facture ou payout inconnu → **200**, rien n'est crédité.
-4. **Application** : idempotente (`applyFundingPaid` ne crédite qu'une fois même avec un nouvel `event_id`).
+2. **Rejeu** : l'`event_id` (sinon le SHA-256 du corps) est déjà dans `db.webhooks` → **200** sans rien faire. Un évènement n'est « vu » qu'**une fois appliqué** : ceux classés `unknown_invoice`, `unknown_payout` ou `amount_mismatch` sont journalisés mais **peuvent être retraités** (renvoi depuis le tableau de bord). Le journal garde 500 entrées au plus.
+3. **Ressource connue** : facture ou payout inconnu → **200**, rien n'est crédité (Bitnob ne relance donc pas : le repli est l'interrogation, voir D11).
+4. **Montant** (factures Lightning) : si l'évènement porte un montant lisible (`amount`, `amount_sats`, `amount_msat`…, lu comme sats, millisats ou BTC, tolérance 0,5 %) qui ne correspond pas à la facture → `amount_mismatch`, **pas de crédit**, raison dans `WebhookRecord.note`. Sans montant lisible, l'évènement signé est crédité : le champ réel sera fixé en B0.5. Le montant des payouts n'est pas comparé.
+5. **Application** : idempotente (`applyFundingPaid` ne crédite qu'une fois même avec un nouvel `event_id`).
 
 Un évènement valide reçoit toujours **200** (Bitnob réessaie 3 fois avec attente croissante). Le routage se fait par **expression régulière sur le type** (`lightning|invoice` ; `payout|withdrawal|transfer` ; succès `success|completed|paid|received…` ; échec `fail|expire|cancel|reject|declin`) et par **recherche d'identifiants à n'importe quelle profondeur** du JSON (`collectValues` : `id`, `invoice_id`, `payment_hash`, `reference`, `payout_id`, `quote_id`). Évènements vus dans la doc : `btc.lightning.received.success`, `payouts.initialized`, `payouts.processing`, `payouts.withdrawal.success`, `payouts.withdrawal.expired`, `transfer.success` / `transfer.failed`. **Les formes exactes des charges utiles ne sont pas documentées** : il faut capturer des évènements réels (Phase 0).
+
+**Capture :** avec `CAPTURE_WEBHOOKS=1`, chaque livraison reçue (même rejetée) est écrite dans `.data/webhook-captures/` : corps brut tel quel, en-têtes avec signature masquée, réponse donnée. À utiliser pour récupérer les vraies charges utiles (B0.5, B0.8).
 
 Exemples proposés par les mentors pour tester leur propre serveur : « Rejouer le webhook » et « Forger un faux webhook ». Les tests `tests/webhook.test.ts` couvrent ces deux cas.
 
@@ -296,6 +299,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `DEMO_OTP` | code SMS unique de démonstration | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |
+| `CAPTURE_WEBHOOKS` | `1` : enregistre chaque webhook reçu dans `.data/webhook-captures/` (débogage sandbox) | absent |
 
 `GET /api/health` indique le mode, la présence des clés et l'URL de webhook attendue.
 
@@ -306,7 +310,7 @@ cd frontend
 npm install
 npm run dev                # http://localhost:3000   (le service worker n'existe qu'en production)
 npm run typecheck
-npm test                   # 32 tests Vitest
+npm test                   # 45 tests Vitest
 npm run build && npm start # production locale
 ```
 
@@ -342,9 +346,9 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 | D4 | S1 | Base = **un fichier JSON** (`db.ts`) : un seul processus, réécriture complète à chaque écriture, pas de sauvegarde, pas de migration. Inadapté aux hébergements sans disque partagé. |
 | D5 | S1 | Dépôts de fichiers : type MIME **fourni par le client**, pas de contrôle des octets (magic bytes) ; stockage sur disque local. |
 | D6 | S2 | **Le séquestre est un nombre dans notre base**, jamais rapproché du solde Bitnob (`GET /api/balances` non utilisé). Portefeuille Bitnob commun à tous les projets. |
-| D7 | S2 | La **conversion BTC→USDT** n'est tentée que dans `refreshFunding` (quand l'écran de financement interroge), **pas** quand le webhook crédite. Le paiement fournisseur part d'USDT : fonds insuffisants possibles. |
-| D8 | S2 | Le webhook ne **compare pas le montant reçu** au montant attendu. |
-| D9 | S2 | **Pas d'idempotence ni de reprise** sur l'enchaînement `initialize` → `finalize` : si le processus s'arrête entre la phase 1 et la phase 3 (§ 7.2), l'étape reste `releasing` sans `payoutId` et `reconcile()` ne la reprend pas. |
+| D7 | S2 | La **conversion BTC→USDT** n'est tentée que dans `refreshFunding` (quand l'écran de financement interroge), **pas** quand le webhook crédite. Le paiement fournisseur part d'USDT : fonds insuffisants possibles. De plus, un résultat `failed` est stocké dans `funding.conversion` et **empêche toute nouvelle tentative**, et deux sondages simultanés passent tous deux le test `!funding.conversion` (instantané périmé) : **double vente possible**. |
+| D8 | S2 | ~~Le webhook ne compare pas le montant reçu~~ : **fait pour les factures** (§ 8.3, point 4), avec le champ réel à confirmer en B0.5. Reste : le **repli par interrogation** (`refreshFunding`) crédite sur le seul statut, sans montant ; le montant des payouts n'est pas comparé. |
+| D9 | S2 | **Pas d'idempotence ni de reprise** sur l'enchaînement `initialize` → `finalize` (§ 7.2). (a) Si le processus s'arrête entre la phase 1 et la phase 3, l'étape reste `releasing` sans `payoutId` et `reconcile()` ne la reprend pas. (b) **Plus grave :** toute exception de la phase 2, y compris un délai dépassé (20 s) *après* que Bitnob a accepté `finalize`, est traitée comme un échec définitif : l'étape revient à `proof_submitted`, le séquestre est libéré, et le financeur peut **repayer** avec une nouvelle `reference` (elle contient l'heure), sans déduplication possible côté Bitnob. **Risque de double paiement.** À traiter en B2.2 après avoir vu en sandbox si un payout se retrouve par `reference`. |
 | D10 | S2 | Aucun **remboursement** : le financeur ne peut pas récupérer un séquestre inutilisé (projet abandonné). Fonctionnalité produit manquante. |
 | D11 | S2 | `reconcile()` s'exécute **pendant le rendu des pages et le sondage `/state`** (écritures dans des requêtes GET ; en sandbox, un appel Bitnob par rendu pour chaque payout en cours). À sortir dans une tâche de fond. |
 | D12 | S3 | **Position GPS et heure déclarées par le client** (§ 4) ; l'EXIF n'est pas lu. |
@@ -353,6 +357,9 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 | D15 | S3 | `services.ts` (financement, devis, paiement) et `bitnob/client.ts` **n'ont pas de test automatique** (pas de `fetch` simulé). |
 | D16 | S3 | Dates relatives (« Hier ») calculées avec le **fuseau du serveur**. |
 | D17 | S3 | Une seule règle d'approbation ; aucune notification (ni e-mail, SMS, WhatsApp, push). |
+| D18 | S3 | Le **registre ne note pas le mode** (`mock` / `sandbox`) : un paiement fait via « Continuer en simulation » en sandbox (`payout.mode = 'mock'`) est identique à un vrai dans le dossier ancré et vérifiable publiquement. Contraire à la règle d'honnêteté. Corriger = ajouter un champ aux données des évènements : **décision du chef de projet** (format du registre). |
+| D19 | S3 | `npm audit --omit=dev` : Next.js 14.2.35 a des avis critiques / élevés (déni de service, SSRF des Server Actions, empoisonnement de cache…). Correctif = changement de version majeure. Peu pertinent pour une démonstration locale, à traiter avant un hébergement public. |
+| D20 | S3 | `db.ts` : `holder.db` est remplacé **avant** l'écriture sur disque ; si l'écriture échoue, la mémoire a une avance sur le fichier. |
 
 ## 15. Conventions de travail avec le chef de projet
 

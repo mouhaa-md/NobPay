@@ -48,7 +48,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 **Objectif :** remplacer chaque hypothèse de `CONTEXTE-PROJET.md` § 8.2 par un fait observé, et obtenir un parcours complet en `BITNOB_MODE=sandbox`.
 
 ### B0.1 Poser la base de référence  `P0 · S`
-- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (32 tests verts), `npm run dev`.
+- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (45 tests verts), `npm run dev`.
 - Faire le parcours de démonstration du README en `mock` (compte démo, valider l'étape 3 de « Résidence à Thiès », envoyer une preuve via `/terrain/demo-villa-thies`, financer, ancrer).
 - Lire dans cet ordre : `server/services.ts`, `server/domain.ts`, `server/webhooks.ts`, `server/bitnob/client.ts`, `server/db.ts`.
 - **Terminé quand :** tout est vert chez vous et vous pouvez expliquer en 2 minutes ce qui se passe quand le financeur clique « Confirmer et payer » (CONTEXTE § 7.2).
@@ -60,7 +60,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - `frontend/.env.local` : `BITNOB_MODE=sandbox`, `BITNOB_CLIENT_ID`, `BITNOB_CLIENT_SECRET`, `BITNOB_WEBHOOK_SECRET`, `PUBLIC_BASE_URL=<URL publique>`, `SESSION_SECRET=<32+ caractères aléatoires>`.
 - **Terminé quand :** `GET <URL publique>/api/health` renvoie `mode:"sandbox"`, `bitnobKeys:true`, `webhookSecret:true`, et le bandeau « Sandbox Mode » est visible dans le tableau de bord Bitnob. **Ne committez rien de cela.**
 
-### B0.3 Capturer les évènements réels  `P0 · S`
+### B0.3 Capturer les évènements réels  `P0 · S`  ✅ fait (variable `CAPTURE_WEBHOOKS=1`, `server/capture.ts`)
 - Ajouter, dans `src/app/api/webhooks/bitnob/route.ts`, une capture **activée seulement si `CAPTURE_WEBHOOKS=1`** : écrire dans `.data/webhook-captures/<horodatage>.json` les en-têtes (signature masquée) et le corps brut. `.data/` est déjà ignoré par Git.
 - **Terminé quand :** tout évènement reçu laisse un fichier lisible, sans changer le comportement quand la variable est absente.
 
@@ -172,7 +172,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Factures `pending` dont `expiresAt` est passé → `expired` par la tâche (aujourd'hui seulement quand l'écran interroge).
 - **Terminé quand :** un test coupe volontairement le processus entre deux phases (simulé) et l'étape se rétablit seule.
 
-### B2.3 Contrôle des montants  `P0 · S`
+### B2.3 Contrôle des montants  `P0 · S`  (webhook de réception fait, voir CONTEXTE § 8.3 ; reste le repli par interrogation et les payouts)
 - Webhook de réception : comparer le montant reçu (sats) au `funding.amountSats` (tolérance à définir). Écart → résultat `amount_mismatch`, **pas de crédit**, journal d'alerte. Webhook de payout : comparer le montant.
 - **Terminé quand :** deux tests (sous-paiement, sur-paiement) et un message clair dans `db.webhooks`.
 

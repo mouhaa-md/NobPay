@@ -17,7 +17,7 @@ Tu reprends le BACKEND de NobPay, un prototype de hackathon (Code & Chain Dakar,
 Je suis le développeur qui reprend le backend. Le chef de projet est francophone et a construit le frontend avec un autre Claude. Réponds-moi en français, de façon courte et concrète (pas de pavés).
 
 ## 1. Lis d'abord, en entier et dans cet ordre
-1. docs/CONTEXTE-PROJET.md : le produit, l'architecture, les règles métier, ce qui est vérifié ou non, la dette technique (D1 à D17).
+1. docs/CONTEXTE-PROJET.md : le produit, l'architecture, les règles métier, ce qui est vérifié ou non, la dette technique (D1 à D20).
 2. docs/ROADMAP-BACKEND.md : le plan par phases (B0 à B5), les contrats à ne pas casser, la définition de « terminé ».
 3. README.md, puis frontend/design-reference/COPY-RULES.md (règles de rédaction : le jury relit chaque phrase affichée).
 4. Le code, dans cet ordre : frontend/src/server/services.ts, domain.ts, webhooks.ts, bitnob/client.ts, bitnob/mock.ts, bitnob/types.ts, db.ts, auth.ts, ledger.ts. Puis la liste de frontend/src/app/api/**/route.ts.
@@ -57,7 +57,7 @@ Méthode
 
 ## 5. Contexte rapide, au cas où
 - Stack : Next.js 14 (App Router), TypeScript strict, un seul projet dans frontend/. Le backend = frontend/src/server/ et frontend/src/app/api/. Base = fichier JSON (.data/db.json), un seul processus.
-- Commandes (dans frontend/) : npm install, npm run dev, npm run typecheck, npm test (32 tests), npm run build && npm start.
+- Commandes (dans frontend/) : npm install, npm run dev, npm run typecheck, npm test (45 tests), npm run build && npm start.
 - Compte démo : bouton « Essayer avec le compte démo », code SMS 123456. Projets de démonstration : p_villa, p_champ, p_boutique ; jetons terrain : demo-villa-thies, demo-champ-kaolack, demo-boutique-sandaga.
 - Le séquestre est une règle logicielle : l'argent est dans des portefeuilles Bitnob communs, NobPay le compte projet par projet dans sa base. Les paiements partent en USDT vers le mobile money du Sénégal (XOF).
 - Ce qui n'a jamais été testé : tout appel à l'API Bitnob réelle, les charges utiles réelles des webhooks, la confirmation Bitcoin d'un ancrage OpenTimestamps.
