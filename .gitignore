@@ -13,3 +13,6 @@ desktop.ini
 
 # local launcher
 start-demo.bat
+
+# local demo recordings (large)
+demo-video/

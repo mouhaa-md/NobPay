@@ -102,7 +102,7 @@ Correction : agrandir la zone cliquable (marge intérieure ou pseudo-élément) 
 - `covers/*.jpg` de 777 à 871 px de large affichées à **64 px** (vignettes des listes et de l'assistant) : 244 Ko sur 4 écrans. Générer des vignettes de 160 px (WebP) pour les listes.
 
 **11. Règle de rédaction non respectée.** *(effort S)*
-- « **Devis garanti** encore 0:58 » dans la feuille de confirmation : « garanti » est interdit par `design-reference/COPY-RULES.md`. Écrire « Devis **valable** encore 0:58 ». C'est le seul écart relevé sur l'ensemble du code des écrans.
+- « **Devis garanti** encore 0:58 » dans la feuille de confirmation : « garanti » est interdit par `design-reference/COPY-RULES.md`. Écrire « Devis **valable** encore 0:58 ». C'est le seul écart relevé sur l'ensemble du code des écrans. **Corrigé** (une ligne dans `ReleasePanel.tsx`) lors de l'enregistrement de la vidéo de démonstration.
 
 **12. Assistant de création : débordement à 200 % de texte.** *(effort S)*
 - Seul écran sur 4 testés qui déborde (441 px pour 390) quand le texte est agrandi : l'écran d'ouverture de l'assistant (choix du secteur). Vérifier les largeurs minimales des cartes de secteur ; les écrans suivants de l'assistant n'ont pas été testés à 200 %.
