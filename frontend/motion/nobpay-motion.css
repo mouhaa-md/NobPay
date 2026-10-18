@@ -1,0 +1,322 @@
+/*
+ * NobPay motion kit : styles
+ *
+ * Original implementation of the motion patterns observed on nexaris.com
+ * (durations and easings were measured from its public CSS, JS and Lottie
+ * metadata). No Nexaris code, artwork or Lottie file is copied here.
+ *
+ * Progressive enhancement: without JS everything stays visible. The script
+ * (or the inline <head> snippet in demo.html) adds `.nm-js` on <html>; only
+ * then do the "hidden until revealed" states apply.
+ */
+
+:root {
+  /* Tokens taken from the Stitch app palette (primary-container, on-surface,
+     tertiary-fixed-dim). The app theme can override them. */
+  --nm-blue: #1d4ed8;
+  --nm-dark: #0b1c30;
+  --nm-accent: #ffb874;
+
+  --nm-ease-in-out-cubic: cubic-bezier(.65, 0, .35, 1);
+  --nm-ease-in-out-sine: cubic-bezier(.52, 0, .48, 1);
+
+  --nm-reveal-dur: .6s;
+  --nm-blur: clamp(2px, .6vw, 10px);
+  --nm-rise: clamp(10px, 2vw, 32px);
+}
+
+/* ------------------------------------------------------------------ *
+ * 1. Smooth scroll (same rules as the official lenis.css)
+ * ------------------------------------------------------------------ */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* ------------------------------------------------------------------ *
+ * 2. Text reveal
+ *    <h2 data-nm-reveal="words">  words: fade + de-blur + scale 1.2 -> 1
+ *    <p  data-nm-reveal="lines">  lines: fade + rise
+ *    Both: 0.6 s, 100 ms stagger, triggered once when entering the viewport.
+ * ------------------------------------------------------------------ */
+.nm-js [data-nm-reveal]:not([data-nm-ready]) { visibility: hidden; }
+
+.nm-js [data-nm-reveal] .nm-word {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(var(--nm-blur));
+  transform: scale(1.2);
+  transition: filter var(--nm-reveal-dur), transform var(--nm-reveal-dur), opacity var(--nm-reveal-dur);
+}
+.nm-js [data-nm-reveal] .nm-word.nm-in {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+
+.nm-js [data-nm-reveal="lines"] .nm-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(var(--nm-rise));
+  transition: transform var(--nm-reveal-dur), opacity var(--nm-reveal-dur);
+}
+.nm-js [data-nm-reveal="lines"] .nm-line.nm-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * 3. Levitation (coins, illustrations)
+ *    data-nm-float="a": 6 s, -2 %   |   data-nm-float="b": 5 s, -1 %
+ *    Tune with --nm-float-amp.
+ * ------------------------------------------------------------------ */
+[data-nm-float="a"] { animation: nm-float-a 6s ease-in-out infinite; }
+[data-nm-float="b"] { animation: nm-float-b 5s ease-in-out infinite; }
+@keyframes nm-float-a {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(calc(var(--nm-float-amp, 2%) * -1)); }
+}
+@keyframes nm-float-b {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(calc(var(--nm-float-amp, 1%) * -1)); }
+}
+
+/* ------------------------------------------------------------------ *
+ * 4. Film grain overlay (own SVG noise, jittered ~5 fps, 8 % opacity)
+ * ------------------------------------------------------------------ */
+.nm-grain { position: relative; isolation: isolate; }
+.nm-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .08;
+  background-size: 220px 220px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: nm-grain .9s steps(1) infinite;
+}
+@keyframes nm-grain {
+  0%   { background-position: 0 0; }
+  20%  { background-position: -40px 25px; }
+  40%  { background-position: 30px -35px; }
+  60%  { background-position: -25px -20px; }
+  80%  { background-position: 45px 40px; }
+  100% { background-position: 0 0; }
+}
+
+/* ------------------------------------------------------------------ *
+ * 5. Scroll parallax
+ *    <section data-nm-parallax-root> ... <div data-nm-parallax="-40"> ...
+ *    The value is the final translateY in % of the element's own height.
+ *    Put float animations on an INNER element, never on the same node.
+ * ------------------------------------------------------------------ */
+[data-nm-parallax] {
+  transform: translate3d(0, var(--nm-py, 0%), 0);
+  will-change: transform;
+}
+
+/* ------------------------------------------------------------------ *
+ * 6. Button hover (0.4 s): fill swaps with a soft inner glow
+ * ------------------------------------------------------------------ */
+.nm-btn { transition: all .4s; cursor: pointer; }
+.nm-btn--swap:hover {
+  background: #fff;
+  color: var(--nm-dark);
+  box-shadow: inset 0 0 2rem color-mix(in srgb, var(--nm-blue) 14%, transparent);
+}
+.nm-social { transition: background-color .2s; }
+.nm-social:hover { background-color: var(--nm-accent); }
+
+/* ------------------------------------------------------------------ *
+ * 7. Auto-playing tabs with progress line
+ *    delay 4 s, slide 0.5 s, active tab full opacity, inactive dimmed.
+ * ------------------------------------------------------------------ */
+[data-nm-tabs] [data-nm-tab] { cursor: pointer; }
+[data-nm-tabs] .nm-tab-title { opacity: .6; transition: opacity .2s; }
+[data-nm-tabs] .nm-tab-list  { opacity: .4; transition: opacity .2s; }
+[data-nm-tabs] [data-nm-tab].is-active .nm-tab-title,
+[data-nm-tabs] [data-nm-tab].is-active .nm-tab-list { opacity: 1; }
+
+.nm-tab-progress {
+  display: block;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .22);
+  overflow: hidden;
+}
+.nm-tab-progress > i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+[data-nm-panels] { display: grid; overflow: hidden; }
+[data-nm-panels] > .nm-panel {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateX(6%);
+  transition: opacity .5s ease, transform .5s ease;
+  pointer-events: none;
+}
+[data-nm-panels] > .nm-panel.is-active { opacity: 1; transform: none; pointer-events: auto; }
+[data-nm-panels] > .nm-panel.is-leaving { transform: translateX(-6%); }
+
+/* ------------------------------------------------------------------ *
+ * 8. Looping illustrations (pure CSS, original artwork supplied by the
+ *    app; these classes only provide the motion).
+ * ------------------------------------------------------------------ */
+
+/* 8a. Three round icons that trade places (4.5 s, ease-in-out cubic) */
+.nm-pucks { position: relative; height: calc(var(--nm-puck, 5.5rem) * 1.6); color: var(--nm-blue); }
+.nm-puck,
+.nm-pucks::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--nm-puck, 5.5rem);
+  aspect-ratio: 1;
+  margin: calc(var(--nm-puck, 5.5rem) / -2) 0 0 calc(var(--nm-puck, 5.5rem) / -2);
+  border-radius: 50%;
+}
+.nm-puck {
+  display: grid;
+  place-items: center;
+  animation: nm-puck 4.5s var(--nm-ease-in-out-cubic) infinite;
+  animation-delay: calc(var(--i, 0) * -1.5s);
+}
+@keyframes nm-puck {
+  0%, 11.1%   { transform: translateX(-72%) scale(.9);  z-index: 1; }
+  33.3%, 44.4% { transform: translateX(0)    scale(1.18); z-index: 3; }
+  66.6%, 77.7% { transform: translateX(72%)  scale(.9);  z-index: 2; }
+  100%        { transform: translateX(-72%) scale(.9);  z-index: 1; }
+}
+.nm-pucks::after {
+  content: "";
+  z-index: 0;
+  border: 2px solid currentColor;
+  opacity: 0;
+  pointer-events: none;
+  animation: nm-ring 1.5s var(--nm-ease-in-out-cubic) infinite;
+}
+@keyframes nm-ring {
+  0%   { transform: scale(1.18); opacity: .5; }
+  70%, 100% { transform: scale(1.75); opacity: 0; }
+}
+
+/* 8b. Tiles swinging on arcs (pendulum, 4.8 to 5.6 s, ease-in-out sine) */
+.nm-swing { position: relative; }
+.nm-swing-arm {
+  position: absolute;
+  inset: 0;
+  transform-origin: var(--ox, 50%) var(--oy, 130%);
+  animation: nm-swing var(--d, 5s) var(--nm-ease-in-out-sine) infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes nm-swing {
+  from { transform: rotate(calc(var(--a, 8deg) * -1)); }
+  to   { transform: rotate(var(--a, 8deg)); }
+}
+
+/* 8c. Dots orbiting concentric rings (linear, 11 to 17 s per turn) */
+.nm-orbits { position: relative; aspect-ratio: 1; }
+.nm-orbit {
+  position: absolute;
+  inset: var(--inset, 10%);
+  border-radius: 50%;
+  border: 1px solid rgba(120, 140, 190, .28);
+  animation: nm-spin var(--d, 12s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+.nm-orbit > i {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: .8rem;
+  aspect-ratio: 1;
+  margin: -.4rem 0 0 -.4rem;
+  border-radius: 50%;
+  background: var(--nm-blue);
+  box-shadow: 0 0 0 .3rem color-mix(in srgb, var(--nm-blue) 14%, transparent);
+}
+.nm-orbit > i.nm-blink { animation: nm-blink 4s ease-in-out infinite; }
+@keyframes nm-spin { to { transform: rotate(360deg); } }
+@keyframes nm-blink { 0%, 100% { opacity: 0; } 25%, 70% { opacity: 1; } }
+
+/* 8d. Card stack cycling: front card leaves, others advance, a new one pops
+ *     in at the back. 6 s loop, one step every 1.5 s, 1 s moves. */
+.nm-stack { --u: 1rem; position: relative; height: var(--nm-stack-h, 15rem); }
+.nm-stack-card {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0;
+  animation: nm-stack 6s infinite;
+  animation-delay: calc(var(--i, 0) * -1.5s);
+}
+@keyframes nm-stack {
+  0%      { transform: translateY(0) scale(1); opacity: 1; z-index: 4; animation-timing-function: var(--nm-ease-in-out-cubic); }
+  8%      { transform: translateY(calc(var(--u) * 2.4)) scale(1.1); opacity: 0; z-index: 4; }
+  8.001%  { transform: translateY(calc(var(--u) * -4.2)) scale(0); opacity: 0; z-index: 1; animation-timing-function: var(--nm-ease-in-out-cubic); }
+  21%     { transform: translateY(calc(var(--u) * -4.2)) scale(.82); opacity: .8; z-index: 1; }
+  25%     { transform: translateY(calc(var(--u) * -4.2)) scale(.82); opacity: .8; z-index: 1; animation-timing-function: var(--nm-ease-in-out-cubic); }
+  41.7%   { transform: translateY(calc(var(--u) * -3)) scale(.88); opacity: .9; z-index: 2; }
+  50%     { transform: translateY(calc(var(--u) * -3)) scale(.88); opacity: .9; z-index: 2; animation-timing-function: var(--nm-ease-in-out-cubic); }
+  66.7%   { transform: translateY(calc(var(--u) * -1.6)) scale(.94); opacity: 1; z-index: 3; }
+  75%     { transform: translateY(calc(var(--u) * -1.6)) scale(.94); opacity: 1; z-index: 3; animation-timing-function: var(--nm-ease-in-out-cubic); }
+  91.7%   { transform: translateY(0) scale(1); opacity: 1; z-index: 4; }
+  100%    { transform: translateY(0) scale(1); opacity: 1; z-index: 4; }
+}
+
+/* 8e. Toggle + coin: coin bobs, arrow nudges, platform tilts (3 s) */
+.nm-toggle { position: relative; }
+.nm-toggle-platform { transform-origin: 50% 60%; animation: nm-tilt 3s ease-in-out infinite; }
+.nm-toggle-coin { animation: nm-bob 3s ease-in-out infinite; }
+.nm-toggle-arrow { animation: nm-nudge 3s ease-in-out infinite; }
+@keyframes nm-tilt { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+@keyframes nm-bob { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6%) scale(1.03); } }
+@keyframes nm-nudge { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6%, -6%); } }
+
+/* 8f. Ripple rings: scale .84 -> 2.09 while rotating a full turn, new ring
+ *     every 0.8 s, each lasting 3 s. */
+.nm-ripple { position: relative; aspect-ratio: 1; color: var(--nm-blue); }
+.nm-ripple-ring {
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  opacity: 0;
+  animation: nm-ripple 3s cubic-bezier(.33, 0, .67, 1) infinite;
+  animation-delay: calc(var(--i, 0) * .8s);
+}
+@keyframes nm-ripple {
+  0%   { transform: scale(.84) rotate(0); opacity: 0; }
+  28%  { opacity: .9; }
+  62%  { opacity: .9; }
+  100% { transform: scale(2.09) rotate(366deg); opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ *
+ * 9. Reduced motion: final states, no loops
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  [data-nm-float], .nm-grain::before, .nm-puck, .nm-pucks::after, .nm-swing-arm,
+  .nm-orbit, .nm-orbit > i, .nm-stack-card, .nm-toggle-platform, .nm-toggle-coin,
+  .nm-toggle-arrow, .nm-ripple-ring { animation: none !important; }
+
+  .nm-js [data-nm-reveal] .nm-word,
+  .nm-js [data-nm-reveal] .nm-line { opacity: 1; filter: none; transform: none; transition: none; }
+
+  [data-nm-panels] > .nm-panel { transition: none; }
+
+  .nm-puck { transform: translateX(calc((var(--i, 0) - 1) * 72%)) scale(calc(.9 + var(--i, 0) * (2 - var(--i, 0)) * .28)); }
+  .nm-stack-card {
+    transform: translateY(calc(var(--u) * var(--i, 0) * -1.4)) scale(calc(1 - var(--i, 0) * .06));
+    z-index: calc(4 - var(--i, 0));
+  }
+  .nm-ripple-ring { opacity: .35; transform: scale(calc(.9 + var(--i, 0) * .3)); }
+}

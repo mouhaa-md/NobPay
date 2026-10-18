@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#f8f9ff;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary": "#673900", "primary-fixed": "#dce1ff", "inverse-on-surface": "#eaf1ff", "on-tertiary-fixed": "#2d1600", "on-tertiary": "#ffffff", "on-surface": "#0b1c30", "surface-variant": "#d3e4fe", "tertiary-fixed-dim": "#ffb874", "on-error": "#ffffff", "surface-dim": "#cbdbf5", "tertiary-container": "#894d00", "tertiary-fixed": "#ffdcbf", "surface-container": "#e5eeff", "on-primary": "#ffffff", "on-secondary": "#ffffff", "on-secondary-fixed-variant": "#41465d", "error": "#ba1a1a", "on-tertiary-fixed-variant": "#6b3b00", "outline-variant": "#c4c5d7", "on-primary-fixed-variant": "#0039b5", "on-tertiary-container": "#ffca9c", "background": "#f8f9ff", "outline": "#747686", "inverse-surface": "#213145", "error-container": "#ffdad6", "on-error-container": "#93000a", "secondary-container": "#dadefc", "surface-bright": "#f8f9ff", "secondary-fixed-dim": "#c1c5e2", "surface-container-highest": "#d3e4fe", "on-primary-fixed": "#001551", "on-secondary-container": "#5d617a", "secondary-fixed": "#dde1fe", "on-background": "#0b1c30", "primary": "#0037b0", "on-primary-container": "#cad3ff", "surface": "#f8f9ff", "primary-fixed-dim": "#b7c4ff", "surface-container-low": "#eff4ff", "on-secondary-fixed": "#151a30", "on-surface-variant": "#434655", "primary-container": "#1d4ed8", "surface-container-lowest": "#ffffff", "secondary": "#595d76", "surface-tint": "#2151da", "surface-container-high": "#dce9ff", "inverse-primary": "#b7c4ff" }, borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, spacing: { "margin": "1rem", "space-2xl": "3rem", "space-xs": "0.5rem", "gutter-desktop": "1.5rem", "margin-tablet": "1.5rem", "space-md": "1rem", "space-lg": "1.5rem", "space-2xs": "0.25rem", "margin-desktop": "2.5rem", "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.75rem" }, fontFamily: { "title-lg": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "label-md": ["Inter"], "title-md": ["Plus Jakarta Sans"], "body-md": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "label-lg": ["Inter"], "headline-xl-mobile": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Plus Jakarta Sans"] }, fontSize: { "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }], "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "700" }], "headline-xl": ["36px", { "lineHeight": "44px", "fontWeight": "800" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "headline-xl-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-md": ["20px", { "lineHeight": "26px", "fontWeight": "700" }] } } } }</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased flex flex-col items-center min-h-screen"><div class="w-full max-w-[480px] min-h-screen relative flex flex-col bg-background shadow-2xl"><header class="fixed top-0 w-full max-w-[480px] z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-xs"><img alt="NobPay Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VNQkRGq6LXbXqYhZ3e4NO07-i9V-a0Z-HgW0k9aK8xIhKlh72vGEJwOb0uRiq6HaecJ6g3xfVETH6UnxEOxWyW0KhMe0Gc1kfx3JSbSmNkAjU98Km1xHOd7JjkleYihNp15PEg0_DwrfVbWtIslfz2gdvpwkjZTlHWZIPPO3gct_1BDZAL96pQ4DjzfX5Htz32l0RcUfk-9V7ExVdi95fMviF0sI3W6QxBMLIehEUgzFBo7PKaDCUypn65"/><span class="font-title-md text-title-md text-on-surface tracking-tight uppercase">NobPay</span></div><div class="flex items-center gap-space-xs"><span class="font-title-md text-title-md text-on-surface">Accueil</span></div><div class="flex items-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Ocean Deep Gradient Header Area -->
+<section class="w-full bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] px-5 pt-4 pb-12 text-white shadow-xl relative overflow-hidden">
+<!-- Subtle Ambient Glow -->
+<div class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary-container/20 blur-3xl pointer-events-none"></div>
+<div class="absolute top-28 -left-12 w-48 h-48 rounded-full bg-surface-tint/15 blur-2xl pointer-events-none"></div>
+<!-- Greeting Bar -->
+<div class="relative z-10 flex items-center justify-between gap-3 mb-6">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F97316] text-white flex items-center justify-center font-title-md text-title-md shadow-md shrink-0">
+          AS
+        </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-white truncate">Bonjour, Aminata Sow</span>
+<span class="text-base select-none">👋</span>
+</div>
+<span class="font-label-sm text-label-sm text-surface-variant/80 truncate">Paris (Diaspora) · Sécurisé</span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button aria-label="Rechercher" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-white backdrop-blur-md" type="button">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</button>
+<button aria-label="Notifications" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-white backdrop-blur-md relative" type="button">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F97316] ring-2 ring-[#0B132B]"></span>
+</button>
+</div>
+</div>
+<!-- Big Escrow Balance Card -->
+<div class="relative z-10 bg-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-surface-variant font-semibold">Total en séquestre</span>
+<button aria-label="Masquer ou afficher le solde" class="text-surface-variant hover:text-white transition flex items-center" id="toggle-balance-btn" type="button">
+<span class="material-symbols-outlined text-[17px]" id="balance-eye-icon">visibility</span>
+</button>
+</div>
+<span class="inline-flex items-center gap-1 bg-[#F7931A]/20 text-[#FFD8A8] px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]">lock</span>
+          On-chain
+        </span>
+</div>
+<div class="font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight text-white mb-1.5 transition-all" id="balance-amount-display">
+        $56,893.30
+      </div>
+<div class="font-body-sm text-body-sm text-surface-variant flex items-center gap-1.5 font-medium flex-wrap" id="balance-sub-display">
+<span>≈ 35 150 000 FCFA</span>
+<span class="inline-block w-1 h-1 rounded-full bg-surface-variant/60"></span>
+<span class="text-[#FFDCBF] flex items-center gap-0.5 font-semibold">
+<span class="material-symbols-outlined text-[14px]">currency_bitcoin</span>
+          0.8842 BTC
+        </span>
+</div>
+<!-- Quick Action Pills -->
+<div class="grid grid-cols-2 gap-2.5 mt-5">
+<button class="w-full h-12 bg-white hover:bg-slate-50 active:scale-95 text-on-surface font-label-lg text-label-lg rounded-full flex items-center justify-center gap-2 shadow-lg transition" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary">add_circle</span>
+<span>+ Financer</span>
+</button>
+<button class="w-full h-12 bg-primary hover:bg-primary-container active:scale-95 text-on-primary font-label-lg text-label-lg rounded-full flex items-center justify-center gap-2 shadow-lg transition backdrop-blur-md" type="button">
+<span class="material-symbols-outlined text-[19px]">send</span>
+<span>Nouveau projet</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Tactile Content Sheet Overlapping Header -->
+<section class="relative z-20 -mt-6 rounded-t-3xl bg-surface-container-lowest px-5 pt-6 pb-6 shadow-[0_-8px_30px_rgba(10,15,36,0.08)] flex flex-col gap-6">
+<!-- Dismissible PWA Card -->
+<div class="relative bg-surface-container-low rounded-2xl p-4 shadow-sm flex items-start gap-3 transition-all duration-300" id="pwa-install-banner">
+<div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[22px]">install_mobile</span>
+</div>
+<div class="flex flex-col min-w-0 pr-6">
+<p class="font-title-md text-title-md text-on-surface mb-1">Alertes directes de chantier</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Installez NobPay sur votre écran d'accueil pour recevoir les preuves de travaux en temps réel.
+        </p>
+<div class="mt-3 flex items-center gap-2">
+<button class="h-8 px-4 bg-primary text-on-primary font-label-sm text-label-sm rounded-full shadow-sm hover:bg-primary-container active:scale-95 transition font-semibold" id="pwa-install-action" type="button">
+            Installer
+          </button>
+<button class="h-8 px-3 text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition" id="pwa-dismiss-text" type="button">
+            Plus tard
+          </button>
+</div>
+</div>
+<button aria-label="Fermer" class="absolute top-3 right-3 text-on-surface-variant hover:text-on-surface p-1 rounded-full active:scale-90 transition" id="pwa-close-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Quick Stat Counter Pill Row -->
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-surface-container-lowest shadow-sm rounded-2xl p-3 flex flex-col items-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">En cours</span>
+<span class="font-headline-md text-headline-md font-bold text-primary mt-0.5">3</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/80">Projets</span>
+</div>
+<div class="bg-surface-container-lowest shadow-sm rounded-2xl p-3 flex flex-col items-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Séquestrés</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface mt-0.5">4/5</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/80">Jalons</span>
+</div>
+<div class="bg-surface-container-lowest shadow-sm rounded-2xl p-3 flex flex-col items-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ancrages</span>
+<span class="font-headline-md text-headline-md font-bold text-[#C26700] mt-0.5">100%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/80">Vérifiés</span>
+</div>
+</div>
+<!-- Field Teams Section -->
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-3.5">
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">Équipes terrain</h2>
+<span class="w-5 h-5 rounded-full bg-surface-container text-on-secondary-container font-label-sm text-label-sm flex items-center justify-center font-semibold">4</span>
+</div>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-container font-semibold flex items-center transition" href="#">
+          Voir tout <span class="material-symbols-outlined text-[14px] ml-0.5">chevron_right</span>
+</a>
+</div>
+<!-- Horizontal Scroll Avatar Row -->
+<div class="flex items-center gap-3.5 overflow-x-auto pb-1 -mx-5 px-5 select-none">
+<!-- Avatar 1 -->
+<div class="flex flex-col items-center text-center shrink-0 w-20 group cursor-pointer">
+<div class="relative">
+<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white flex items-center justify-center font-title-md text-title-md shadow-md group-hover:scale-105 transition">
+              MD
+            </div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#16A34A] ring-2 ring-white"></span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 truncate w-full">Mamadou D.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full">Kaolack</span>
+</div>
+<!-- Avatar 2 -->
+<div class="flex flex-col items-center text-center shrink-0 w-20 group cursor-pointer">
+<div class="relative">
+<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#047857] to-[#10B981] text-white flex items-center justify-center font-title-md text-title-md shadow-md group-hover:scale-105 transition">
+              IN
+            </div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#16A34A] ring-2 ring-white"></span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 truncate w-full">Ibrahima N.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full">Thiès</span>
+</div>
+<!-- Avatar 3 -->
+<div class="flex flex-col items-center text-center shrink-0 w-20 group cursor-pointer">
+<div class="relative">
+<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#9333EA] to-[#C084FC] text-white flex items-center justify-center font-title-md text-title-md shadow-md group-hover:scale-105 transition">
+              FS
+            </div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#F59E0B] ring-2 ring-white"></span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 truncate w-full">Fatou Sy</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full">Dakar</span>
+</div>
+<!-- Avatar 4 -->
+<div class="flex flex-col items-center text-center shrink-0 w-20 group cursor-pointer">
+<div class="relative">
+<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#D97706] to-[#FBBF24] text-white flex items-center justify-center font-title-md text-title-md shadow-md group-hover:scale-105 transition">
+              AK
+            </div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#16A34A] ring-2 ring-white"></span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 truncate w-full">Alioune K.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full">Mbour</span>
+</div>
+<!-- Add Contact Action -->
+<div class="flex flex-col items-center text-center shrink-0 w-20 group cursor-pointer">
+<div class="w-14 h-14 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center group-hover:bg-surface-variant transition">
+<span class="material-symbols-outlined text-[24px]">person_add</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant mt-1.5 truncate w-full">Inviter</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/70">Artisan</span>
+</div>
+</div>
+</div>
+<!-- Active Escrow Highlight Card -->
+<div class="bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-4 rounded-2xl shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="text-base">🇸🇳</span>
+<span class="font-title-md text-title-md text-on-surface">Villa à Thiès</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] font-label-sm text-label-sm font-semibold uppercase">
+          Jalon 3 / 4
+        </span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 mb-2 overflow-hidden">
+<div class="bg-primary h-2 rounded-full" style="width: 75%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Gros œuvre terminé</span>
+<span class="font-medium text-on-surface">18 500 $ / 25 000 $ débloqués</span>
+</div>
+</div>
+<!-- Recent Activity Section -->
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-title-md text-title-md text-on-surface">Activité récente</h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dernières 48h</span>
+</div>
+<div class="flex flex-col space-y-2">
+<!-- Item 1: Milestone Validated -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-[#DCFCE7] text-[#15803D] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2">
+<span class="font-title-md text-title-md text-on-surface truncate">Étape validée · Fondations</span>
+<span class="font-title-md text-title-md text-[#15803D] font-semibold shrink-0">+4 500,00 $</span>
+</div>
+<div class="flex items-center justify-between gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Villa à Thiès</span>
+<span class="font-label-sm text-label-sm text-[#C26700] bg-[#FFEDD5] px-2 py-0.2 rounded-full font-medium shrink-0 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[11px]">link</span>
+                14:20 · Preuve BTC
+              </span>
+</div>
+</div>
+</div>
+<!-- Item 2: Wave Payment -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2">
+<span class="font-title-md text-title-md text-on-surface truncate">Paiement fournisseur · Wave</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold shrink-0">-2 000,00 $</span>
+</div>
+<div class="flex items-center justify-between gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Quincaillerie Ndiaye</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant shrink-0">Aujourd'hui, 11:05</span>
+</div>
+<div class="mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant/80">-1 520 000 FCFA</span>
+</div>
+</div>
+</div>
+<!-- Item 3: Lightning Inflow -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-[#FFEDD5] text-[#C26700] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2">
+<span class="font-title-md text-title-md text-on-surface truncate">Financement reçu · Lightning</span>
+<span class="font-title-md text-title-md text-[#15803D] font-semibold shrink-0">+$5,000.00</span>
+</div>
+<div class="flex items-center justify-between gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Apport personnel (France)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant shrink-0">Hier, 18:30</span>
+</div>
+</div>
+</div>
+<!-- Item 4: Pending Proof -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-[#FEF3C7] text-[#B45309] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">pending</span>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-2">
+<span class="font-title-md text-title-md text-on-surface truncate">Preuve en attente de revue</span>
+<span class="px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] font-label-sm text-label-sm font-semibold uppercase shrink-0">
+                À valider
+              </span>
+</div>
+<div class="flex items-center justify-between gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Boutique Sandaga (Rideaux fer)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant shrink-0">Hier, 09:15</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Security & Trust Footer Tagline -->
+<div class="pt-2 pb-6 flex items-center justify-center gap-2 text-on-surface-variant/70">
+<span class="material-symbols-outlined text-[15px] text-[#16A34A]">shield</span>
+<span class="font-label-sm text-label-sm">Séquestre sous protocole Bitcoin multisig · Vérifiable</span>
+</div>
+</section>
+</div>
+<script>
+  // Dynamic balance reveal / obscure toggle
+  (function() {
+    const toggleBtn = document.getElementById('toggle-balance-btn');
+    const eyeIcon = document.getElementById('balance-eye-icon');
+    const amountDisplay = document.getElementById('balance-amount-display');
+    const subDisplay = document.getElementById('balance-sub-display');
+
+    let isHidden = false;
+    const originalAmount = '$56,893.30';
+    const originalSub = '≈ 35 150 000 FCFA · 0.8842 BTC';
+
+    if (toggleBtn && amountDisplay && eyeIcon) {
+      toggleBtn.addEventListener('click', function() {
+        isHidden = !isHidden;
+        if (isHidden) {
+          amountDisplay.textContent = '••••••••';
+          if (subDisplay) subDisplay.classList.add('opacity-30');
+          eyeIcon.textContent = 'visibility_off';
+        } else {
+          amountDisplay.textContent = originalAmount;
+          if (subDisplay) subDisplay.classList.remove('opacity-30');
+          eyeIcon.textContent = 'visibility';
+        }
+      });
+    }
+
+    // PWA install banner dismissal
+    const pwaBanner = document.getElementById('pwa-install-banner');
+    const closeBtn = document.getElementById('pwa-close-btn');
+    const dismissText = document.getElementById('pwa-dismiss-text');
+    const installAction = document.getElementById('pwa-install-action');
+
+    function dismissPwa() {
+      if (!pwaBanner) return;
+      pwaBanner.classList.add('opacity-0', '-translate-y-2');
+      setTimeout(() => {
+        pwaBanner.style.display = 'none';
+      }, 300);
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', dismissPwa);
+    if (dismissText) dismissText.addEventListener('click', dismissPwa);
+    if (installAction) {
+      installAction.addEventListener('click', function() {
+        installAction.textContent = 'Téléchargement...';
+        setTimeout(() => {
+          dismissPwa();
+        }, 1200);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full max-w-[480px] z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_20px_-2px_rgba(10,15,36,0.08)]" data-active-classes="text-primary font-label-md"><div class="relative flex items-center justify-around h-16 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center w-14 h-12 transition-colors text-primary font-label-md" data-path="accueil" href="#"><span class="material-symbols-outlined text-[24px]">home</span><span class="font-label-sm text-label-sm mt-0.5">Accueil</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="projets" href="#"><span class="material-symbols-outlined text-[24px]">folder</span><span class="font-label-sm text-label-sm mt-0.5">Projets</span></a><div class="relative -top-4 flex items-center justify-center"><a class="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_10px_20px_-4px_rgba(29,78,216,0.5)] active:scale-95 transition-transform" data-path="nouveau-transfert" href="#"><span class="material-symbols-outlined text-[28px]">add</span></a></div><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="portefeuille" href="#"><span class="material-symbols-outlined text-[24px]">account_balance_wallet</span><span class="font-label-sm text-label-sm mt-0.5">Portefeuille</span></a><a class="flex flex-col items-center justify-center w-14 h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="profil" href="#"><span class="material-symbols-outlined text-[24px]">person</span><span class="font-label-sm text-label-sm mt-0.5">Profil</span></a></div></nav></div></body></html>

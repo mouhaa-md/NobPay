@@ -1,0 +1,475 @@
+import {
+  escrowCents,
+  type Db,
+  type Funding,
+  type FundingMethod,
+  type Payout,
+  type PayoutQuote,
+  type Project,
+  type ProofKind,
+  type ProofPhoto,
+  type Sector,
+  type Step,
+  type StoredFile,
+  type Supplier,
+  type User,
+} from '@/lib/types';
+import { formatInt, formatUsdShort, usdToSats } from '@/lib/money';
+import { SECTORS } from '@/lib/templates';
+import { gatewayFor, getGateway } from './bitnob';
+import { getConfig } from './config';
+import { randomId, randomToken } from './crypto';
+import { readDb, withDb } from './db';
+import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep } from './domain';
+import { HttpError } from './http';
+import { appendLedger } from './ledger';
+import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
+
+const MAX_LIGHTNING_SATS = 20_000_000; // per-invoice limit documented by Bitnob
+
+/* ------------------------------------------------------------------------- *
+ * Access helpers
+ * ------------------------------------------------------------------------- */
+
+function ownedProject(db: Db, user: User, projectId: string): Project {
+  const project = findProject(db, projectId);
+  if (!project || project.ownerId !== user.id) throw new HttpError(404, 'Projet introuvable');
+  return project;
+}
+
+function stepOf(project: Project, stepId: string): Step {
+  const step = findStep(project, stepId);
+  if (!step) throw new HttpError(404, 'Étape introuvable');
+  return step;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Projects
+ * ------------------------------------------------------------------------- */
+
+export interface ProjectInput {
+  name: string;
+  sector: Sector;
+  city: string;
+  budgetCents: number;
+  managerName: string;
+  managerPhone?: string;
+  steps: { title: string; amountCents: number; proofKinds: ProofKind[] }[];
+}
+
+export async function createProject(owner: User, input: ProjectInput): Promise<Project> {
+  const name = String(input.name ?? '').trim();
+  const city = String(input.city ?? '').trim();
+  const managerName = String(input.managerName ?? '').trim();
+  if (name.length < 2 || name.length > 80) throw new HttpError(400, 'Donnez un nom au projet (2 à 80 caractères)');
+  if (!SECTORS[input.sector]) throw new HttpError(400, 'Secteur invalide');
+  if (!city) throw new HttpError(400, 'Indiquez la ville');
+  if (!managerName) throw new HttpError(400, 'Indiquez la personne de confiance sur place');
+  if (!Number.isInteger(input.budgetCents) || input.budgetCents < 10_000 || input.budgetCents > 50_000_000) {
+    throw new HttpError(400, 'Le budget doit être compris entre 100 $ et 500 000 $');
+  }
+  if (!Array.isArray(input.steps) || input.steps.length < 1 || input.steps.length > 12) {
+    throw new HttpError(400, 'Prévoyez entre 1 et 12 étapes');
+  }
+  const steps = input.steps.map((s, i) => {
+    const title = String(s.title ?? '').trim();
+    if (!title) throw new HttpError(400, `Donnez un nom à l'étape ${i + 1}`);
+    if (!Number.isInteger(s.amountCents) || s.amountCents < 100) throw new HttpError(400, `Montant invalide pour l'étape ${i + 1}`);
+    return { title: title.slice(0, 80), amountCents: s.amountCents, proofKinds: s.proofKinds?.length ? s.proofKinds : (['photos', 'facture'] as ProofKind[]) };
+  });
+  if (steps.reduce((sum, s) => sum + s.amountCents, 0) !== input.budgetCents) {
+    throw new HttpError(400, 'La somme des étapes doit être égale au budget');
+  }
+
+  const id = randomId('p', 4);
+  const project: Project = {
+    id,
+    ownerId: owner.id,
+    name,
+    sector: input.sector,
+    city,
+    country: 'SN',
+    budgetCents: input.budgetCents,
+    coverImage: SECTORS[input.sector].cover,
+    managerName,
+    managerPhone: input.managerPhone?.trim() || undefined,
+    managerToken: randomToken(12),
+    approvalRule: 'owner',
+    steps: steps.map((s, i) => ({
+      id: `${id}_s${i + 1}`,
+      index: i + 1,
+      title: s.title,
+      amountCents: s.amountCents,
+      proofKinds: s.proofKinds,
+      status: 'upcoming' as const,
+    })),
+    createdAt: new Date().toISOString(),
+  };
+
+  await withDb((db) => {
+    db.projects.push(project);
+    appendLedger(db, id, 'project_created', {
+      name,
+      sector: project.sector,
+      city,
+      budgetCents: project.budgetCents,
+      steps: project.steps.map((s) => ({ index: s.index, title: s.title, amountCents: s.amountCents })),
+    });
+  });
+  return project;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Funding (Lightning)
+ * ------------------------------------------------------------------------- */
+
+export async function createFunding(
+  owner: User,
+  projectId: string,
+  input: { amountCents: number; method: FundingMethod },
+): Promise<Funding> {
+  const db = await readDb();
+  const project = ownedProject(db, owner, projectId);
+  const amountCents = Math.round(Number(input.amountCents));
+  if (!Number.isFinite(amountCents) || amountCents < 500) throw new HttpError(400, 'Montant minimum : 5 $');
+  const remainingBudget = project.budgetCents - db.fundings.filter((f) => f.projectId === projectId && f.status === 'paid').reduce((s, f) => s + f.amountCents, 0);
+  if (amountCents > Math.max(remainingBudget, 0) + 500_00) {
+    throw new HttpError(400, `Le projet est déjà financé à presque 100 % (reste ${formatUsdShort(Math.max(remainingBudget, 0))}).`);
+  }
+  if (input.method !== 'lightning') {
+    throw new HttpError(400, 'Le dépôt en USDT/USDC arrive bientôt. Utilisez Bitcoin Lightning.', 'method_unavailable');
+  }
+
+  const gateway = getGateway();
+  const id = randomId('f', 5);
+  const reference = `nobpay:fund:${id}`;
+  const btcUsd = await gateway.btcUsd();
+  const amountSats = usdToSats(amountCents, btcUsd);
+  if (amountSats > MAX_LIGHTNING_SATS) {
+    const maxUsd = Math.floor((MAX_LIGHTNING_SATS / 1e8) * btcUsd);
+    throw new HttpError(400, `Une facture Lightning est limitée à environ ${formatInt(maxUsd)} $. Faites plusieurs versements.`, 'too_large');
+  }
+  const invoice = await gateway.createInvoice({
+    amountSats,
+    description: `NobPay · ${project.name}`.slice(0, 100),
+    reference,
+    expirySeconds: 86_400,
+  });
+
+  const funding: Funding = {
+    id,
+    projectId,
+    amountCents,
+    method: 'lightning',
+    status: 'pending',
+    reference,
+    mode: gateway.mode,
+    createdAt: new Date().toISOString(),
+    invoiceId: invoice.id,
+    bolt11: invoice.bolt11,
+    paymentHash: invoice.paymentHash,
+    amountSats,
+    btcUsd,
+    expiresAt: invoice.expiresAt,
+  };
+  await withDb((d) => {
+    d.fundings.push(funding);
+  });
+  return funding;
+}
+
+/** Current state of a funding. In sandbox mode a still-pending invoice is also checked on the API (polling fallback). */
+export async function refreshFunding(owner: User, fundingId: string): Promise<Funding> {
+  let db = await readDb();
+  let funding = db.fundings.find((f) => f.id === fundingId);
+  if (!funding) throw new HttpError(404, 'Versement introuvable');
+  ownedProject(db, owner, funding.projectId);
+
+  if (funding.status === 'pending') {
+    if (funding.expiresAt && Date.parse(funding.expiresAt) < Date.now()) {
+      await withDb((d) => {
+        const f = d.fundings.find((x) => x.id === fundingId);
+        if (f && f.status === 'pending') f.status = 'expired';
+      });
+    } else if (funding.mode === 'sandbox' && funding.invoiceId) {
+      try {
+        const status = await gatewayFor('sandbox').invoiceStatus(funding.invoiceId);
+        if (status.status === 'paid') {
+          await withDb((d) => {
+            const f = d.fundings.find((x) => x.id === fundingId);
+            if (f) applyFundingPaid(d, f, { preimage: status.preimage });
+          });
+        }
+      } catch {
+        /* the webhook remains the source of truth; try again on the next poll */
+      }
+    }
+    db = await readDb();
+    funding = db.fundings.find((f) => f.id === fundingId)!;
+  }
+
+  // Best-effort BTC -> USDT conversion once paid (sandbox only), recorded on the funding.
+  if (funding.status === 'paid' && funding.mode === 'sandbox' && !funding.conversion && funding.amountSats) {
+    const result = await gatewayFor('sandbox').convertBtcToStable({ sats: funding.amountSats, reference: `nobpay:conv:${funding.id}` });
+    await withDb((d) => {
+      const f = d.fundings.find((x) => x.id === fundingId);
+      if (f) f.conversion = result;
+    });
+    funding = (await readDb()).fundings.find((f) => f.id === fundingId)!;
+  }
+  return funding;
+}
+
+/** Mock mode only: pays the invoice by sending a signed event to the real webhook handler. */
+export async function simulateFundingPaid(owner: User, fundingId: string): Promise<Funding> {
+  if (getConfig().mode !== 'mock') throw new HttpError(403, 'La simulation est désactivée en mode sandbox');
+  const db = await readDb();
+  const funding = db.fundings.find((f) => f.id === fundingId);
+  if (!funding) throw new HttpError(404, 'Versement introuvable');
+  ownedProject(db, owner, funding.projectId);
+  if (funding.status === 'pending') await simulateInvoicePaid(funding);
+  return (await readDb()).fundings.find((f) => f.id === fundingId)!;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Proofs (submitted by the person on site)
+ * ------------------------------------------------------------------------- */
+
+export type Actor = { kind: 'owner'; user: User } | { kind: 'manager'; token: string };
+
+export interface ProofInput {
+  photos: (StoredFile & { takenAt?: string; gps?: ProofPhoto['gps'] })[];
+  invoice?: StoredFile;
+  invoiceAmountFcfa?: number;
+  note?: string;
+  supplier: Supplier;
+}
+
+/** Throws unless the actor (owner session or field-manager link) may act on the project. */
+export async function assertProjectAccess(actor: Actor, projectId: string): Promise<Project> {
+  const db = await readDb();
+  const project = findProject(db, projectId);
+  if (!project) throw new HttpError(404, 'Projet introuvable');
+  if (actor.kind === 'owner' ? project.ownerId !== actor.user.id : project.managerToken !== actor.token) {
+    throw new HttpError(403, "Vous n'avez pas accès à ce projet");
+  }
+  return project;
+}
+
+export async function submitProof(actor: Actor, projectId: string, stepId: string, input: ProofInput): Promise<Step> {
+  const project = await assertProjectAccess(actor, projectId);
+  const current = stepOf(project, stepId);
+  if (current.status !== 'active' && current.status !== 'rejected') {
+    throw new HttpError(409, current.status === 'upcoming' ? "Cette étape n'est pas encore débloquée : le séquestre doit la couvrir." : 'Une preuve a déjà été envoyée pour cette étape');
+  }
+  const supplier = input.supplier;
+  if (!supplier?.name?.trim() || !supplier.phone?.trim() || !supplier.network) {
+    throw new HttpError(400, 'Indiquez qui sera payé (nom, numéro et opérateur mobile money)');
+  }
+  const needsPhoto = current.proofKinds.includes('photos') || current.proofKinds.includes('titre');
+  if (needsPhoto && input.photos.length === 0) throw new HttpError(400, 'Ajoutez au moins une photo');
+  if (current.proofKinds.includes('facture') && !input.invoice) throw new HttpError(400, 'Ajoutez la facture du fournisseur');
+
+  const submittedAt = new Date().toISOString();
+  return withDb((d) => {
+    const p = findProject(d, projectId)!;
+    const step = stepOf(p, stepId);
+    step.proof = {
+      photos: input.photos.map((f) => ({ ...f, takenAt: f.takenAt ?? submittedAt })),
+      invoice: input.invoice,
+      invoiceAmountFcfa: input.invoiceAmountFcfa,
+      note: input.note?.trim().slice(0, 500) || undefined,
+      supplier: { name: supplier.name.trim().slice(0, 80), phone: supplier.phone.trim(), network: supplier.network },
+      submittedAt,
+      submittedBy: actor.kind === 'owner' ? 'owner' : 'manager',
+    };
+    step.status = 'proof_submitted';
+    step.decision = undefined;
+    step.quote = undefined;
+    appendLedger(
+      d,
+      projectId,
+      'proof_submitted',
+      {
+        stepId,
+        index: step.index,
+        photos: step.proof.photos.map((f) => ({ sha256: f.sha256, takenAt: f.takenAt, gps: f.gps })),
+        invoice: step.proof.invoice ? { sha256: step.proof.invoice.sha256, amountFcfa: step.proof.invoiceAmountFcfa } : undefined,
+        note: step.proof.note,
+      },
+      submittedAt,
+    );
+    return structuredClone(step);
+  });
+}
+
+export async function rejectProof(owner: User, projectId: string, stepId: string, note?: string): Promise<Step> {
+  return withDb((db) => {
+    const project = ownedProject(db, owner, projectId);
+    const step = stepOf(project, stepId);
+    if (step.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à refuser');
+    step.status = 'rejected';
+    step.decision = { kind: 'rejected', at: new Date().toISOString(), note: note?.trim().slice(0, 300) || undefined };
+    step.quote = undefined;
+    appendLedger(db, projectId, 'step_rejected', { stepId, index: step.index, note: step.decision.note });
+    return structuredClone(step);
+  });
+}
+
+/* ------------------------------------------------------------------------- *
+ * Release: quote -> confirm (-> payout webhook)
+ * ------------------------------------------------------------------------- */
+
+export async function quoteRelease(owner: User, projectId: string, stepId: string, opts: { simulate?: boolean } = {}): Promise<PayoutQuote> {
+  const db = await readDb();
+  const project = ownedProject(db, owner, projectId);
+  const step = stepOf(project, stepId);
+  if (step.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à valider pour cette étape');
+  if (!step.proof?.supplier) throw new HttpError(409, 'Le fournisseur à payer est manquant');
+  const escrow = escrowCents(db, project);
+  if (escrow < step.amountCents) {
+    throw new HttpError(409, `Le séquestre (${formatUsdShort(escrow)}) ne couvre pas cette étape (${formatUsdShort(step.amountCents)}). Financez le projet.`, 'insufficient_escrow');
+  }
+  const gateway = getGateway(opts.simulate);
+  const reference = `nobpay:pay:${step.id}:${Date.now().toString(36)}`;
+  let quote: PayoutQuote;
+  try {
+    quote = await gateway.quotePayout({ amountUsdCents: step.amountCents, reference });
+  } catch (err) {
+    throw new HttpError(502, `Devis de paiement refusé : ${(err as Error).message}`, 'gateway_error');
+  }
+  await withDb((d) => {
+    const s = stepOf(findProject(d, projectId)!, stepId);
+    s.quote = quote;
+  });
+  return quote;
+}
+
+export async function confirmRelease(owner: User, projectId: string, stepId: string): Promise<Step> {
+  const snapshot = await readDb();
+  const project0 = ownedProject(snapshot, owner, projectId);
+  const step0 = stepOf(project0, stepId);
+  const quote = step0.quote;
+  if (step0.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à valider pour cette étape');
+  if (!quote) throw new HttpError(409, "Demandez d'abord un devis de paiement", 'no_quote');
+  if (Date.parse(quote.expiresAt) < Date.now()) throw new HttpError(409, 'Le devis a expiré. Demandez-en un nouveau.', 'quote_expired');
+  const supplier = step0.proof!.supplier!;
+  if (escrowCents(snapshot, project0) < step0.amountCents) throw new HttpError(409, 'Séquestre insuffisant', 'insufficient_escrow');
+
+  // Phase 1: record the decision and reserve the funds.
+  const startedAt = new Date().toISOString();
+  await withDb((db) => {
+    const project = ownedProject(db, owner, projectId);
+    const step = stepOf(project, stepId);
+    if (step.status !== 'proof_submitted') throw new HttpError(409, 'Cette étape a déjà été traitée');
+    const payout: Payout = {
+      reference: quote.reference,
+      quoteId: quote.quoteId,
+      status: 'initiated',
+      amountUsdCents: quote.amountUsdCents,
+      amountFcfa: quote.amountFcfa,
+      rate: quote.rate,
+      feeUsdCents: quote.feeUsdCents,
+      supplier,
+      mode: quote.mode,
+      startedAt,
+    };
+    step.status = 'releasing';
+    step.decision = { kind: 'approved', at: startedAt };
+    step.payout = payout;
+    step.quote = undefined;
+    appendLedger(db, projectId, 'step_approved', { stepId, index: step.index, amountCents: step.amountCents }, startedAt);
+    appendLedger(
+      db,
+      projectId,
+      'payout_started',
+      {
+        stepId,
+        index: step.index,
+        reference: payout.reference,
+        quoteId: payout.quoteId,
+        amountUsdCents: payout.amountUsdCents,
+        amountFcfa: payout.amountFcfa,
+        rate: payout.rate,
+        supplier: { name: supplier.name, network: supplier.network },
+      },
+      startedAt,
+    );
+  });
+
+  // Phase 2: ask the gateway to move the money (outside the database lock).
+  const { publicBaseUrl } = getConfig();
+  try {
+    const start = await gatewayFor(quote.mode).startPayout({
+      quote,
+      reference: quote.reference,
+      supplier,
+      reason: 'vendor_payment',
+      callbackUrl: publicBaseUrl.startsWith('https://') ? `${publicBaseUrl}/api/webhooks/bitnob` : undefined,
+    });
+    // Phase 3: store the gateway's answer. Completion arrives by webhook (or polling).
+    return await withDb((db) => {
+      const project = findProject(db, projectId)!;
+      const step = stepOf(project, stepId);
+      if (step.payout) {
+        step.payout.payoutId = start.payoutId;
+        step.payout.status = start.status === 'initiated' ? 'pending' : start.status;
+      }
+      if (start.status === 'completed') applyPayoutCompleted(db, project, step, { payoutId: start.payoutId });
+      if (start.status === 'failed') applyPayoutFailed(db, project, step, 'Paiement refusé par le réseau');
+      return structuredClone(step);
+    });
+  } catch (err) {
+    const message = (err as Error).message;
+    await withDb((db) => {
+      const project = findProject(db, projectId)!;
+      applyPayoutFailed(db, project, stepOf(project, stepId), message);
+    });
+    throw new HttpError(502, `Paiement non exécuté : ${message}`, 'gateway_error');
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Reconciliation: finish payouts that are still in flight.
+ *  - mock: the simulator "receives" the payout webhook shortly after the request
+ *  - sandbox: poll the payout status (the webhook normally arrives first)
+ * ------------------------------------------------------------------------- */
+
+export async function reconcile(): Promise<void> {
+  const db = await readDb();
+  for (const project of db.projects) {
+    for (const step of project.steps) {
+      const payout = step.payout;
+      if (!payout || (payout.status !== 'pending' && payout.status !== 'initiated')) continue;
+      const age = Date.now() - Date.parse(payout.startedAt);
+      if (payout.mode === 'mock') {
+        if (age > 2500) await simulatePayoutCompleted(step);
+      } else if (payout.payoutId && age > 4000) {
+        try {
+          const status = await gatewayFor('sandbox').payoutStatus(payout.payoutId);
+          if (status.status === 'completed') {
+            await withDb((d) => {
+              const p = findProject(d, project.id)!;
+              applyPayoutCompleted(d, p, stepOf(p, step.id), { payoutId: payout.payoutId });
+            });
+          } else if (status.status === 'failed') {
+            await withDb((d) => {
+              const p = findProject(d, project.id)!;
+              applyPayoutFailed(d, p, stepOf(p, step.id), status.error ?? 'Paiement refusé par le réseau');
+            });
+          }
+        } catch {
+          /* try again on the next poll */
+        }
+      }
+    }
+  }
+}
+
+/** Used by the UI to re-evaluate which step can be started after a funding or a payout. */
+export async function refreshActivation(projectId: string): Promise<void> {
+  await withDb((db) => {
+    const project = findProject(db, projectId);
+    if (project) activateSteps(db, project);
+  });
+}

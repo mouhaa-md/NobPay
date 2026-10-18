@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NobPay · Laboratoire d'animations</title>
+<!-- Hides reveal text until the script is ready; removed again if the script never loads. -->
+<script>document.documentElement.classList.add('nm-js');setTimeout(function(){if(!window.__nmReady)document.documentElement.classList.remove('nm-js')},3000)</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nobpay-motion.css">
+<style>
+  /* ---- Lab-only layout & placeholder art. Final design comes from the Stitch screens. ---- */
+  /* Palette = Stitch app tokens: primary #0037b0, primary-container #1d4ed8, on-surface #0b1c30, tertiary-fixed #ffdcbf */
+  :root { --blue:#1d4ed8; --blue-deep:#0037b0; --dark:#0b1c30; --grey:#6b7280; --nm-blue:#1d4ed8; --nm-dark:#0b1c30; }
+  * { box-sizing: border-box; }
+  html { font-size: clamp(11px, 1vw, 16px); }
+  body { margin:0; font-family:'Inter',system-ui,sans-serif; color:var(--dark); background:#fff; overflow-x:hidden; }
+  h1,h2,h3 { font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:400; letter-spacing:-.03em; margin:0; line-height:1.05; }
+  p { margin:0; line-height:1.45; }
+  .wrap { width:min(92%,100rem); margin-inline:auto; }
+
+  /* hero */
+  .hero { position:relative; min-height:100svh; display:grid; align-content:end; justify-items:center; padding:0 0 6rem; background:linear-gradient(180deg,#0037b0 0%,#1d4ed8 36%,#b7c4ff 62%,#f8f9ff 84%); overflow:hidden; }
+  .hero-logo { position:absolute; top:3rem; left:0; right:0; text-align:center; z-index:5; color:#fff; font:600 2.2rem 'Plus Jakarta Sans',sans-serif; letter-spacing:-.04em; }
+  .coin-wrap { position:absolute; z-index:3; }
+  .coin { aspect-ratio:1; border-radius:50%; display:grid; place-items:center; color:#fff; font:600 calc(var(--s,10rem)*.42) 'Plus Jakarta Sans',sans-serif; width:var(--s,10rem);
+          background:radial-gradient(circle at 32% 28%,#dce1ff 0,#4a74f0 38%,#0037b0 80%); box-shadow:inset 0 0 0 .55rem rgba(255,255,255,.22), 0 2rem 4rem rgba(0,20,100,.35); }
+  .coin--usdt { background:radial-gradient(circle at 32% 28%,#9fe6d3 0,#2fae93 40%,#0f6f6a 80%); }
+  .coin--house { background:radial-gradient(circle at 32% 28%,#fff 0,#dfe7ff 45%,#9db2ff 85%); color:#1f3dff; }
+  .c1 { left:17%; top:30%; --s:11rem; } .c2 { left:37%; top:20%; --s:17rem; } .c3 { left:57%; top:8%; --s:12rem; } .c4 { left:73%; top:18%; --s:13rem; }
+  .hero-text { position:relative; z-index:4; text-align:center; display:grid; gap:2.4rem; justify-items:center; padding-inline:5%; }
+  .hero h1 { font-size:clamp(3.4rem,7.4rem,9rem); }
+  .pill-form { display:flex; width:min(100%,40rem); border-radius:99px; border:2px solid var(--dark); background:var(--dark); overflow:hidden; }
+  .pill-form input { flex:1; min-width:0; border:0; padding:1.4rem 2.2rem; font:inherit; font-size:1.6rem; border-radius:99px; outline:none; }
+  .pill-form button { border:0; background:var(--dark); color:#fff; font:inherit; font-size:1.6rem; padding:0 2.4rem; }
+  .hero-links { display:flex; gap:2.2rem; font-size:1.4rem; }
+  .hero-links a { color:var(--dark); text-decoration:none; border-bottom:1px solid currentColor; }
+
+  /* intro */
+  .intro { padding:12rem 0 6rem; text-align:center; display:grid; justify-items:center; gap:2rem; }
+  .chip { display:inline-flex; gap:1rem; align-items:center; background:#f4f6f9; border-radius:99px; padding:.6rem .6rem .6rem 1.4rem; font-size:1.3rem; color:var(--grey); }
+  .chip i { width:2.4rem; aspect-ratio:1; border-radius:50%; background:var(--blue); color:#fff; display:grid; place-items:center; font-style:normal; font-size:1.2rem; }
+  .intro h2 { font-size:6rem; }
+  .intro p { font-size:1.8rem; color:var(--grey); max-width:44rem; }
+
+  /* bento */
+  .bento { display:grid; gap:2rem; padding-bottom:10rem; }
+  .pair { display:grid; gap:2rem; grid-template-columns:1.35fr 1fr; }
+  .pair.flip { grid-template-columns:1fr 1.35fr; }
+  .card { border:1px solid #e8ecf5; border-radius:3.2rem; background:#fff; padding:3rem; min-height:36rem; display:flex; flex-direction:column; justify-content:space-between; gap:2rem; overflow:hidden; position:relative; }
+  .card h3 { font-size:4.4rem; margin-bottom:1.2rem; }
+  .card p { color:var(--grey); font-size:1.6rem; max-width:42rem; }
+  .card p.dark { color:var(--dark); font-size:1.9rem; }
+  .art { position:relative; display:grid; place-items:center; flex:1; min-height:15rem; }
+  .puck { color:#fff; font:600 2.4rem 'Plus Jakarta Sans'; box-shadow:0 1rem 3rem rgba(31,61,255,.25); }
+  .pk-a { background:linear-gradient(135deg,#b79cff,#8061f0); } .pk-b { background:linear-gradient(135deg,#3b9bff,#1f5cff); } .pk-c { background:linear-gradient(135deg,#2a2d3d,#050714); }
+  .tile { position:absolute; width:5.4rem; aspect-ratio:1; border-radius:1.4rem; display:grid; place-items:center; color:#fff; font-size:2.2rem; box-shadow:0 1rem 2.4rem rgba(20,30,120,.2); }
+  .t1 { background:linear-gradient(135deg,#b79cff,#8061f0); } .t2 { background:linear-gradient(135deg,#2a2d3d,#050714); } .t3 { background:linear-gradient(135deg,#3b9bff,#1f5cff); }
+  .orbit-btn { position:absolute; inset:0; display:grid; place-items:center; }
+  .btn { display:inline-block; background:var(--blue); color:#fff; padding:1.5rem 2.6rem; border-radius:1.6rem; font-size:1.8rem; text-decoration:none; }
+  .nm-btn--swap { box-shadow:0 1rem 2rem rgba(32,124,254,.12); }
+  .row { background:#fff; border:1px solid #e8ecf5; border-radius:1.8rem; padding:1.4rem 1.8rem; display:flex; gap:1.4rem; align-items:center; box-shadow:0 1rem 3rem rgba(31,61,255,.08); }
+  .row b { width:4rem; aspect-ratio:1; border-radius:50%; background:#e6ebf7; flex:none; }
+  .row span { flex:1; height:1.1rem; border-radius:99px; background:#e6ebf7; } .row em { width:7rem; height:2.4rem; border-radius:99px; background:#eef1f8; }
+
+  /* solution (blue) */
+  .solution { background:var(--blue); color:#fff; border-radius:4rem 4rem 0 0; padding:9rem 0 8rem; text-align:center; }
+  .solution .chip { background:rgba(255,255,255,.18); color:#fff; } .solution .chip i { background:#fff; color:var(--blue); }
+  .solution h2 { font-size:5rem; max-width:90rem; margin:2rem auto 0; }
+  .duo { display:grid; grid-template-columns:1fr 20rem 1fr; gap:3rem; align-items:center; margin:5rem auto 7rem; max-width:96rem; }
+  .duo p { font-size:1.7rem; opacity:.95; } .duo p:first-child { text-align:right; } .duo p:last-child { text-align:left; }
+  .toggle-art { height:14rem; position:relative; }
+  /* the animated node must be the positioned one (a transformed parent would become the containing block) */
+  .toggle-art .nm-toggle-platform { position:absolute; bottom:0; left:0; right:0; height:6rem; border-radius:99px; background:linear-gradient(180deg,#fff,#c9d8ff); box-shadow:0 1.6rem 3rem rgba(0,0,60,.3); }
+  .toggle-art .nm-toggle-coin { --s:7rem; position:absolute; left:50%; bottom:2.4rem; margin-left:-3.5rem; } .toggle-art .nm-toggle-arrow { position:absolute; left:6%; bottom:3.6rem; font-size:3.4rem; color:#fff; }
+  .tabs { display:grid; grid-template-columns:1fr 1.1fr; gap:6rem; text-align:left; max-width:96rem; margin:0 auto; align-items:center; }
+  .tab { padding:1.6rem 0 2rem; border-top:1px solid rgba(255,255,255,.2); outline-offset:4px; }
+  .tab .nm-tab-title { font:500 2.2rem 'Plus Jakarta Sans'; margin-bottom:.8rem; } .tab ul { margin:0 0 1.4rem; padding-left:1.8rem; font-size:1.4rem; line-height:1.5; }
+  .panel-art { aspect-ratio:1; max-height:34rem; width:100%; display:grid; place-items:center; background:rgba(255,255,255,.1); border-radius:3rem; }
+  .panel-art .nm-ripple { width:60%; color:#fff; } .panel-art .nm-ripple::after { content:"₿"; position:absolute; inset:0; display:grid; place-items:center; font:600 5rem 'Plus Jakarta Sans'; }
+  .panel-art .nm-orbits { width:62%; } .panel-art .nm-orbit { border-color:rgba(255,255,255,.35); } .panel-art .nm-orbit > i { background:#fff; box-shadow:0 0 0 .3rem rgba(255,255,255,.2); }
+
+  /* cta */
+  .cta { background:var(--blue); color:#fff; text-align:center; padding:11rem 0 5rem; position:relative; overflow:hidden; }
+  .cta .logo-tile { width:9rem; aspect-ratio:1; border-radius:2rem; margin:0 auto 4rem; display:grid; place-items:center; background:linear-gradient(135deg,#1ff0cf,#08c7a9); font:600 4rem 'Plus Jakarta Sans'; box-shadow:0 1rem 3rem rgba(0,0,0,.2); }
+  .cta h2 { font-size:6rem; } .cta p { font-size:1.7rem; opacity:.85; margin:2rem 0 4rem; }
+  .cta .pill-form { margin-inline:auto; border-color:#050714; }
+  .cta .coin-wrap { z-index:1; } .cta .c5 { left:-7%; top:4%; --s:15rem; } .cta .c6 { right:-6%; top:30%; --s:16rem; }
+  .foot { position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center; margin-top:9rem; font-size:1.3rem; }
+  .socials { display:flex; gap:1.2rem; }
+  .nm-social { width:3.6rem; aspect-ratio:1; border-radius:50%; border:1px solid rgba(255,255,255,.25); display:grid; place-items:center; color:#fff; text-decoration:none; font-size:1.3rem; }
+  .replay { position:fixed; right:1.2rem; bottom:1.2rem; z-index:99; border:0; border-radius:99px; background:var(--dark); color:#fff; font:500 13px 'Inter'; padding:.8rem 1.2rem; cursor:pointer; opacity:.85; }
+
+  @media (max-width:760px) {
+    html { font-size:3.4vw; }
+    .pair, .pair.flip, .duo, .tabs { grid-template-columns:1fr; }
+    .duo p:first-child, .duo p:last-child { text-align:center; } .toggle-art { order:-1; }
+    .hero h1 { font-size:3.9rem; } .intro h2 { font-size:4.2rem; } .solution h2 { font-size:3.6rem; } .cta h2 { font-size:4rem; } .card h3 { font-size:3.4rem; }
+    .c1 { left:2%; top:22%; --s:8rem; } .c2 { left:27%; top:11%; --s:11rem; } .c3 { left:60%; top:6%; --s:8rem; } .c4 { left:72%; top:21%; --s:7.5rem; }
+    .cta .c5 { left:-14%; top:2%; --s:11rem; } .cta .c6 { right:-14%; top:56%; --s:11rem; }
+    .foot { flex-direction:column-reverse; gap:2rem; }
+    .pill-form { flex-direction:column; gap:1rem; background:transparent; border:0; border-radius:0; overflow:visible; }
+    .pill-form input { border:2px solid var(--dark); padding:1.6rem 2.2rem; font-size:1.8rem; }
+    .pill-form button { border-radius:99px; padding:1.6rem 2.2rem; font-size:1.8rem; }
+    .hero-links { flex-wrap:wrap; justify-content:center; font-size:1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero nm-grain" data-nm-parallax-root>
+  <div class="hero-logo">Nob<span style="color:#ffdcbf">Pay</span> ⚡</div>
+
+  <div class="coin-wrap c1" data-nm-parallax="-20"><div class="coin" data-nm-float="a">$</div></div>
+  <div class="coin-wrap c2" data-nm-parallax="-40"><div class="coin" data-nm-float="b">₿</div></div>
+  <div class="coin-wrap c3" data-nm-parallax="-10"><div class="coin coin--usdt" data-nm-float="a">₮</div></div>
+  <div class="coin-wrap c4" data-nm-parallax="-80"><div class="coin coin--house" data-nm-float="b">⌂</div></div>
+
+  <div class="hero-text">
+    <h1 data-nm-reveal="words">Investissez au pays.<br>Avec preuve.</h1>
+    <form class="pill-form" onsubmit="return false">
+      <input type="email" placeholder="Votre e-mail" aria-label="Votre e-mail">
+      <button class="nm-btn">Rejoindre la liste d'attente</button>
+    </form>
+    <div class="hero-links"><a href="#how">Essayer la démo →</a><a href="#cta">Vérifier un dossier</a></div>
+  </div>
+</section>
+
+<!-- ============ INTRO ============ -->
+<main>
+<section class="wrap intro">
+  <div class="chip">Bienvenue sur NobPay <i>✦</i></div>
+  <h2 data-nm-reveal="words">L'argent de la diaspora, enfin vérifiable</h2>
+  <p data-nm-reveal="lines" data-nm-margin="10">Pour que chaque franc envoyé au pays serve vraiment à ce pour quoi il a été envoyé.</p>
+</section>
+
+<!-- ============ BENTO ============ -->
+<section class="wrap bento">
+  <div class="pair">
+    <article class="card">
+      <div class="art">
+        <div class="nm-pucks" style="width:100%">
+          <span class="nm-puck puck pk-a" style="--i:0">⚡</span>
+          <span class="nm-puck puck pk-b" style="--i:1">₿</span>
+          <span class="nm-puck puck pk-c" style="--i:2">✓</span>
+        </div>
+      </div>
+      <div><h3 data-nm-reveal="words" data-nm-margin="10">Au-delà du simple transfert</h3>
+      <p data-nm-reveal="lines">Un transfert déplace l'argent. NobPay en garantit l'usage : fonds en séquestre, libérés étape par étape, sur preuve.</p></div>
+    </article>
+    <article class="card">
+      <p class="dark" data-nm-reveal="lines">Des rails ouverts : Lightning pour entrer, stablecoins pour garder, mobile money pour payer, Bitcoin pour prouver.</p>
+      <div class="art"><div class="nm-swing" style="width:100%;height:16rem">
+        <div class="nm-swing-arm" style="--a:9deg;--d:5.2s;--delay:-1s"><span class="tile t1" style="left:12%;top:8%">⛨</span></div>
+        <div class="nm-swing-arm" style="--a:7deg;--d:4.8s;--delay:-2.4s"><span class="tile t2" style="left:68%;top:2%">⚡</span></div>
+        <div class="nm-swing-arm" style="--a:14deg;--d:5.6s;--delay:-3.2s"><span class="tile t3" style="left:48%;top:58%">$</span></div>
+      </div></div>
+    </article>
+  </div>
+
+  <div class="pair flip">
+    <article class="card">
+      <p class="dark" data-nm-reveal="lines">Notre mission : redonner à chaque famille de la diaspora le contrôle de ce qu'elle finance.</p>
+      <div class="art"><div class="nm-orbits" style="width:min(100%,24rem)">
+        <div class="nm-orbit" style="--inset:2%;--d:17s"><i></i></div>
+        <div class="nm-orbit" style="--inset:17%;--d:13s;--delay:-4s"><i class="nm-blink"></i></div>
+        <div class="nm-orbit" style="--inset:32%;--d:11s;--delay:-2s"><i></i></div>
+        <div class="orbit-btn"><a class="btn nm-btn nm-btn--swap" href="#how">Essayer la démo</a></div>
+      </div></div>
+    </article>
+    <article class="card">
+      <div class="art"><div class="nm-stack" style="width:100%;--u:1.1rem">
+        <div class="nm-stack-card row" style="--i:0"><b></b><span></span><em></em></div>
+        <div class="nm-stack-card row" style="--i:1"><b></b><span></span><em></em></div>
+        <div class="nm-stack-card row" style="--i:2"><b></b><span></span><em></em></div>
+        <div class="nm-stack-card row" style="--i:3"><b></b><span></span><em></em></div>
+      </div></div>
+      <div><h3 data-nm-reveal="words" data-nm-margin="10">Fini les chantiers fantômes</h3>
+      <p data-nm-reveal="lines">On remplace la confiance aveugle par des preuves : chaque étape est vérifiée, payée directement au fournisseur et ancrée sur Bitcoin.</p></div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ SOLUTION (blue) ============ -->
+<section class="solution nm-grain" id="how">
+  <div class="wrap">
+    <div class="chip">Comment ça marche <i>⚡</i></div>
+    <h2 data-nm-reveal="words">Financez, validez, payez, vérifiez.</h2>
+
+    <div class="duo">
+      <p data-nm-reveal="lines" data-nm-margin="10">Financez en Bitcoin Lightning ou en USDT. Vos fonds restent en séquestre.</p>
+      <div class="toggle-art nm-toggle" data-nm-float="a">
+        <div class="nm-toggle-platform"></div>
+        <div class="nm-toggle-coin coin">₿</div>
+        <div class="nm-toggle-arrow">➜</div>
+      </div>
+      <p data-nm-reveal="lines" data-nm-margin="10">Chaque étape validée déclenche un paiement direct au fournisseur par mobile money et laisse une preuve que n'importe qui peut vérifier.</p>
+    </div>
+
+    <div class="tabs" data-nm-tabs data-nm-delay="4000" role="tablist">
+      <div>
+        <div class="tab" data-nm-tab role="tab"><div class="nm-tab-title">1 · Financer</div><ul class="nm-tab-list"><li>Paiement Lightning ou USDT depuis n'importe où.</li><li>Les fonds restent en séquestre.</li></ul><span class="nm-tab-progress"><i></i></span></div>
+        <div class="tab" data-nm-tab role="tab"><div class="nm-tab-title">2 · Prouver</div><ul class="nm-tab-list"><li>Photos géolocalisées, factures, titre foncier.</li></ul><span class="nm-tab-progress"><i></i></span></div>
+        <div class="tab" data-nm-tab role="tab"><div class="nm-tab-title">3 · Libérer</div><ul class="nm-tab-list"><li>Vous approuvez, le fournisseur est payé en mobile money.</li></ul><span class="nm-tab-progress"><i></i></span></div>
+        <div class="tab" data-nm-tab role="tab"><div class="nm-tab-title">4 · Vérifier</div><ul class="nm-tab-list"><li>Chaque étape est ancrée sur Bitcoin.</li><li>N'importe qui peut la contrôler.</li></ul><span class="nm-tab-progress"><i></i></span></div>
+      </div>
+      <div data-nm-panels>
+        <div class="nm-panel" data-nm-panel><div class="panel-art"><div class="nm-ripple"><span class="nm-ripple-ring" style="--i:0"></span><span class="nm-ripple-ring" style="--i:1"></span><span class="nm-ripple-ring" style="--i:2"></span><span class="nm-ripple-ring" style="--i:3"></span></div></div></div>
+        <div class="nm-panel" data-nm-panel><div class="panel-art"><div class="nm-orbits"><div class="nm-orbit" style="--inset:6%;--d:15s"><i></i></div><div class="nm-orbit" style="--inset:24%;--d:11s;--delay:-3s"><i></i></div></div></div></div>
+        <div class="nm-panel" data-nm-panel><div class="panel-art"><div class="nm-pucks" style="width:80%;--nm-puck:6rem"><span class="nm-puck puck pk-a" style="--i:0">⚡</span><span class="nm-puck puck pk-b" style="--i:1">$</span><span class="nm-puck puck pk-c" style="--i:2">✓</span></div></div></div>
+        <div class="nm-panel" data-nm-panel><div class="panel-art"><div class="nm-ripple" style="color:#0defd1"><span class="nm-ripple-ring" style="--i:0"></span><span class="nm-ripple-ring" style="--i:1"></span><span class="nm-ripple-ring" style="--i:2"></span></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ CTA ============ -->
+<footer class="cta nm-grain" id="cta">
+  <div class="coin-wrap c5"><div class="coin" data-nm-float="a">$</div></div>
+  <div class="coin-wrap c6"><div class="coin" data-nm-float="b">₿</div></div>
+  <div class="wrap" style="position:relative;z-index:2">
+    <div class="logo-tile">⚡</div>
+    <h2 data-nm-reveal="words">Investissez au pays. Avec preuve.</h2>
+    <p data-nm-reveal="lines" data-nm-margin="10">Rejoignez la liste d'attente pour être parmi les premiers à essayer NobPay.</p>
+    <form class="pill-form" onsubmit="return false">
+      <input type="email" placeholder="Votre e-mail" aria-label="Votre e-mail">
+      <button class="nm-btn">Rejoindre la liste d'attente</button>
+    </form>
+    <div class="foot">
+      <span>© 2026 NobPay · Projet open source, Code &amp; Chain Dakar</span>
+      <div class="socials"><a class="nm-social" href="#" aria-label="GitHub">GH</a><a class="nm-social" href="#" aria-label="X">X</a></div>
+    </div>
+  </div>
+</footer>
+
+<button class="replay" onclick="location.reload()">↻ Rejouer</button>
+
+<script src="vendor/lenis.min.js"></script>
+<script src="nobpay-motion.js"></script>
+<script>
+  window.motion = NobPayMotion.init();
+  console.log('[nobpay-motion] ready — lenis:', !!window.motion.lenis, ' reduced-motion:', NobPayMotion.reducedMotion);
+</script>
+</body>
+</html>

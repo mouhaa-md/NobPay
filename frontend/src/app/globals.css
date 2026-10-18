@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background font-body-md text-body-md text-on-surface antialiased;
+    overscroll-behavior-y: none;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
+/* Icon font (Material Symbols, filled variant is toggled with font-variation-settings) */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined Variable', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400;
+  user-select: none;
+}
+
+/* Inside the phone-width app column, scrollbars stay out of the way (horizontal chip rows, sheets). */
+.app-shell ::-webkit-scrollbar {
+  display: none;
+}
+.app-shell * {
+  scrollbar-width: none;
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Reusable gradient used by every hero banner of the app (Stitch "ocean" gradient) */
+.bg-ocean {
+  background-image: linear-gradient(to bottom right, #0a0f24, #0b132b, #1e40af);
+}
+
+@keyframes nob-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.nob-skeleton {
+  background: linear-gradient(90deg, #e5eeff 25%, #eff4ff 37%, #e5eeff 63%);
+  background-size: 200% 100%;
+  animation: nob-shimmer 1.4s ease infinite;
+}
+
+@keyframes nob-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.nob-pop {
+  animation: nob-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes nob-rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.nob-rise {
+  animation: nob-rise 0.4s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nob-pop,
+  .nob-rise,
+  .nob-skeleton {
+    animation: none;
+  }
+}
