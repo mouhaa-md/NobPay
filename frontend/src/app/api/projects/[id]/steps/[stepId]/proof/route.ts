@@ -1,4 +1,5 @@
 import type { ProofPhoto } from '@/lib/types';
+import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { requireUser } from '@/server/auth';
 import { saveUpload } from '@/server/files';
 import { HttpError, respond } from '@/server/http';
@@ -25,6 +26,8 @@ export async function POST(request: Request, { params }: { params: { id: string;
     const form = await request.formData();
     const token = String(form.get('token') ?? '').trim();
     const actor: Actor = token ? { kind: 'manager', token } : { kind: 'owner', user: await requireUser() };
+    enforce(`proof:${token ? `token:${token}` : `user:${(actor as { user: { id: string } }).user.id}`}`, LIMITS.proof.max, LIMITS.proof.windowMs);
+    enforce(`proof:ip:${clientIp(request)}`, LIMITS.proof.max * 3, LIMITS.proof.windowMs);
     await assertProjectAccess(actor, params.id); // check access BEFORE writing any file
 
     let meta: PhotoMeta[] = [];

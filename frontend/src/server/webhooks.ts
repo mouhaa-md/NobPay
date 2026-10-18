@@ -49,7 +49,7 @@ export function extractEventId(payload: Json, rawBody: string): string {
 }
 
 /** Outcomes that do not consume the event id: the same event may be processed again later. */
-const REPROCESSABLE = new Set(['unknown_invoice', 'unknown_payout', 'amount_mismatch']);
+const REPROCESSABLE = new Set(['unknown_invoice', 'unknown_payout', 'unknown_transfer', 'amount_mismatch']);
 
 /** Amount fields seen or expected in payment events; their unit is not documented, see amountMatches. */
 const AMOUNT_KEYS = ['amount', 'amount_sats', 'amountSats', 'sats', 'amount_msat', 'amount_msats', 'amountMsat', 'msats', 'amount_received'];
@@ -80,28 +80,40 @@ interface Routed {
 const SUCCESS = /(success|succeeded|completed|complete|paid|settled|received)/;
 const FAILURE = /(fail|expire|cancel|reject|declin)/;
 
+/**
+ * Which resource an event is about is decided by the identifiers in its content, not by its name: Bitnob may report an
+ * incoming Lightning payment as `btc.lightning.received.success` or as a generic `transfer.success`, and a payout as
+ * `payouts.withdrawal.success` or `transfer.success`. The name only says success or failure. Events named after a
+ * payout (`payout`, `withdrawal`) are never matched against fundings.
+ */
 function route(db: Db, type: string, payload: Json): Routed {
   const t = type.toLowerCase();
   const failed = FAILURE.test(t);
   const succeeded = SUCCESS.test(t) && !failed;
+  const payoutNamed = /payout|withdrawal/.test(t);
+  const lightningNamed = /lightning|invoice/.test(t);
+  const transferNamed = /transfer|deposit/.test(t);
 
-  if (/lightning|invoice/.test(t)) {
+  if (!payoutNamed && (lightningNamed || transferNamed)) {
     if (!succeeded) return { outcome: 'ignored' };
     const ids = collectValues(payload, ['id', 'invoice_id', 'payment_hash', 'paymentHash', 'reference']);
     const funding = db.fundings.find(
       (f) => ids.has(f.reference) || (f.invoiceId && ids.has(f.invoiceId)) || (f.paymentHash && ids.has(f.paymentHash)),
     );
-    if (!funding) return { outcome: 'unknown_invoice' };
-    if (funding.status !== 'paid' && checkReceivedAmount(payload, funding.amountSats) === 'mismatch') {
-      const received = [...collectValues(payload, AMOUNT_KEYS)].join(', ');
-      console.warn(`[webhook] amount mismatch on ${funding.id}: expected ${funding.amountSats} sats, event carries ${received}`);
-      return { outcome: 'amount_mismatch', note: `attendu ${funding.amountSats} sats, reçu ${received}` };
+    if (funding) {
+      if (funding.status !== 'paid' && checkReceivedAmount(payload, funding.amountSats) === 'mismatch') {
+        const received = [...collectValues(payload, AMOUNT_KEYS)].join(', ');
+        console.warn(`[webhook] amount mismatch on ${funding.id}: expected ${funding.amountSats} sats, event carries ${received}`);
+        return { outcome: 'amount_mismatch', note: `attendu ${funding.amountSats} sats, reçu ${received}` };
+      }
+      const preimage = [...collectValues(payload, ['preimage', 'payment_preimage'])][0];
+      return { outcome: applyFundingPaid(db, funding, { preimage }) ? 'funding_paid' : 'funding_already_paid' };
     }
-    const preimage = [...collectValues(payload, ['preimage', 'payment_preimage'])][0];
-    return { outcome: applyFundingPaid(db, funding, { preimage }) ? 'funding_paid' : 'funding_already_paid' };
+    if (lightningNamed) return { outcome: 'unknown_invoice' };
+    // a generic transfer that is not one of our invoices may be one of our payouts: fall through
   }
 
-  if (/payout|withdrawal|transfer/.test(t)) {
+  if (payoutNamed || transferNamed) {
     if (!succeeded && !failed) return { outcome: 'ignored' };
     const ids = collectValues(payload, ['id', 'payout_id', 'quote_id', 'reference']);
     for (const project of db.projects) {
@@ -115,7 +127,7 @@ function route(db: Db, type: string, payload: Json): Routed {
         return { outcome: applyPayoutFailed(db, project, step, reason) ? 'payout_failed' : 'payout_already_settled' };
       }
     }
-    return { outcome: 'unknown_payout' };
+    return { outcome: payoutNamed ? 'unknown_payout' : 'unknown_transfer' };
   }
 
   return { outcome: 'ignored' };

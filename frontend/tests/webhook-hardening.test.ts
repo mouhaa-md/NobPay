@@ -142,3 +142,50 @@ describe('amount received must match the invoice', () => {
     expect(mods.amountMatches(7, 5)).toBe(false);
   });
 });
+
+describe('the resource is found by identifiers, whatever the event is called', () => {
+  const generic = (eventId: string, name: string, data: Record<string, unknown>) => JSON.stringify({ event: name, event_id: eventId, data });
+
+  it('credits an incoming Lightning payment reported as transfer.success', async () => {
+    await addFunding('xfer');
+    const res = await send(generic('evt_xfer', 'transfer.success', { id: 'inv_xfer', amount: SATS }));
+    expect(res.body.outcome).toBe('funding_paid');
+    expect(await statusOf('xfer')).toBe('paid');
+  });
+
+  it('matches on payment_hash or reference too, and still checks the amount', async () => {
+    await addFunding('xfer2');
+    const wrong = await send(generic('evt_xfer2a', 'transfer.success', { reference: 'nobpay:fund:xfer2', amount: 5 }));
+    expect(wrong.body.outcome).toBe('amount_mismatch');
+    const ok = await send(generic('evt_xfer2b', 'transfer.success', { payment_hash: 'xfer2'.padEnd(64, 'a'), amount: SATS }));
+    expect(ok.body.outcome).toBe('funding_paid');
+  });
+
+  it('never credits a funding from an event named after a payout', async () => {
+    await addFunding('xfer3');
+    const res = await send(generic('evt_xfer3', 'payouts.withdrawal.success', { id: 'inv_xfer3', reference: 'nobpay:fund:xfer3' }));
+    expect(res.body.outcome).toBe('unknown_payout');
+    expect(await statusOf('xfer3')).toBe('pending');
+  });
+
+  it('completes one of our payouts reported as transfer.success', async () => {
+    await mods.db.withDb((d) => {
+      const s = d.projects.find((p) => p.id === 'p_h')!.steps[0];
+      s.status = 'releasing';
+      s.payout = { reference: 'nobpay:pay:p_h_s1:x', quoteId: 'QT2_x', payoutId: 'po_x', status: 'pending', amountUsdCents: 100, amountFcfa: 59000, rate: 590, feeUsdCents: 0, supplier: { name: 'A', network: 'wave', phone: '+221771234567' }, mode: 'sandbox', startedAt: new Date().toISOString() };
+    });
+    const res = await send(generic('evt_xfer4', 'transfer.success', { id: 'po_x', reference: 'nobpay:pay:p_h_s1:x', status: 'success' }));
+    expect(res.body.outcome).toBe('payout_completed');
+    expect((await mods.db.readDb()).projects.find((p) => p.id === 'p_h')!.steps[0].status).toBe('paid');
+  });
+
+  it('reports a transfer that matches nothing as unknown and lets it be processed again later', async () => {
+    const res = await send(generic('evt_xfer5', 'transfer.success', { id: 'nothing-we-know' }));
+    expect(res.body.outcome).toBe('unknown_transfer');
+    await addFunding('nothing-we-know');
+    // the funding now exists under that invoice id
+    await mods.db.withDb((d) => { d.fundings.find((f) => f.id === 'nothing-we-know')!.invoiceId = 'nothing-we-know'; });
+    const again = await send(generic('evt_xfer5', 'transfer.success', { id: 'nothing-we-know' }));
+    expect(again.body.outcome).toBe('funding_paid');
+  });
+});

@@ -15,6 +15,8 @@ vi.mock('next/headers', () => ({
 const STRONG = 'a-long-random-secret-of-more-than-32-characters';
 const post = (init?: { json?: unknown }) =>
   new Request('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(init?.json ?? {}) });
+// Next always hands a Request to a route; calls without one get a plain POST
+const withRequest = (fn: unknown) => (req?: Request) => (fn as (r: Request) => Promise<Response>)(req ?? post());
 
 let routes: Record<'demo' | 'otp' | 'login' | 'register' | 'reset' | 'health', (req?: Request) => Promise<Response>>;
 let services: typeof import('@/server/services');
@@ -23,8 +25,8 @@ let db: typeof import('@/server/db');
 beforeAll(async () => {
   process.env.DATA_DIR = mkdtempSync(path.join(tmpdir(), 'nobpay-demo-'));
   routes = {
-    demo: (await import('@/app/api/auth/demo/route')).POST as never,
-    otp: (await import('@/app/api/auth/otp/route')).POST as never,
+    demo: withRequest((await import('@/app/api/auth/demo/route')).POST),
+    otp: withRequest((await import('@/app/api/auth/otp/route')).POST),
     login: (await import('@/app/api/auth/login/route')).POST as never,
     register: (await import('@/app/api/auth/register/route')).POST as never,
     reset: (await import('@/app/api/dev/reset/route')).POST as never,
