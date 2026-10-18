@@ -106,7 +106,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Mettre à jour `CONTEXTE-PROJET.md` § 8.2 (tableau) : retirer « hypothèse » partout où c'est confirmé.
 - **Terminé quand :** les hypothèses restantes sont listées une par une, avec la raison.
 
-### B0.11 Répétition générale et plan B  `P0 · S`  (possible maintenant pour la partie paiement ; garder à l'esprit : 336 $ au plus par paiement, séquestre crédité sans Lightning)
+### B0.11 Répétition générale et plan B  `P0 · S`  (possible maintenant pour la partie paiement ; l'entrée Lightning se démontre avec le bouton « Simuler la réception » (`ALLOW_DEMO=1`), marqué `simulated` dans le registre ; 336 $ au plus par paiement)
 - Dérouler le parcours de démonstration **en sandbox**, chronométré, deux fois de suite, depuis une base neuve.
 - Vérifier que le **plan B** marche : `BITNOB_MODE=mock` + « Simuler le paiement », et le bouton « Continuer en simulation » quand le devis sandbox échoue (déjà dans l'interface).
 - Préparer : URL du tunnel stable, `.env.local` de secours, base `.data/` de départ sauvegardée, ancrages déjà confirmés pour montrer un vrai bloc Bitcoin.

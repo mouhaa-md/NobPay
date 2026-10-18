@@ -15,6 +15,8 @@ interface Props {
   projectId: string;
   projectName: string;
   mode: 'mock' | 'sandbox';
+  /** demo conveniences are allowed on this instance (ALLOW_DEMO) */
+  allowDemo?: boolean;
   btcUsd: number;
   usdXof: number;
   /** quick amounts computed on the server (cents) */
@@ -44,7 +46,7 @@ function useCountdown(iso?: string): string {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${m}:${String(s % 60).padStart(2, '0')}`;
 }
 
-export function FundingFlow({ projectId, projectName, mode, btcUsd, usdXof, suggestions, steps }: Props) {
+export function FundingFlow({ projectId, projectName, mode, allowDemo = false, btcUsd, usdXof, suggestions, steps }: Props) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('amount');
   const [digits, setDigits] = useState('');
@@ -301,12 +303,20 @@ export function FundingFlow({ projectId, projectName, mode, btcUsd, usdXof, sugg
                     {busy ? <Spinner /> : <Icon name="refresh" size={20} />} Nouvelle facture
                   </button>
                 )}
-                {funding.mode === 'mock' && funding.status === 'pending' && (
+                {(funding.mode === 'mock' || (funding.mode === 'sandbox' && allowDemo)) && funding.status === 'pending' && (
                   <div className="rounded-2xl bg-tertiary-fixed/50 p-3.5 text-on-tertiary-fixed">
                     <p className="mb-2 flex items-start gap-2 font-body-sm text-body-sm">
                       <Icon name="info" size={18} className="mt-0.5 shrink-0" />
                       <span>
-                        <strong>Mode démonstration.</strong> Cette facture n&apos;existe pas sur le réseau Lightning. Le bouton ci-dessous envoie à NobPay un événement signé, comme le ferait Bitnob après un vrai paiement.
+                        {funding.mode === 'mock' ? (
+                          <>
+                            <strong>Mode démonstration.</strong> Cette facture n&apos;existe pas sur le réseau Lightning. Le bouton ci-dessous envoie à NobPay un événement signé, comme le ferait Bitnob après un vrai paiement.
+                          </>
+                        ) : (
+                          <>
+                            <strong>Démonstration.</strong> Cette facture existe chez Bitnob (réseau de test) mais n&apos;a pas été payée. Le bouton ci-dessous crédite le séquestre par un événement signé par NobPay : ce versement sera marqué « simulé » dans le registre.
+                          </>
+                        )}
                       </span>
                     </p>
                     <button type="button" onClick={simulate} disabled={simulating} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-on-tertiary-fixed font-label-lg text-label-lg font-bold text-tertiary-fixed transition active:scale-[0.98] disabled:opacity-60">
