@@ -1,0 +1,13 @@
+{
+  "type": "https://api.bitnob.com/errors/INSUFFICIENT_FUNDS",
+  "title": "Insufficient Funds",
+  "status": 422,
+  "detail": "Insufficient funds to complete the transaction",
+  "code": "INSUFFICIENT_FUNDS",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "timestamp": "2026-10-18T00:55:18.434458239Z",
+  "request_id": "req_00000000-0000-0000-0000-000000000000",
+  "extensions": {
+    "account_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

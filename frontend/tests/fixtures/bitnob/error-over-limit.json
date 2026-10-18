@@ -1,0 +1,10 @@
+{
+  "type": "https://api.bitnob.com/errors/VALIDATION_ERROR",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "Amount 3567600.00 XOF exceeds maximum of 200000.00 XOF",
+  "code": "VALIDATION_ERROR",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "timestamp": "2026-10-18T00:55:18.434458239Z",
+  "request_id": "req_00000000-0000-0000-0000-000000000000"
+}

@@ -28,6 +28,8 @@ export interface PayoutStartInput {
   quote: PayoutQuote;
   reference: string;
   supplier: Supplier;
+  /** who sends the money (the funder): Bitnob requires it for Senegal mobile money */
+  sender: { name: string; country: string };
   reason: string;
   callbackUrl?: string;
 }
@@ -54,6 +56,8 @@ export class GatewayError extends Error {
     message: string,
     public readonly status?: number,
     public readonly body?: unknown,
+    /** Bitnob error code (e.g. INSUFFICIENT_FUNDS, VALIDATION_ERROR) when the API sent one */
+    public readonly code?: string,
   ) {
     super(message);
     this.name = 'GatewayError';

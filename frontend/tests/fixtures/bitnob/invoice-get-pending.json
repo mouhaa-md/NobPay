@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "message": "Lightning invoice retrieved successfully",
+  "data": {
+    "id": "00000000-0000-4000-8000-0000000000b1",
+    "payment_hash": "24d7bc97d51fecd6acea01297aff51137fb7603a5cc7a816051536bcbcb9d48b",
+    "request": "lntb10u1pREDACTEDREDACTEDREDACTED",
+    "preimage": "0000000000000000000000000000000000000000000000000000000000000000",
+    "amount_sat": "1000",
+    "amount_msat": "1000000",
+    "fee_sat": "0",
+    "fee_msat": "0",
+    "description": "NobPay probe",
+    "status": "pending",
+    "direction": "incoming",
+    "company_id": "00000000-0000-4000-8000-000000000001",
+    "customer_id": "",
+    "reference": "nobpay:probe:001",
+    "expires_at": "1792288405",
+    "created_at": "2026-10-18T00:53:25Z",
+    "updated_at": "2026-10-18T00:53:25Z"
+  },
+  "timestamp": "2026-10-18T00:53:34.482243933Z"
+}

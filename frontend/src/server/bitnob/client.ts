@@ -53,13 +53,33 @@ async function request(method: 'GET' | 'POST' | 'DELETE', path: string, body?: u
     json = { raw: text };
   }
   if (!res.ok) {
-    const msg = json.message || json.error?.message || json.error || res.statusText;
-    throw new GatewayError(`Bitnob ${res.status} sur ${method} ${path} : ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`, res.status, json);
+    const code = typeof json.code === 'string' ? json.code : undefined;
+    throw new GatewayError(friendlyError(res.status, json, method, path), res.status, json, code);
   }
   return json;
 }
 
+/**
+ * Bitnob errors look like { type, title, status, detail, code, extensions }: `detail` carries the reason.
+ * Known cases get a message the funder can act on; the raw body stays on GatewayError.body.
+ */
+export function friendlyError(status: number, json: Json, method: string, path: string): string {
+  const detail = String(json.detail ?? json.message ?? json.error?.message ?? (typeof json.error === 'string' ? json.error : '') ?? '') || String(status);
+  if (json.code === 'INSUFFICIENT_FUNDS') return "Solde insuffisant côté Bitnob pour ce paiement. Alimentez le portefeuille ou réessayez plus tard.";
+  const max = /exceeds maximum of ([\d.]+) (\w+)/i.exec(detail);
+  if (max) return `Ce montant dépasse la limite d'un paiement mobile money (${formatLimit(Number(max[1]))} ${max[2].toUpperCase()}). Réduisez le montant de l'étape.`;
+  const min = /below minimum of ([\d.]+) (\w+)/i.exec(detail);
+  if (min) return `Ce montant est inférieur au minimum d'un paiement mobile money (${formatLimit(Number(min[1]))} ${min[2].toUpperCase()}).`;
+  if (status === 401 || status === 403) return `Bitnob a refusé l'authentification (${detail}). Vérifiez les clés et la liste d'adresses IP autorisées.`;
+  return `Bitnob ${status} sur ${method} ${path} : ${detail}`;
+}
+
+const formatLimit = (n: number) => n.toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ');
+
 const unwrap = (json: Json): Json => (json && typeof json.data === 'object' && json.data !== null && !Array.isArray(json.data) ? json.data : json);
+
+/** Payout endpoints answer { data: { payout: {...} } }; older shapes had the object directly. */
+const payoutOf = (json: Json): Json => (json?.data?.payout ?? json?.payout ?? unwrap(json)) as Json;
 
 const pick = (obj: Json, ...keys: string[]): unknown => {
   for (const k of keys) if (obj?.[k] !== undefined && obj?.[k] !== null) return obj[k];
@@ -142,23 +162,26 @@ function mapStatus(raw: unknown): PayoutStatus {
 
 async function quotePayout(input: { amountUsdCents: number; reference: string }): Promise<PayoutQuote> {
   const amount = (input.amountUsdCents / 100).toFixed(2);
-  const d = unwrap(
+  const d = payoutOf(
     await request('POST', '/api/payouts/quotes', {
       amount,
       country: 'SN',
       from_asset: 'USDT',
       to_currency: 'XOF',
       source: 'offchain',
+      payment_reason: 'vendor_payment',
       reference: input.reference,
     }),
   );
-  const quoteId = String(pick(d, 'quote_id', 'id') ?? '');
+  const quoteId = String(pick(d, 'quote_id') ?? '');
   if (!quoteId) throw new GatewayError('Réponse Bitnob inattendue pour le devis de paiement.', undefined, d);
-  const settlement = Number(pick(d, 'settlement_amount'));
-  const rateFromApi = Number((pick(d, 'exchange_rate') as Json | undefined)?.rate ?? pick(d, 'rate'));
   const usd = input.amountUsdCents / 100;
+  const settlement = Number(pick(d, 'settlement_amount'));
+  const fx = (pick(d, 'exchange_rate') as Json | undefined) ?? {};
+  // effective_rate is what the supplier really gets per dollar (settlement / amount); `rate` is the raw market rate
+  const rateFromApi = Number(fx.effective_rate ?? fx.rate);
   const rate = Number.isFinite(rateFromApi) && rateFromApi > 0 ? rateFromApi : Number.isFinite(settlement) && usd > 0 ? settlement / usd : getConfig().usdXof;
-  const fees = Number(pick(d, 'fees') ?? 0);
+  const fees = Number(pick(d, 'fees') ?? 0); // in fee_currency (USD)
   return {
     quoteId,
     reference: input.reference,
@@ -171,60 +194,51 @@ async function quotePayout(input: { amountUsdCents: number; reference: string })
   };
 }
 
+/** Network codes accepted for Senegal mobile money (GET /api/payouts/supported-countries/SN also offers `expresso`). */
 const NETWORK_LABEL: Record<Supplier['network'], string> = { wave: 'wave', orange_money: 'orange', free_money: 'free' };
 
-function toLocalPhone(phone: string): string {
-  return phone.replace(/[^0-9+]/g, '');
+/** Bitnob's own pattern for a Senegalese mobile number: 77 123 45 67, 771234567 or +221771234567. */
+const SN_MOBILE = /^(\+?221[7]\d{8}|[7]\d{8})$/;
+
+export function toSenegalNumber(phone: string): string {
+  const cleaned = phone.replace(/[^0-9+]/g, '');
+  if (!SN_MOBILE.test(cleaned)) {
+    throw new GatewayError(`Numéro mobile money invalide : ${phone}. Indiquez un numéro sénégalais (ex. 77 123 45 67).`, 400, undefined, 'invalid_beneficiary');
+  }
+  return cleaned;
 }
 
-/**
- * The exact beneficiary keys depend on the country: the API publishes them at
- * /api/payouts/supported-countries/:code. We read that list and fill what we can.
- */
-async function buildBeneficiary(supplier: Supplier): Promise<Json> {
-  const base: Json = {
+/** Fields required for SN mobile_money (read from /supported-countries/SN): account_name, account_number, network, sender{account_name,country}. */
+export function buildBeneficiary(supplier: Supplier, sender: { name: string; country: string }): Json {
+  return {
     destination_type: 'mobile_money',
     country: 'SN',
     account_name: supplier.name,
-    account_number: toLocalPhone(supplier.phone),
+    account_number: toSenegalNumber(supplier.phone),
     network: NETWORK_LABEL[supplier.network],
+    sender: { account_name: sender.name, country: sender.country },
   };
-  try {
-    const details = unwrap(await request('GET', '/api/payouts/supported-countries/SN'));
-    const fields = (details.fields ?? []) as unknown[];
-    const names = fields
-      .map((f) => (typeof f === 'string' ? f : String((f as Json)?.name ?? (f as Json)?.key ?? (f as Json)?.field ?? '')))
-      .filter(Boolean);
-    for (const name of names) {
-      if (base[name] !== undefined) continue;
-      if (/phone|msisdn|mobile/i.test(name)) base[name] = toLocalPhone(supplier.phone);
-      else if (/holder|owner|beneficiary_name|full_name/i.test(name)) base[name] = supplier.name;
-    }
-  } catch {
-    /* use the base keys; the API will tell us what is missing */
-  }
-  return base;
 }
 
 async function startPayout(input: PayoutStartInput): Promise<PayoutStart> {
-  const beneficiary = await buildBeneficiary(input.supplier);
-  const init = await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/initialize`, {
-    quote_id: input.quote.quoteId,
-    reference: input.reference,
-    payment_reason: input.reason,
-    ...(input.callbackUrl ? { callback_url: input.callbackUrl } : {}),
-    beneficiary,
-  });
-  const initPayout = (init.payout ?? unwrap(init)) as Json;
-  const fin = await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/finalize`);
-  const finPayout = (fin.payout ?? unwrap(fin)) as Json;
-  const payoutId = String(pick(finPayout, 'id', 'payout_id') ?? pick(initPayout, 'id', 'payout_id') ?? '') || undefined;
-  return { payoutId, status: mapStatus(pick(finPayout, 'status') ?? pick(initPayout, 'status')) };
+  const beneficiary = buildBeneficiary(input.supplier, input.sender); // validates before any call
+  const init = payoutOf(
+    await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/initialize`, {
+      quote_id: input.quote.quoteId,
+      reference: input.reference,
+      payment_reason: input.reason,
+      ...(input.callbackUrl ? { callback_url: input.callbackUrl } : {}),
+      beneficiary,
+    }),
+  );
+  const fin = payoutOf(await request('POST', `/api/payouts/${encodeURIComponent(input.quote.quoteId)}/finalize`));
+  // the payout id is the one returned by initialize (it is also the id of the quote's payout)
+  const payoutId = String(pick(init, 'id', 'payout_id') ?? pick(fin, 'id', 'payout_id') ?? '') || undefined;
+  return { payoutId, status: mapStatus(pick(fin, 'status') ?? pick(init, 'status')) };
 }
 
 async function payoutStatus(payoutId: string): Promise<{ status: PayoutStatus; error?: string }> {
-  const res = await request('GET', `/api/payouts/${encodeURIComponent(payoutId)}`);
-  const p = (res.payout ?? unwrap(res)) as Json;
+  const p = payoutOf(await request('GET', `/api/payouts/${encodeURIComponent(payoutId)}`));
   return { status: mapStatus(pick(p, 'status')), error: pick(p, 'failure_reason', 'error', 'message') as string | undefined };
 }
 

@@ -53,7 +53,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Lire dans cet ordre : `server/services.ts`, `server/domain.ts`, `server/webhooks.ts`, `server/bitnob/client.ts`, `server/db.ts`.
 - **Terminé quand :** tout est vert chez vous et vous pouvez expliquer en 2 minutes ce qui se passe quand le financeur clique « Confirmer et payer » (CONTEXTE § 7.2).
 
-### B0.2 Clés, tunnel et webhook  `P0 · S`
+### B0.2 Clés, tunnel et webhook  `P0 · S`  ✅ clés et authentification validées (`whoami`), URL publique OK ; webhook à créer dans le tableau de bord
 - Tableau de bord Bitnob en **Sandbox** : Settings → API keys → créer une clé (liste blanche d'IP **vide**) ; noter `CLIENT_ID` et `CLIENT_SECRET`.
 - Exposer le port 3000 en HTTPS : `cloudflared tunnel --url http://localhost:3000` (ou `ngrok http 3000`). Noter l'URL publique.
 - Tableau de bord → Webhooks : URL `<URL publique>/api/webhooks/bitnob`, **secret de signature de votre choix** (long, aléatoire), tentatives : 3.
@@ -64,13 +64,13 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Ajouter, dans `src/app/api/webhooks/bitnob/route.ts`, une capture **activée seulement si `CAPTURE_WEBHOOKS=1`** : écrire dans `.data/webhook-captures/<horodatage>.json` les en-têtes (signature masquée) et le corps brut. `.data/` est déjà ignoré par Git.
 - **Terminé quand :** tout évènement reçu laisse un fichier lisible, sans changer le comportement quand la variable est absente.
 
-### B0.4 Facture Lightning réelle  `P0 · M`
+### B0.4 Facture Lightning réelle  `P0 · M`  ✅ facture `lntb` créée par l'application, forme confirmée
 - Créer un projet, ouvrir « Financer », générer une facture. Comparer **la réponse brute** de `POST /api/lightning/invoices` avec `createInvoice()` (clés `request` / `bolt11`, `id`, `expires_at`, `payment_hash`, unité de `amount` : sats ?, unité de `expiry` : secondes ?).
 - Vérifier le préfixe de la facture : **si `lnbc…` (mainnet) → ne pas payer, demander à un mentor**.
 - Corriger `bitnob/client.ts` et l'`InvoiceResult` selon la réalité ; enregistrer la réponse (secrets et identifiants retirés) dans `tests/fixtures/bitnob/invoice-create.json`.
 - **Terminé quand :** l'écran affiche un QR valide issu de Bitnob et `invoiceStatus()` renvoie `pending`.
 
-### B0.5 Payer la facture en sandbox et recevoir le webhook  `P0 · M`
+### B0.5 Payer la facture en sandbox et recevoir le webhook  `P0 · M`  ⛔ **bloqué** : aucun moyen documenté de payer une facture ou de créditer un solde (voir BITNOB-SANDBOX-REPORT.md)
 - Demander à un mentor **comment payer une facture Lightning en sandbox** (l'outil du workshop avait une « simulation » d'environ 2 s ; les références `demo-xxxx` suggèrent un mécanisme interne).
 - Capturer l'évènement (B0.3) : nom exact (`btc.lightning.received.success` ?), forme de `data`, présence d'un identifiant d'évènement, champs `reference`, `id`, `payment_hash`, `preimage`, montant.
 - Si le routage par expression régulière (`webhooks.ts`) ne reconnaît pas l'évènement, **l'adapter** ; ajouter un test avec la charge réelle signée par vous-même.
@@ -82,7 +82,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - **Décision à consigner** dans le rapport (B0.10) : le séquestre est-il crédité à la réception des BTC (comportement actuel) ou après conversion en USDT ?
 - **Terminé quand :** après un financement, le solde USDT de Bitnob couvre le montant du prochain payout, ou le rapport explique pourquoi ce n'est pas nécessaire.
 
-### B0.7 Pays supportés et bénéficiaire mobile money  `P0 · M`
+### B0.7 Pays supportés et bénéficiaire mobile money  `P0 · M`  ✅ réseaux, `sender`, numéro, limite 200 000 XOF (test des deux corps figés)
 - `GET /api/payouts/supported-countries` puis `/SN` : relever les **réseaux** acceptés, leurs **codes exacts** et les **champs obligatoires** du bénéficiaire.
 - Corriger `NETWORK_LABEL` (valeurs devinées : `wave` / `orange` / `free`) et `buildBeneficiary()` ; format du numéro (`+221…` ou local ?).
 - **Terminé quand :** un bénéficiaire Wave et un bénéficiaire Orange Money de test sont acceptés par `initialize`, et un test unitaire fige les deux corps de requête.
@@ -98,7 +98,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Faire correspondre chaque erreur Bitnob à un **message français clair** et à un `code` (`gateway_error`, `quote_expired`, `insufficient_escrow`, …) ; vérifier le retour à `proof_submitted` (la preuve reste valable) et l'écriture de `payout_failed` dans le registre.
 - **Terminé quand :** chaque cas laisse l'interface dans un état cohérent et un test le couvre.
 
-### B0.10 Rapport, jeux d'essai et tests du client  `P0 · M`
+### B0.10 Rapport, jeux d'essai et tests du client  `P0 · M`  ◐ rapport, fixtures et `tests/bitnob-client.test.ts` faits ; reste à compléter avec paiement, webhooks et conversion
 - Écrire `docs/BITNOB-SANDBOX-REPORT.md` : pour chaque appel, requête, réponse (nettoyée), différence avec nos hypothèses, correction faite, **questions restées ouvertes pour Bitnob**.
 - Ajouter `tests/fixtures/bitnob/*.json` et `tests/bitnob-client.test.ts` : `fetch` simulé qui rejoue ces réponses ; on vérifie les corps envoyés, les en-têtes signés et l'analyse des réponses (succès et erreurs).
 - Mettre à jour `CONTEXTE-PROJET.md` § 8.2 (tableau) : retirer « hypothèse » partout où c'est confirmé.

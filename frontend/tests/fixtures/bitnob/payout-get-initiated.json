@@ -1,0 +1,50 @@
+{
+  "success": true,
+  "message": "Payout retrieved successfully",
+  "data": {
+    "payout": {
+      "id": "00000000-0000-4000-8000-0000000000a1",
+      "quote_id": "QT2_21053046",
+      "company_id": "00000000-0000-4000-8000-000000000001",
+      "status": "INITIATED",
+      "source": "OFFCHAIN",
+      "from_asset": "USDT",
+      "to_currency": "XOF",
+      "sat_amount": "122610",
+      "btc_amount": "0.0012261",
+      "cent_amount": "5934108",
+      "amount": "100",
+      "settlement_amount": "59341.08",
+      "cent_fees": "0",
+      "fees": "0",
+      "fee_currency": "USD",
+      "source_fee": "0",
+      "total_amount": "100",
+      "exchange_rate": {
+        "rate": "594.6",
+        "btc_rate": "81559.55",
+        "currency": "xof",
+        "effective_rate": "593.4108"
+      },
+      "payment_reason": "vendor_payment",
+      "reference": "nobpay:pay:s1:test",
+      "country": "SN",
+      "expires_at": "2099-01-01T00:00:00.000000Z",
+      "created_at": null,
+      "updated_at": null,
+      "beneficiary": {
+        "account_name": "Test Fournisseur",
+        "account_number": "221771234567",
+        "country": "SN",
+        "destination_type": "mobile_money",
+        "network": "wave",
+        "sender": {
+          "account_name": "Aminata Sow",
+          "country": "FR"
+        }
+      },
+      "provider_settlement_id": "sandbox_txn_00000000-0000-4000-8000-0000000000c1",
+      "callback_url": "https://example.test/api/webhooks/bitnob"
+    }
+  }
+}

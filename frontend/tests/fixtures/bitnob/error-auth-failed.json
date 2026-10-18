@@ -1,0 +1,10 @@
+{
+  "type": "https://api.bitnob.com/errors/UNAUTHORIZED",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "Authentication failed",
+  "code": "UNAUTHORIZED",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "timestamp": "2026-10-18T00:55:18.434458239Z",
+  "request_id": "req_00000000-0000-0000-0000-000000000000"
+}
