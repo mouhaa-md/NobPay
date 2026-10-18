@@ -26,7 +26,19 @@
 3. Le financeur regarde la preuve, voit un **devis** (taux, frais, montant reçu en FCFA) puis **valide**. NobPay paie **directement le fournisseur** en mobile money (Wave, Orange Money, Free Money) via **Bitnob Payouts**.
 4. Chaque évènement s'ajoute à un **registre enchaîné par hachage**. L'empreinte du registre est **ancrée sur Bitcoin** avec **OpenTimestamps**. N'importe qui peut **vérifier** un dossier sans compte, dans son navigateur : « verify, don't trust ».
 
-**Acteurs :** financeur (a un compte), personne de confiance sur place (lien privé), fournisseur (reçoit un paiement mobile money, ne voit rien), vérificateur public (page `/verifier`).
+**Acteurs :** financeur (a un compte), personne de confiance sur place (lien privé), fournisseur (reçoit un paiement mobile money), vérificateur public (page `/verifier`), administrateur (page `/app/admin`).
+
+**Une interface par acteur (niveau 1) :**
+
+| Acteur | Page | Accès | Ce qu'il voit |
+|---|---|---|---|
+| Financeur | `/app/*` | session | tout son dossier : budget, preuves, paiements, registre |
+| Personne sur place | `/terrain/<jeton>` | lien signé 90 jours | l'étape à faire + formulaire de preuve, l'avancement, ses envois (miniatures), les décisions et paiements. **Jamais** le solde ni le moyen de débloquer de l'argent. Mise en page 2 colonnes sur ordinateur |
+| Fournisseur | `/recu/<stepId>.<mac>` | jeton HMAC sans état (`server/receipt.ts`) | montant en FCFA, état du paiement, opérateur et numéro masqué, référence. Le jeton couvre la référence du paiement : relancer un paiement refusé invalide l'ancien lien. Le financeur le partage depuis la page d'étape (`ReceiptCard`, WhatsApp ou copie) ; la personne sur place le voit aussi |
+| Administrateur | `/app/admin` | session + `ADMIN_PHONES` (liste de numéros) ; en démo, le compte démo | chiffres clés, alertes (paiement coincé > 5 min ou incertain, conversion abandonnée, versement non crédité, ancrage > 24 h, webhooks refusés), tables paiements / versements / ancrages / journal Bitnob. **Lecture seule** : ne déplace jamais d'argent (`server/admin.ts`, fonction pure `adminOverview`) |
+| Vérificateur | `/verifier` | public | recalcul du registre dans le navigateur |
+
+Il n'y a toujours pas de rôles en base (niveau 2, non fait) : un compte est un financeur ; l'administrateur est désigné par configuration.
 
 **Portée.** Pan-africaine dans le discours, mais le **prototype ne paie qu'au Sénégal** (XOF, rails Wave / Orange Money / Free Money). **Trois secteurs uniquement** : immobilier, agricole, commerce. Le nom est **NobPay** (pas « Tabax », nom provisoire rejeté).
 
@@ -327,6 +339,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `ALLOW_DEMO` | `1` / `0` / absent : facilités de démonstration (§ 10) | absent = autorisé en `mock` seulement |
 | `SMS_PROVIDER` | `log` (codes écrits dans la console serveur, développement), `twilio`, ou vide | vide |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | identifiants Twilio (si `SMS_PROVIDER=twilio`) | vide |
+| `ADMIN_PHONES` | numéros (séparés par des virgules) autorisés à ouvrir `/app/admin` ; en démo (`ALLOW_DEMO`), le compte démo y a aussi accès | vide |
 | `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement sans fournisseur SMS et si `ALLOW_DEMO` autorise) | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |

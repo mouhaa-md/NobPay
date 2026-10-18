@@ -54,6 +54,15 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: 'mock' | 'sandb
             <Icon name="fact_check" size={20} /> Vérifier un dossier
             <Icon name="north_east" size={14} className="ml-auto opacity-60" />
           </Link>
+          {user.admin && (
+            <Link
+              href="/app/admin"
+              aria-current={pathname === '/app/admin' ? 'page' : undefined}
+              className={`flex items-center gap-space-sm rounded-full px-space-md py-space-sm font-label-lg text-label-lg transition-all ${pathname === '/app/admin' ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            >
+              <Icon name="admin_panel_settings" size={20} filled={pathname === '/app/admin'} /> Administration
+            </Link>
+          )}
         </nav>
       </div>
 

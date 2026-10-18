@@ -93,7 +93,7 @@ Vérifiez `GET /api/health` : il indique le mode, la présence des clés et l'UR
 
 ```
 Navigateur (PWA) ──► Next.js (App Router, TypeScript)
-                       ├─ Pages : / (vitrine) · /app/* (financeur) · /terrain/[token] · /verifier
+                       ├─ Pages : / (vitrine) · /app/* (financeur) · /app/admin (administrateur, lecture seule) · /terrain/[token] (personne sur place) · /recu/[jeton] (reçu du fournisseur) · /verifier
                        ├─ API : /api/* (auth, projets, financements, preuves, devis, paiements, ancrages)
                        ├─ server/bitnob : client signé (HMAC-SHA256), passerelle mock ou sandbox
                        ├─ server/webhooks : signature (HMAC-SHA512) → rejeu → ressource connue → application

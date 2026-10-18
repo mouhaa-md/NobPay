@@ -1,5 +1,4 @@
-import { PhoneShell } from '@/components/PhoneShell';
-
+/** The field space builds its own frame (phone column, two columns on a computer): see the page. */
 export default function FieldLayout({ children }: { children: React.ReactNode }) {
-  return <PhoneShell>{children}</PhoneShell>;
+  return <>{children}</>;
 }

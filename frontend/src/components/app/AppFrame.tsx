@@ -5,6 +5,8 @@ export interface FrameUser {
   lastName: string;
   country: string;
   demo: boolean;
+  /** Can open the read-only back-office (see server/admin.ts). */
+  admin: boolean;
 }
 
 /**
