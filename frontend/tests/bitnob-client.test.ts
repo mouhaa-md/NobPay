@@ -194,6 +194,72 @@ describe('payout start: initialize then finalize', () => {
   });
 });
 
+describe('BTC -> stablecoin conversion', () => {
+  const conv = { sats: 122_630, reference: 'nobpay:conv:f_1' };
+
+  it('asks a SELL quote in BTC, then orders it with the quote id and our reference', async () => {
+    reply('trading-quote');
+    reply('trading-order');
+    const res = await sandboxGateway.convertBtcToStable(conv);
+    expect(res).toEqual({ status: 'done', detail: 'Ordre 00000000-0000-4000-8000-0000000000e1 (completed)' });
+    expect(JSON.parse(calls[0].body)).toEqual({ base_currency: 'BTC', quote_currency: 'USDT', side: 'sell', quantity: '0.00122630' });
+    expect(JSON.parse(calls[1].body)).toEqual({ base_currency: 'BTC', quote_currency: 'USDT', side: 'sell', quantity: '0.00122630', quote_id: '00000000-0000-4000-8000-0000000000d1', reference: 'nobpay:conv:f_1' });
+  });
+
+  it('treats "duplicate reference" as already done: the first order went through', async () => {
+    reply('trading-quote');
+    reply('error-duplicate', 409);
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'done' });
+  });
+
+  it('a 503 that says no funds were charged is temporary but NOT uncertain', async () => {
+    reply('trading-quote');
+    reply('error-order-503-not-charged', 503);
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'failed', retryable: true, uncertain: false });
+  });
+
+  it('a gateway error or a lost answer is temporary AND uncertain: the order may exist', async () => {
+    reply('trading-quote');
+    reply('error-bad-gateway', 502);
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'failed', retryable: true, uncertain: true });
+    reply('trading-quote');
+    replies.push({ status: 0, json: {} }); // no answer to the order
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'failed', retryable: true, uncertain: true });
+  });
+
+  it('no funds yet is temporary; a validation error is final', async () => {
+    reply('trading-quote');
+    reply('error-insufficient-funds', 422);
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'failed', retryable: true });
+    reply('trading-quote');
+    reply('error-sender-required', 400);
+    expect(await sandboxGateway.convertBtcToStable(conv)).toMatchObject({ status: 'failed', retryable: false });
+  });
+
+  it('looks for an earlier order by reference in the order list (a UUID is needed to fetch one)', async () => {
+    reply('trading-orders-one');
+    expect(await sandboxGateway.findConversionByReference('nobpay:conv:f_1')).toBe(true);
+    reply('trading-orders-empty');
+    expect(await sandboxGateway.findConversionByReference('nobpay:conv:f_1')).toBe(false);
+  });
+});
+
+describe('balances', () => {
+  it('reads the available balance per currency as numbers', async () => {
+    reply('balances-funded');
+    expect(await sandboxGateway.balances()).toEqual({ BTC: 0.0012263, USDC: 10.5, USDT: 250.25 });
+    reply('balances-empty');
+    expect(await sandboxGateway.balances()).toEqual({ BTC: 0, USDC: 0, USDT: 0 });
+  });
+
+  it('pays payouts from the configured stablecoin', async () => {
+    vi.stubEnv('PAYOUT_ASSET', 'usdc');
+    reply('payout-quote');
+    await sandboxGateway.quotePayout({ amountUsdCents: 10_000, reference: 'r' });
+    expect(JSON.parse(calls[0].body).from_asset).toBe('USDC');
+  });
+});
+
 describe('finding a payout by our reference', () => {
   it('matches the reference in the list, a bare quote included, and maps statuses', async () => {
     reply('payouts-list');

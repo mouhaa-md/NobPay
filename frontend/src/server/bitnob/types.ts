@@ -24,7 +24,14 @@ export interface InvoiceStatus {
 export interface ConversionResult {
   status: 'done' | 'skipped' | 'failed';
   detail?: string;
+  /** failed only: worth trying again later (temporary refusal, no funds yet, outage) */
+  retryable?: boolean;
+  /** failed only: the order may have been placed without us hearing back */
+  uncertain?: boolean;
 }
+
+/** Available balance per currency code (BTC in BTC, stablecoins in dollars), as decimal numbers. */
+export type Balances = Record<string, number>;
 
 export interface PayoutStartInput {
   quote: PayoutQuote;
@@ -59,6 +66,9 @@ export interface Gateway {
   quotePayout(input: { amountUsdCents: number; reference: string }): Promise<PayoutQuote>;
   startPayout(input: PayoutStartInput): Promise<PayoutStart>;
   payoutStatus(payoutId: string): Promise<{ status: PayoutStatus; error?: string }>;
+  balances(): Promise<Balances>;
+  /** True when a conversion order carrying our reference already exists at the provider. */
+  findConversionByReference(reference: string): Promise<boolean>;
   /** Finds a payout (even a bare quote) by the reference we gave it, or null when Bitnob does not know it. */
   findPayoutByReference(reference: string): Promise<PayoutLookup | null>;
 }

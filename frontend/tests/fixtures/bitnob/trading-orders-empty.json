@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "message": "Orders retrieved successfully",
+  "data": {
+    "orders": [],
+    "total_count": "0",
+    "has_more": false,
+    "next_cursor": ""
+  }
+}

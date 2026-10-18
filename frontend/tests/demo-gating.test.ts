@@ -30,7 +30,7 @@ beforeAll(async () => {
     login: (await import('@/app/api/auth/login/route')).POST as never,
     register: (await import('@/app/api/auth/register/route')).POST as never,
     reset: (await import('@/app/api/dev/reset/route')).POST as never,
-    health: (await import('@/app/api/health/route')).GET as never,
+    health: ((get) => (req?: Request) => get(req ?? new Request('http://localhost/api/health')))((await import('@/app/api/health/route')).GET as (r: Request) => Promise<Response>),
   };
   services = await import('@/server/services');
   db = await import('@/server/db');
@@ -112,5 +112,25 @@ describe('demo allowed (mock by default, or ALLOW_DEMO=1)', () => {
     vi.stubEnv('ALLOW_DEMO', '0');
     expect((await routes.demo()).status).toBe(403);
     expect((await routes.otp()).status).toBe(503);
+  });
+});
+
+describe('/api/health?detail=1 never reveals balances to the public', () => {
+  const detail = () => routes.health(new Request('http://localhost/api/health?detail=1'));
+
+  it('gives the same answer as without detail when nobody is signed in', async () => {
+    vi.stubEnv('BITNOB_MODE', 'mock');
+    const body = await (await detail()).json();
+    expect(body).not.toHaveProperty('balances');
+    expect(body).not.toHaveProperty('solvency');
+    expect(body).not.toHaveProperty('payoutAsset');
+  });
+
+  it('adds the detail for a signed-in demo account', async () => {
+    vi.stubEnv('BITNOB_MODE', 'mock');
+    await routes.demo(); // signs the demo account in (cookie jar)
+    const body = await (await detail()).json();
+    expect(body).toMatchObject({ mode: 'mock', payoutAsset: 'USDT' });
+    expect(body).toHaveProperty('solvency');
   });
 });

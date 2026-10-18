@@ -3,6 +3,7 @@ import { getConfig } from '../config';
 import { buildAuthHeaders } from './sign';
 import {
   GatewayError,
+  type Balances,
   type ConversionResult,
   type Gateway,
   type InvoiceInput,
@@ -131,18 +132,44 @@ async function btcUsd(): Promise<number> {
 }
 
 async function convertBtcToStable(input: { sats: number; reference: string }): Promise<ConversionResult> {
+  const asset = getConfig().payoutAsset;
   try {
-    const quantity = (input.sats / 1e8).toFixed(8);
-    const base = { base_currency: 'BTC', quote_currency: 'USDT', side: 'sell', quantity };
-    const q = unwrap(await request('POST', '/api/trading/quotes', base));
-    const price = String(pick(q, 'price') ?? '');
-    const quoteId = String(pick(q, 'id') ?? '');
-    if (!price) throw new GatewayError('Devis de conversion sans prix.');
-    const order = unwrap(await request('POST', '/api/trading/orders', { ...base, price, quote_id: quoteId || undefined, reference: input.reference }));
-    return { status: 'done', detail: `Ordre ${String(pick(order, 'id') ?? '')} (${String(pick(order, 'status') ?? 'envoyé')})` };
+    // SELL BTC for the stablecoin; quantity is in BTC. The quote lives 5 minutes and its id goes into the order.
+    const base = { base_currency: 'BTC', quote_currency: asset, side: 'sell', quantity: (input.sats / 1e8).toFixed(8) };
+    const quote = (unwrap(await request('POST', '/api/trading/quotes', base)).quote ?? {}) as Json;
+    const quoteId = String(pick(quote, 'id', 'quote_id') ?? '');
+    if (!quoteId) throw new GatewayError('Devis de conversion sans identifiant.');
+    const order = unwrap(await request('POST', '/api/trading/orders', { ...base, quote_id: quoteId, reference: input.reference }));
+    const o = (order.order ?? order) as Json;
+    return { status: 'done', detail: `Ordre ${String(pick(o, 'id') ?? '')} (${String(pick(o, 'status') ?? 'envoyé')})` };
   } catch (err) {
-    return { status: 'failed', detail: (err as Error).message };
+    if (err instanceof GatewayError) {
+      // the reference is unique at the provider: a second order with it means the first one went through
+      if (err.status === 409 || err.code === 'DUPLICATE_KEY_ERROR') return { status: 'done', detail: 'Ordre déjà enregistré chez Bitnob' };
+      const body = JSON.stringify(err.body ?? '');
+      const notCharged = /no funds were charged/i.test(body);
+      const temporary = err.ambiguous || err.status === 429 || err.code === 'INSUFFICIENT_FUNDS';
+      return { status: 'failed', retryable: temporary, uncertain: err.ambiguous && !notCharged, detail: err.message };
+    }
+    return { status: 'failed', retryable: false, detail: (err as Error).message };
   }
+}
+
+async function balances(): Promise<Balances> {
+  const accounts = (unwrap(await request('GET', '/api/balances')).accounts ?? []) as Json[];
+  const out: Balances = {};
+  for (const a of accounts) {
+    const n = Number(pick(a, 'available_balance'));
+    if (typeof a.currency === 'string' && Number.isFinite(n)) out[a.currency.toUpperCase()] = n;
+  }
+  return out;
+}
+
+/** Orders carry the reference we gave them; looking one up by reference is not possible (the id must be a UUID), so list. */
+async function findConversionByReference(reference: string): Promise<boolean> {
+  const res = unwrap(await request('GET', '/api/trading/orders?limit=100'));
+  const orders = (res.orders ?? res.items ?? []) as Json[];
+  return orders.some((o) => o.reference === reference);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -170,7 +197,7 @@ async function quotePayout(input: { amountUsdCents: number; reference: string })
     await request('POST', '/api/payouts/quotes', {
       amount,
       country: 'SN',
-      from_asset: 'USDT',
+      from_asset: getConfig().payoutAsset,
       to_currency: 'XOF',
       source: 'offchain',
       payment_reason: 'vendor_payment',
@@ -273,4 +300,6 @@ export const sandboxGateway: Gateway = {
   startPayout,
   payoutStatus,
   findPayoutByReference,
+  balances,
+  findConversionByReference,
 };

@@ -1,0 +1,12 @@
+{
+  "type": "https://api.bitnob.com/errors/BAD_GATEWAY",
+  "title": "Bad Gateway",
+  "status": 502,
+  "detail": "upstream timeout",
+  "code": "BAD_GATEWAY",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "extensions": {
+    "upstream_service": "trading-service"
+  },
+  "request_id": "req_00000000-0000-0000-0000-000000000000"
+}

@@ -147,7 +147,20 @@ export interface Funding {
   // Settlement
   paidAt?: string;
   preimage?: string;
-  conversion?: { status: 'done' | 'skipped' | 'failed'; detail?: string };
+  /**
+   * BTC -> stablecoin conversion after the invoice was paid (sandbox). `pending` = an attempt was started: if the
+   * process stopped there, the next round looks for the order by reference before selling again.
+   */
+  conversion?: {
+    status: 'pending' | 'done' | 'skipped' | 'failed';
+    detail?: string;
+    attempts?: number;
+    /** false once we gave up (validation error, attempts exhausted): needs a person */
+    retryable?: boolean;
+    /** the last attempt may have reached Bitnob without an answer */
+    uncertain?: boolean;
+    nextAttemptAt?: string;
+  };
   /** why a payment seen at Bitnob was not credited (e.g. different amount); never contains secrets */
   note?: string;
   demo?: boolean;

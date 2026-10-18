@@ -58,6 +58,15 @@ async function payoutStatus() {
   return { status: 'pending' as const };
 }
 
+async function balances() {
+  // the simulation never runs out of money, so no guard ever blocks the demo
+  return { BTC: 10, USDT: 1_000_000_000, USDC: 1_000_000_000 };
+}
+
+async function findConversionByReference() {
+  return false;
+}
+
 async function findPayoutByReference() {
   return null; // nothing exists outside this process in mock mode
 }
@@ -72,4 +81,6 @@ export const mockGateway: Gateway = {
   startPayout,
   payoutStatus,
   findPayoutByReference,
+  balances,
+  findConversionByReference,
 };

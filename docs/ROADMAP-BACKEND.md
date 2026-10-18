@@ -78,7 +78,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Si le routage par expression régulière (`webhooks.ts`) ne reconnaît pas l'évènement, **l'adapter** ; ajouter un test avec la charge réelle signée par vous-même.
 - **Terminé quand :** l'écran « Financer » passe seul à « reçus » **par le webhook** (pas par le sondage), l'étape 1 s'ouvre, l'évènement est dans `db.webhooks` avec le résultat `funding_paid`.
 
-### B0.6 Soldes et conversion BTC → USDT  `P0 · M`
+### B0.6 Soldes et conversion BTC → USDT  `P0 · M`  ◐ `balances()` fait et confirmé ; devis de conversion confirmé ; ordre non testé. **Décision à prendre : séquestre crédité à la réception des BTC (actuel, avec garde-fou au paiement) ou après conversion**
 - Ajouter `balances()` à l'interface `Gateway` (`GET /api/balances`), dans les deux implémentations ; l'afficher dans `/api/health` (valeurs seulement si `?detail=1` et session démo/admin : jamais en public).
 - Tester `convertBtcToStable` (devis puis ordre) : sens (`sell` BTC ?), unité de `quantity`, résultat. Déterminer **si la conversion est nécessaire** : la source de payout est `from_asset: USDT`, mais peut-être qu'un payout peut débiter le portefeuille BTC.
 - **Décision à consigner** dans le rapport (B0.10) : le séquestre est-il crédité à la réception des BTC (comportement actuel) ou après conversion en USDT ?
@@ -178,12 +178,12 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Webhook de réception : comparer le montant reçu (sats) au `funding.amountSats` (tolérance à définir). Écart → résultat `amount_mismatch`, **pas de crédit**, journal d'alerte. Webhook de payout : comparer le montant.
 - **Terminé quand :** deux tests (sous-paiement, sur-paiement) et un message clair dans `db.webhooks`.
 
-### B2.4 Conversion BTC → USDT fiable  `P0 · M`
+### B2.4 Conversion BTC → USDT fiable  `P0 · M`  ✅ fait (CONTEXTE D7), ordre à valider dès qu'un solde existe
 - Aujourd'hui (D7) la conversion n'est tentée que quand l'écran interroge (`refreshFunding`). La déplacer **après le crédit**, dans la tâche B2.1 : machine d'états sur `funding.conversion` (`pending` → `done` / `failed`), clé d'idempotence `nobpay:conv:<fundingId>`, reprises, journal.
 - Selon la décision B0.6 : soit le séquestre n'est crédité qu'une fois la conversion faite, soit un payout est refusé tant que le solde USDT est insuffisant (message clair).
 - **Terminé quand :** fermer l'onglet après paiement n'empêche pas la conversion ; test avec passerelle simulée qui échoue puis réussit.
 
-### B2.5 Rapprochement des soldes  `P1 · M`
+### B2.5 Rapprochement des soldes  `P1 · M`  ✅ fait (CONTEXTE D6)
 - Invariant à surveiller : `somme des séquestres NobPay ≤ solde Bitnob` (USDT + BTC valorisé). Calculé par la tâche, exposé dans `/api/health?detail=1` (accès restreint), alerte dans les journaux, et **blocage des nouveaux paiements** si violé.
 - **Terminé quand :** un test force un écart et vérifie le blocage.
 

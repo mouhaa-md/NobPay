@@ -1,0 +1,12 @@
+{
+  "type": "https://api.bitnob.com/errors/DUPLICATE_KEY_ERROR",
+  "title": "Resource Already Exists",
+  "status": 409,
+  "detail": "A resource with the same identifier already exists.",
+  "code": "DUPLICATE_KEY_ERROR",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "extensions": {
+    "upstream_service": "trading-service"
+  },
+  "request_id": "req_00000000-0000-0000-0000-000000000000"
+}
