@@ -1,0 +1,232 @@
+[
+ {
+  "shot": "a3-signup-filled",
+  "text": "Recevoir le code",
+  "x": 195,
+  "y": 516,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "a4-otp",
+  "text": "Remplir",
+  "x": 219.0859375,
+  "y": 426,
+  "w": 41.984375,
+  "h": 16,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "a5-otp-filled",
+  "text": "Créer mon compte",
+  "x": 195,
+  "y": 482,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b1-sector",
+  "text": "Immobilier",
+  "x": 195,
+  "y": 257,
+  "w": 358,
+  "h": 96,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b1b-sector-picked",
+  "text": "Continuer",
+  "x": 195,
+  "y": 808,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b2-details",
+  "text": "Continuer",
+  "x": 195,
+  "y": 808,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b3-steps-full",
+  "text": "Continuer",
+  "x": 195,
+  "y": 808,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b4-manager",
+  "text": "Continuer",
+  "x": 195,
+  "y": 808,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "b5-recap-full",
+  "text": "Créer le projet",
+  "x": 195,
+  "y": 808,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c1-fund-empty",
+  "text": "button[aria-label='6']",
+  "x": 317,
+  "y": 592,
+  "w": 114,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c1-fund-empty",
+  "text": "button[aria-label='0']",
+  "x": 195,
+  "y": 720,
+  "w": 114,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c1-fund-empty",
+  "text": "button[aria-label='0']",
+  "x": 195,
+  "y": 720,
+  "w": 114,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c1-fund-empty",
+  "text": "button[aria-label='0']",
+  "x": 195,
+  "y": 720,
+  "w": 114,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c2-keypad",
+  "text": "Continuer",
+  "x": 195,
+  "y": 788,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c3-method",
+  "text": "Générer la facture",
+  "x": 195,
+  "y": 788,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "c4-invoice-full",
+  "text": "Simuler le paiement",
+  "x": 195,
+  "y": 776,
+  "w": 330,
+  "h": 44,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "e1-field-open-full",
+  "text": "Orange Money",
+  "x": 195,
+  "y": 845.890625,
+  "w": 114,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "e2-field-filled-full",
+  "text": "Envoyer la preuve",
+  "x": 195,
+  "y": 1061.890625,
+  "w": 358,
+  "h": 56,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "f2-review-full",
+  "text": "Refuser cette preuve",
+  "x": 195,
+  "y": 878.5,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "f3-reject",
+  "text": "Annuler",
+  "x": 195,
+  "y": 822,
+  "w": 358,
+  "h": 44,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "f3-reject",
+  "text": "Valider et payer",
+  "x": 195,
+  "y": 818.5,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "f4-quote",
+  "text": "Confirmer et payer",
+  "x": 195,
+  "y": 746,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ },
+ {
+  "shot": "h3-certificate-full",
+  "text": "Ancrer l’état actuel sur Bitcoin",
+  "x": 195,
+  "y": 553.9375,
+  "w": 358,
+  "h": 48,
+  "vw": 390,
+  "vh": 844
+ }
+]

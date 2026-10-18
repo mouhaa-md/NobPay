@@ -1,0 +1,195 @@
+1
+00:00:01,100 --> 00:00:02,972
+NobPay.
+
+2
+00:00:03,392 --> 00:00:07,616
+L’argent de la diaspora, libéré étape par étape, sur preuve.
+
+3
+00:00:10,216 --> 00:00:14,944
+Chaque année, la diaspora envoie plus de cent vingt-quatre milliards de dollars vers l’Afrique.
+
+4
+00:00:15,364 --> 00:00:23,116
+Dans le monde, seul un quart des transferts finance un logement, la santé, l’éducation ou un commerce, et cet argent repose sur la confiance.
+
+5
+00:00:23,536 --> 00:00:25,936
+Un virement prouve que l’argent est parti.
+
+6
+00:00:26,356 --> 00:00:28,228
+Pas que la maison existe.
+
+7
+00:00:30,728 --> 00:00:33,344
+NobPay répond avec un principe simple.
+
+8
+00:00:33,764 --> 00:00:40,964
+L’argent reste en séquestre. Il est libéré étape par étape, seulement sur preuve, et versé directement au fournisseur.
+
+9
+00:00:41,384 --> 00:00:46,784
+Financer. Prouver. Valider. Payer. Vérifier.
+
+10
+00:00:47,204 --> 00:00:49,556
+Voyons les parcours, un par un.
+
+11
+00:00:52,056 --> 00:00:54,576
+Premier parcours : le financeur.
+
+12
+00:00:54,996 --> 00:01:01,692
+Moussa vit en France. Il crée son compte avec son numéro de téléphone, et confirme avec un code reçu par SMS.
+
+13
+00:01:02,112 --> 00:01:07,152
+Aussitôt, il arrive sur son tableau de bord. Pour l’instant, il est vide.
+
+14
+00:01:07,952 --> 00:01:11,528
+Il crée son premier projet : une maison familiale à Thiès.
+
+15
+00:01:11,948 --> 00:01:18,836
+Il choisit un secteur, immobilier, agricole ou commerce, puis un nom, une ville et un budget de vingt-quatre mille dollars.
+
+16
+00:01:19,256 --> 00:01:25,088
+NobPay propose des étapes, qu’il peut modifier. La somme des étapes doit être égale au budget.
+
+17
+00:01:25,508 --> 00:01:30,788
+Puis il désigne la personne de confiance sur place, et choisit qui valide les paiements : lui seul.
+
+18
+00:01:31,208 --> 00:01:35,360
+Le projet est prêt. Aucune étape n’est payée tant que rien n’est prouvé.
+
+19
+00:01:36,160 --> 00:01:39,880
+Pour financer, Moussa saisit un montant : six mille dollars.
+
+20
+00:01:40,300 --> 00:01:44,548
+Il paie une facture Bitcoin Lightning, depuis n’importe quel portefeuille.
+
+21
+00:01:44,968 --> 00:01:53,032
+Ici, en démonstration, le paiement est simulé. Bitnob confirme par une notification signée, et le séquestre est crédité.
+
+22
+00:01:53,452 --> 00:01:57,244
+La première étape s’ouvre : la vérification du titre foncier.
+
+23
+00:01:59,744 --> 00:02:02,696
+Deuxième parcours : la personne sur place.
+
+24
+00:02:03,116 --> 00:02:08,684
+Moussa envoie un lien privé à Mamadou, sur WhatsApp. Mamadou n’a aucun compte à créer.
+
+25
+00:02:09,104 --> 00:02:12,680
+Il ouvre le lien sur son téléphone, et voit l’étape à faire.
+
+26
+00:02:13,100 --> 00:02:17,900
+Il photographie le titre foncier : la position de son téléphone est jointe à la photo.
+
+27
+00:02:18,320 --> 00:02:24,056
+Il indique qui doit être payé : le nom du géomètre, son numéro mobile money, son opérateur.
+
+28
+00:02:24,476 --> 00:02:26,948
+Il envoie la preuve. C’est tout.
+
+29
+00:02:29,448 --> 00:02:34,392
+Retour au financeur. Une alerte l’informe : une preuve attend sa décision.
+
+30
+00:02:34,812 --> 00:02:39,876
+Il regarde la photo géolocalisée, le fournisseur à payer, le message de Mamadou.
+
+31
+00:02:40,296 --> 00:02:46,608
+Si la preuve ne convient pas, il peut la refuser, en précisant pourquoi. Rien n’est payé sans son accord.
+
+32
+00:02:47,028 --> 00:02:56,772
+Sinon, il libère le paiement. NobPay affiche le devis : le montant débité, le taux, les frais, et ce que le fournisseur recevra : neuf cent douze mille francs CFA.
+
+33
+00:02:57,192 --> 00:03:02,904
+Il confirme. Le paiement part directement vers le mobile money du fournisseur, via Bitnob.
+
+34
+00:03:03,324 --> 00:03:09,036
+La confirmation arrive par une notification signée : l’étape est payée, et la suivante peut s’ouvrir.
+
+35
+00:03:11,536 --> 00:03:14,152
+Troisième parcours : le fournisseur.
+
+36
+00:03:14,572 --> 00:03:17,548
+Il reçoit un lien de reçu, sans compte à créer.
+
+37
+00:03:17,968 --> 00:03:26,032
+Il y voit le montant en francs CFA, l’état du paiement, la date, et une référence. Son numéro de téléphone est partiellement masqué.
+
+38
+00:03:28,532 --> 00:03:30,956
+Quatrième parcours : la preuve.
+
+39
+00:03:31,376 --> 00:03:36,944
+Chaque événement du projet entre dans un registre enchaîné : modifier une seule ligne casserait toute la suite.
+
+40
+00:03:37,364 --> 00:03:44,420
+Moussa peut ancrer l’empreinte de ce registre sur Bitcoin, avec OpenTimestamps. Seule l’empreinte quitte l’application.
+
+41
+00:03:44,840 --> 00:03:50,816
+Et n’importe qui peut ensuite vérifier le dossier, sans compte : le navigateur refait lui-même tous les calculs.
+
+42
+00:03:53,316 --> 00:03:56,148
+Dernier parcours : l’administrateur.
+
+43
+00:03:56,568 --> 00:04:01,440
+Son tableau de bord est en lecture seule : les paiements, les versements, les ancrages.
+
+44
+00:04:01,860 --> 00:04:08,436
+Et des alertes, si un paiement se bloque ou si un ancrage tarde. Il voit tout, mais il ne déplace jamais d’argent.
+
+45
+00:04:10,936 --> 00:04:14,344
+Sous le capot, l’API Bitnob fait circuler l’argent.
+
+46
+00:04:14,764 --> 00:04:22,612
+Des factures Lightning à l’entrée, une conversion en stablecoin, des paiements mobile money en sortie, et des webhooks signés pour confirmer chaque étape.
+
+47
+00:04:23,032 --> 00:04:26,584
+Bitnob déplace l’argent. NobPay décide quand.
+
+48
+00:04:29,084 --> 00:04:32,876
+NobPay. Investir au pays, avec preuve.
+
+49
+00:04:33,296 --> 00:04:35,168
+Merci.
