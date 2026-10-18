@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   applicationName: 'NobPay',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'NobPay', statusBarStyle: 'black-translucent' },
-  icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
   openGraph: {
     title: 'NobPay · Investissez au pays. Avec preuve.',
     description: "L'argent de la diaspora, libéré étape par étape sur preuve et ancré sur Bitcoin.",

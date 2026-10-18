@@ -171,17 +171,12 @@ html:has(.site) {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
-  font: 600 2.3rem var(--font-display);
+  font: 600 2.9rem var(--font-display);
   letter-spacing: -0.04em;
   text-decoration: none;
 }
 .site-logo svg {
-  width: 2.4rem;
-  height: 2.4rem;
-}
-.site-logo b {
-  font-weight: 700;
-  color: #ffdcbf;
+  filter: drop-shadow(0 1px 10px rgba(11, 19, 43, 0.4));
 }
 .site-nav {
   display: flex;
@@ -967,7 +962,7 @@ html:has(.site) {
     display: none;
   }
   .site-logo {
-    font-size: 2.6rem;
+    font-size: 3.3rem;
   }
   .site-nav .pill {
     padding: 1rem 2rem;
