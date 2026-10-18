@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "message": "Company balances retrieved successfully",
+  "data": {
+    "accounts": [
+      {
+        "currency": "BTC",
+        "available_balance": "0.0012263"
+      },
+      {
+        "currency": "USDC",
+        "available_balance": "10.5"
+      },
+      {
+        "currency": "USDT",
+        "available_balance": "250.25"
+      }
+    ]
+  }
+}

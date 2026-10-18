@@ -251,16 +251,141 @@ export async function refreshFunding(owner: User, fundingId: string): Promise<Fu
     funding = db.fundings.find((f) => f.id === fundingId)!;
   }
 
-  // Best-effort BTC -> USDT conversion once paid (sandbox only), recorded on the funding.
-  if (funding.status === 'paid' && funding.mode === 'sandbox' && !funding.conversion && funding.amountSats) {
-    const result = await gatewayFor('sandbox').convertBtcToStable({ sats: funding.amountSats, reference: `nobpay:conv:${funding.id}` });
-    await withDb((d) => {
-      const f = d.fundings.find((x) => x.id === fundingId);
-      if (f) f.conversion = result;
-    });
-    funding = (await readDb()).fundings.find((f) => f.id === fundingId)!;
-  }
   return funding;
+}
+
+/* ------------------------------------------------------------------------- *
+ * BTC -> stablecoin conversion, balances and solvency
+ *
+ * The escrow is credited when the BTC arrive (decision to confirm with the project lead, see B0.6), but payouts are
+ * paid from the stablecoin balance. So: convert after the credit, retry safely, and refuse a payout the wallet
+ * cannot cover yet.
+ * ------------------------------------------------------------------------- */
+
+export const CONVERSION_BACKOFF_MS = [30_000, 120_000, 600_000, 1_800_000, 7_200_000];
+export const CONVERSION_MAX_ATTEMPTS = 6;
+
+/** Converts every paid sandbox funding that is not converted yet. Idempotent: reference `nobpay:conv:<fundingId>`. */
+export async function convertPaidFundings(now = Date.now()): Promise<void> {
+  let firstError: unknown;
+  for (const f of (await readDb()).fundings) {
+    if (f.status !== 'paid' || f.mode !== 'sandbox' || !f.amountSats) continue;
+    const c = f.conversion;
+    if (c && (c.status === 'done' || c.status === 'skipped')) continue;
+    if (c?.status === 'failed' && !c.retryable) continue; // gave up: a person must look
+    if (c?.nextAttemptAt && Date.parse(c.nextAttemptAt) > now) continue;
+    try {
+      await attemptConversion(f.id, now);
+    } catch (err) {
+      firstError ??= err;
+    }
+  }
+  if (firstError) throw firstError;
+}
+
+async function attemptConversion(fundingId: string, now: number): Promise<void> {
+  const gateway = gatewayFor('sandbox');
+  const f = (await readDb()).fundings.find((x) => x.id === fundingId);
+  if (!f || !f.amountSats || f.status !== 'paid') return;
+  const reference = `nobpay:conv:${f.id}`;
+  const previous = f.conversion;
+  const attempts = (previous?.attempts ?? 0) + 1;
+
+  // An earlier attempt may have reached Bitnob without an answer (or the process stopped mid-attempt, status
+  // `pending`): look for the order before selling the same bitcoin twice. If the lookup fails, wait for the next round.
+  if (previous?.uncertain || previous?.status === 'pending') {
+    if (await gateway.findConversionByReference(reference)) {
+      await withDb((d) => {
+        const x = d.fundings.find((y) => y.id === fundingId);
+        if (x) x.conversion = { status: 'done', detail: 'Ordre retrouvé chez Bitnob', attempts: previous.attempts };
+      });
+      return;
+    }
+  }
+
+  await withDb((d) => {
+    const x = d.fundings.find((y) => y.id === fundingId);
+    if (x) x.conversion = { status: 'pending', attempts, detail: previous?.detail };
+  });
+  const result = await gateway.convertBtcToStable({ sats: f.amountSats, reference });
+  await withDb((d) => {
+    const x = d.fundings.find((y) => y.id === fundingId);
+    if (!x) return;
+    if (result.status !== 'failed') {
+      x.conversion = { status: result.status, detail: result.detail, attempts };
+      return;
+    }
+    const retryable = result.retryable === true && attempts < CONVERSION_MAX_ATTEMPTS;
+    x.conversion = {
+      status: 'failed',
+      detail: result.detail,
+      attempts,
+      retryable,
+      uncertain: result.uncertain === true,
+      ...(retryable ? { nextAttemptAt: new Date(now + CONVERSION_BACKOFF_MS[Math.min(attempts - 1, CONVERSION_BACKOFF_MS.length - 1)]).toISOString() } : {}),
+    };
+  });
+}
+
+export interface Solvency {
+  checkedAt: string;
+  /** what NobPay owes in sandbox: paid funding not yet paid out, in USD cents */
+  liabilityCents: number;
+  /** what the Bitnob wallets hold: stablecoins plus bitcoin at the market price, in USD cents */
+  assetsCents: number;
+  violated: boolean;
+}
+
+const gs = globalThis as unknown as { __nobpaySolvency?: Solvency };
+
+/** Real (non-demo, sandbox) money NobPay owes: paid fundings minus payouts completed or in flight. */
+export function sandboxLiabilityCents(db: Db): number {
+  const funded = db.fundings.filter((f) => f.status === 'paid' && f.mode === 'sandbox' && !f.demo).reduce((s, f) => s + f.amountCents, 0);
+  let out = 0;
+  for (const p of db.projects) {
+    for (const st of p.steps) {
+      const po = st.payout;
+      if (po && po.mode === 'sandbox' && po.status !== 'failed') out += po.amountUsdCents;
+    }
+  }
+  return funded - out;
+}
+
+/** Invariant: what we owe never exceeds what the wallets hold (3 % + 5 $ of slack for the bitcoin price moving). */
+export async function checkSolvency(): Promise<Solvency> {
+  const gateway = gatewayFor('sandbox');
+  const [bal, btcUsd, db] = await Promise.all([gateway.balances(), gateway.btcUsd(), readDb()]);
+  const assetsCents = Math.round(((bal.USDT ?? 0) + (bal.USDC ?? 0) + (bal.BTC ?? 0) * btcUsd) * 100);
+  const liabilityCents = sandboxLiabilityCents(db);
+  const violated = liabilityCents > assetsCents * 1.03 + 500;
+  const was = gs.__nobpaySolvency?.violated ?? false;
+  gs.__nobpaySolvency = { checkedAt: new Date().toISOString(), liabilityCents, assetsCents, violated };
+  if (violated && !was) console.error(`[solvency] ALERTE : NobPay doit ${liabilityCents / 100} $ mais les portefeuilles Bitnob en contiennent ${assetsCents / 100} $. Nouveaux paiements suspendus.`);
+  if (!violated && was) console.info('[solvency] retour à la normale : les paiements reprennent.');
+  return gs.__nobpaySolvency;
+}
+
+export const getSolvency = (): Solvency | undefined => gs.__nobpaySolvency;
+
+/** Before a sandbox payout: payments are paused if the books do not add up, and the wallet must cover this one. */
+async function assertPayoutCovered(amountCents: number): Promise<void> {
+  if (getSolvency()?.violated) {
+    throw new HttpError(503, 'Les paiements sont suspendus : les soldes Bitnob ne couvrent pas les séquestres. Contactez le support.', 'payments_paused');
+  }
+  const asset = getConfig().payoutAsset;
+  let held: number;
+  try {
+    held = (await gatewayFor('sandbox').balances())[asset] ?? 0;
+  } catch {
+    return; // Bitnob unreachable: it will refuse the payout itself if it cannot pay
+  }
+  if (held + 0.005 < amountCents / 100) {
+    throw new HttpError(
+      409,
+      `Le portefeuille ${asset} de Bitnob (${formatUsdShort(Math.round(held * 100))}) ne couvre pas encore ce paiement (${formatUsdShort(amountCents)}). Si le versement vient d'arriver, la conversion est en cours : réessayez dans quelques minutes.`,
+      'insufficient_balance',
+    );
+  }
 }
 
 /** Mock mode only: pays the invoice by sending a signed event to the real webhook handler. */
@@ -377,6 +502,7 @@ export async function quoteRelease(owner: User, projectId: string, stepId: strin
   if (opts.simulate && !getConfig().allowDemo) {
     throw new HttpError(403, 'Le mode démonstration est désactivé sur cette instance', 'demo_disabled');
   }
+  if (getGateway(opts.simulate).mode === 'sandbox') await assertPayoutCovered(step.amountCents);
   const gateway = getGateway(opts.simulate);
   const reference = `nobpay:pay:${step.id}:${Date.now().toString(36)}`;
   let quote: PayoutQuote;
@@ -402,6 +528,7 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
   if (Date.parse(quote.expiresAt) < Date.now()) throw new HttpError(409, 'Le devis a expiré. Demandez-en un nouveau.', 'quote_expired');
   const supplier = step0.proof!.supplier!;
   if (escrowCents(snapshot, project0) < step0.amountCents) throw new HttpError(409, 'Séquestre insuffisant', 'insufficient_escrow');
+  if (quote.mode === 'sandbox') await assertPayoutCovered(step0.amountCents);
 
   // Phase 1: record the decision and reserve the funds.
   const startedAt = new Date().toISOString();

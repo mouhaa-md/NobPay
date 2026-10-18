@@ -1,0 +1,12 @@
+{
+  "type": "https://api.bitnob.com/errors/SERVICE_UNAVAILABLE",
+  "title": "Service Unavailable",
+  "status": 503,
+  "detail": "We couldn't process your order right now. No funds were charged. Please try again shortly.",
+  "code": "SERVICE_UNAVAILABLE",
+  "correlation_id": "req_00000000-0000-0000-0000-000000000000",
+  "extensions": {
+    "upstream_service": "trading-service"
+  },
+  "request_id": "req_00000000-0000-0000-0000-000000000000"
+}

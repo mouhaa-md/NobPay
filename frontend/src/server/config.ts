@@ -51,6 +51,8 @@ export function getConfig() {
     dataDir: process.env.DATA_DIR || path.join(process.cwd(), '.data'),
     captureWebhooks: process.env.CAPTURE_WEBHOOKS === '1',
     /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */
+    /** the stablecoin payouts are paid from (and conversions end in) */
+    payoutAsset: (process.env.PAYOUT_ASSET || 'USDT').toUpperCase(),
     smsProvider: (process.env.SMS_PROVIDER || '').toLowerCase(),
     twilio: {
       accountSid: process.env.TWILIO_ACCOUNT_SID || '',

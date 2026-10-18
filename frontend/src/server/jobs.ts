@@ -1,13 +1,14 @@
 import { getConfig } from './config';
 import { refreshPendingAnchors } from './anchors';
-import { expireFundings, pollPendingFundings, reconcile } from './services';
+import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings, reconcile } from './services';
 
 /**
  * Background work, in the SAME process as the app (the database is a single JSON file: a second process would
  * corrupt it, see db.ts). One loop, never overlapping itself:
  *  - finish payouts still in flight (mock: simulated confirmation; sandbox: poll, recover unconfirmed ones)
  *  - close invoices past their expiry
- *  - sandbox: poll pending invoices (fallback when a webhook is late or lost)
+ *  - sandbox: poll pending invoices (fallback when a webhook is late or lost), convert paid bitcoin to the
+ *    stablecoin (retried safely), and every minute check that what we owe is covered by the wallets
  *  - every 10 minutes: ask OpenTimestamps whether pending anchors reached a Bitcoin block
  * Pages and GET routes no longer do any of this while rendering.
  */
@@ -16,13 +17,15 @@ interface State {
   timer?: NodeJS.Timeout;
   running: boolean;
   lastAnchors: number;
+  lastSolvency: number;
   lastLogged: Map<string, number>;
 }
 const g = globalThis as unknown as { __nobpayJobs?: State };
 
 const ANCHOR_EVERY_MS = 10 * 60_000;
+const SOLVENCY_EVERY_MS = 60_000;
 
-const stateOf = (): State => (g.__nobpayJobs ??= { running: false, lastAnchors: 0, lastLogged: new Map() });
+const stateOf = (): State => (g.__nobpayJobs ??= { running: false, lastAnchors: 0, lastSolvency: 0, lastLogged: new Map() });
 
 async function safely(state: State, name: string, fn: () => Promise<void>): Promise<void> {
   try {
@@ -44,7 +47,14 @@ export async function tick(): Promise<void> {
   try {
     await safely(state, 'payouts', reconcile);
     await safely(state, 'expiry', expireFundings);
-    if (getConfig().mode === 'sandbox') await safely(state, 'invoices', pollPendingFundings);
+    if (getConfig().mode === 'sandbox') {
+      await safely(state, 'invoices', pollPendingFundings);
+      await safely(state, 'conversion', convertPaidFundings);
+      if (Date.now() - state.lastSolvency > SOLVENCY_EVERY_MS) {
+        state.lastSolvency = Date.now();
+        await safely(state, 'solvency', async () => void (await checkSolvency()));
+      }
+    }
     if (Date.now() - state.lastAnchors > ANCHOR_EVERY_MS) {
       state.lastAnchors = Date.now();
       await safely(state, 'anchors', () => refreshPendingAnchors());
