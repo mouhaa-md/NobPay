@@ -31,9 +31,9 @@ Sources : [ONU Info](https://news.un.org/en/story/2026/09/1168330) · [IFAD](htt
 | Brique | Mode `mock` (défaut) | Mode `sandbox` |
 |---|---|---|
 | Facture Lightning | simulée (`lndemo1…`, non payable) ; bouton « Simuler le paiement » | **testé en vrai** : facture `lntb…` (testnet) créée par `POST /api/lightning/invoices` |
-| Événement de paiement reçu | **vrai** chemin : le simulateur signe l'évènement (HMAC-SHA512) et appelle le même récepteur que Bitnob | webhook signé de Bitnob + repli par interrogation (**jamais vu en vrai** : le portefeuille sandbox est vide) |
+| Événement de paiement reçu | **vrai** chemin : le simulateur signe l'évènement (HMAC-SHA512) et appelle le même récepteur que Bitnob | webhook signé de Bitnob + repli par interrogation. **Webhooks `payouts.*` et `deposit.success` reçus en vrai**, signature vérifiée ; l'évènement de réception **Lightning** n'a jamais pu être vu (aucun moyen de payer une facture de test) |
 | Conversion BTC → stablecoin | simulée | devis **testé en vrai** ; l'ordre n'a pas pu être passé (pas de solde) |
-| Devis et paiement mobile money | simulés (taux indicatif, validation après ~2,5 s) | devis et `initialize` **testés en vrai** (Wave, Orange, Free) ; `finalize` refusé sans solde (`INSUFFICIENT_FUNDS`) |
+| Devis et paiement mobile money | simulés (taux indicatif, validation après ~2,5 s) | **testés en vrai de bout en bout** (Wave) : devis, `initialize`, `finalize`, webhooks, étape payée. Financé avec de l'USDC de test (faucet Circle) |
 | Registre enchaîné, états, preuves | réels | réels |
 | Ancrage Bitcoin (OpenTimestamps) | **réel** : calendriers publics, preuve `.ots` téléchargeable | réel |
 | Vérification publique | réelle, dans le navigateur | réelle |
@@ -42,7 +42,7 @@ Détail de ce qui a été observé chez Bitnob : [`docs/BITNOB-SANDBOX-REPORT.md
 
 Limites à connaître :
 
-- Aucun argent réel n'est géré. En sandbox, **aucun moyen documenté de créditer le portefeuille de test** : le parcours complet jusqu'au paiement mobile money terminé n'a donc pas été vu en vrai (le code est écrit et testé avec des réponses rejouées, pas validé de bout en bout).
+- Aucun argent réel n'est géré. En sandbox, le portefeuille se finance avec de l'**USDC de test** (faucet Circle, ~10 min de délai de détection) ; **on ne peut pas payer une facture Lightning de test**, donc l'entrée Lightning et la conversion BTC→stablecoin n'ont pas été vues en vrai (le séquestre des tests de bout en bout a été crédité par un évènement signé par nos soins). `GET /api/balances` est instable en sandbox : voir le rapport.
 - **Un paiement mobile money au Sénégal est limité à 200 000 FCFA (environ 336 $)** par Bitnob : les étapes de démonstration plus grandes seraient refusées en sandbox. Le taux réel observé est d'environ 593 FCFA pour 1 $.
 - La base est un fichier JSON local (`.data/db.json`), un seul processus : parfait pour une démonstration, inadapté à un hébergement sans disque partagé (serverless).
 - La limitation de débit est en mémoire (un seul processus). Le prototype n'a pas été audité : lisez [`SECURITY.md`](SECURITY.md) avant toute exposition publique.

@@ -72,7 +72,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Corriger `bitnob/client.ts` et l'`InvoiceResult` selon la réalité ; enregistrer la réponse (secrets et identifiants retirés) dans `tests/fixtures/bitnob/invoice-create.json`.
 - **Terminé quand :** l'écran affiche un QR valide issu de Bitnob et `invoiceStatus()` renvoie `pending`.
 
-### B0.5 Payer la facture en sandbox et recevoir le webhook  `P0 · M`  ⛔ **bloqué** : aucun moyen documenté de payer une facture ou de créditer un solde (voir BITNOB-SANDBOX-REPORT.md)
+### B0.5 Payer la facture en sandbox et recevoir le webhook  `P0 · M`  ◐ webhook réel reçu et signature vérifiée (`deposit.success`) ; **la réception Lightning reste impossible** (aucun moyen de payer une facture `lntb`)
 - Demander à un mentor **comment payer une facture Lightning en sandbox** (l'outil du workshop avait une « simulation » d'environ 2 s ; les références `demo-xxxx` suggèrent un mécanisme interne).
 - Capturer l'évènement (B0.3) : nom exact (`btc.lightning.received.success` ?), forme de `data`, présence d'un identifiant d'évènement, champs `reference`, `id`, `payment_hash`, `preimage`, montant.
 - Si le routage par expression régulière (`webhooks.ts`) ne reconnaît pas l'évènement, **l'adapter** ; ajouter un test avec la charge réelle signée par vous-même.
@@ -89,13 +89,13 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Corriger `NETWORK_LABEL` (valeurs devinées : `wave` / `orange` / `free`) et `buildBeneficiary()` ; format du numéro (`+221…` ou local ?).
 - **Terminé quand :** un bénéficiaire Wave et un bénéficiaire Orange Money de test sont acceptés par `initialize`, et un test unitaire fige les deux corps de requête.
 
-### B0.8 Cycle complet d'un payout  `P0 · L`
+### B0.8 Cycle complet d'un payout  `P0 · L`  ✅ fait en vrai (appel direct puis parcours par l'application, webhooks `payouts.*` reçus, étape payée par webhook)
 - Enchaîner : `quotePayout` → `initialize` → `finalize` → évènements → `GET` du statut. Relever la forme exacte de chaque réponse (`quote_id`, `settlement_amount`, `exchange_rate`, `fees`, `expires_at`), le sens de `:id` dans `GET /api/payouts/:id` (identifiant du payout ou du devis ?), l'effet de `callback_url`.
 - Vérifier que `finalize` immédiatement après `initialize` est correct ou s'il faut attendre / confirmer autrement.
 - Capturer les évènements `payouts.*` (nom, charge) et ajuster `route()` dans `webhooks.ts` ; vérifier que `reference` retombe bien sur notre `payout.reference`.
 - **Terminé quand :** valider « Élévation des murs » en sandbox passe `releasing` → `paid` **par webhook**, montants FCFA corrects, et `reconcile()` n'a pas eu à intervenir.
 
-### B0.9 Cas d'échec  `P0 · M`
+### B0.9 Cas d'échec  `P0 · M`  ◐ vus en vrai : solde insuffisant (422), numéro invalide, montant hors limite, devis expiré non testé, `payouts.withdrawal.expired` non provoqué
 - Provoquer : devis expiré, solde insuffisant, numéro invalide, réseau coupé, signature de webhook fausse, évènement en double, évènement dans le désordre.
 - Faire correspondre chaque erreur Bitnob à un **message français clair** et à un `code` (`gateway_error`, `quote_expired`, `insufficient_escrow`, …) ; vérifier le retour à `proof_submitted` (la preuve reste valable) et l'écriture de `payout_failed` dans le registre.
 - **Terminé quand :** chaque cas laisse l'interface dans un état cohérent et un test le couvre.
@@ -106,7 +106,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 - Mettre à jour `CONTEXTE-PROJET.md` § 8.2 (tableau) : retirer « hypothèse » partout où c'est confirmé.
 - **Terminé quand :** les hypothèses restantes sont listées une par une, avec la raison.
 
-### B0.11 Répétition générale et plan B  `P0 · S`
+### B0.11 Répétition générale et plan B  `P0 · S`  (possible maintenant pour la partie paiement ; garder à l'esprit : 336 $ au plus par paiement, séquestre crédité sans Lightning)
 - Dérouler le parcours de démonstration **en sandbox**, chronométré, deux fois de suite, depuis une base neuve.
 - Vérifier que le **plan B** marche : `BITNOB_MODE=mock` + « Simuler le paiement », et le bouton « Continuer en simulation » quand le devis sandbox échoue (déjà dans l'interface).
 - Préparer : URL du tunnel stable, `.env.local` de secours, base `.data/` de départ sauvegardée, ancrages déjà confirmés pour montrer un vrai bloc Bitcoin.
