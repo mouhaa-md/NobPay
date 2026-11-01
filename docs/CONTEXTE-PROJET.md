@@ -85,7 +85,7 @@ Chaque texte affiché doit être **vrai**. La liste complète des affirmations i
 
 ### 5.1 Pile
 
-Next.js **14.2.35** (App Router) + React 18 + **TypeScript strict** + Tailwind 3.4, **un seul projet** (frontend et backend dans le même dépôt `frontend/`). Tests Vitest 3. Node 20 ou plus (testé avec Node 24). Pas de base de données externe : fichier JSON local.
+Next.js **16.4.3** (App Router) + React 19 + zod 4 + **TypeScript strict** + Tailwind 3.4, **un seul projet** (frontend et backend dans le même dépôt `frontend/`). Tests Vitest 3. Node 20 ou plus (testé avec Node 24). Pas de base de données externe : fichier JSON local.
 
 ```
 Navigateur (PWA, français)
@@ -138,7 +138,7 @@ NobPay/
       components/                  interface
     motion/                        kit d'animations de la vitrine (hors backend)
     design-reference/              maquettes Stitch + COPY-RULES.md
-    tests/                         Vitest (281 tests)
+    tests/                         Vitest (357 tests)
     public/                        images, icônes PWA, manifest, sw.js
 ```
 
@@ -324,7 +324,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 ### Protection du navigateur (B1.8)
 
 - **En-têtes** (`next.config.mjs`) sur toutes les pages : `Content-Security-Policy` (rien n'est chargé depuis un autre site ; `connect-src 'self'` car Bitnob, OpenTimestamps et blockstream sont appelés par le **serveur** ; `'unsafe-inline'` pour les scripts d'amorçage de Next, `'unsafe-eval'` seulement en développement), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin` (les liens de vérification contiennent un identifiant non devinable), `Permissions-Policy` (géolocalisation pour cette origine seulement, car le formulaire terrain l'utilise), `Strict-Transport-Security`. Vérifié dans un vrai navigateur (Chromium) sur la version de production : aucune violation sur les pages principales, parcours complet (paiement d'étape, dépôt d'une photo et d'un PDF, QR de financement).
-- **Requêtes d'un autre site** (`src/middleware.ts`) : sur `/api/*`, toute requête qui modifie (POST, PUT, PATCH, DELETE) et que le navigateur dit venir d'un autre site (`Sec-Fetch-Site`) ou d'une autre origine (`Origin`, `null` compris) reçoit **403** `cross_site`. Hôtes acceptés : `Host`, `X-Forwarded-Host` et celui de `PUBLIC_BASE_URL`. Les appels de serveur à serveur (webhooks Bitnob) n'envoient aucun de ces en-têtes et passent : ils sont protégés par leur signature.
+- **Requêtes d'un autre site** (`src/proxy.ts`, ex-`middleware.ts` depuis Next 16) : sur `/api/*`, toute requête qui modifie (POST, PUT, PATCH, DELETE) et que le navigateur dit venir d'un autre site (`Sec-Fetch-Site`) ou d'une autre origine (`Origin`, `null` compris) reçoit **403** `cross_site`. Hôtes acceptés : `Host`, `X-Forwarded-Host` et celui de `PUBLIC_BASE_URL`. Les appels de serveur à serveur (webhooks Bitnob) n'envoient aucun de ces en-têtes et passent : ils sont protégés par leur signature.
 
 ## 11. Configuration (`frontend/.env.example` → `frontend/.env.local`, jamais committé)
 
@@ -341,7 +341,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | identifiants Twilio (si `SMS_PROVIDER=twilio`) | vide |
 | `ADMIN_PHONES` | numéros (séparés par des virgules) autorisés à ouvrir `/app/admin` ; en démo (`ALLOW_DEMO`), le compte démo y a aussi accès | vide |
 | `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement sans fournisseur SMS et si `ALLOW_DEMO` autorise) | `123456` |
-| `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 760 ; 81500 |
+| `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 593 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |
 | `MAX_STEP_USD` | montant maximal d'une étape, en dollars ; `0` = aucune limite (décision 1) | `330` en sandbox, aucune en mock |
 | `PAYOUT_ASSET` | stablecoin d'où partent les paiements et où finit la conversion (`USDT`, ou `USDC` si c'est ce que le robinet de test fournit) | `USDT` |
@@ -358,7 +358,7 @@ cd frontend
 npm install
 npm run dev                # http://localhost:3000   (le service worker n'existe qu'en production)
 npm run typecheck
-npm test                   # 281 tests Vitest
+npm test                   # 357 tests Vitest
 npm run build && npm start # production locale
 ```
 
@@ -406,7 +406,7 @@ Gravité : **S1** = bloque toute exposition publique, **S2** = peut perdre ou bl
 | D16 | S3 | Dates relatives (« Hier ») calculées avec le **fuseau du serveur**. |
 | D17 | S3 | Une seule règle d'approbation ; aucune notification (ni e-mail, SMS, WhatsApp, push). |
 | D18 | S3 | ~~Le registre ne note pas le mode~~ **Corrigé** : tout évènement d'argent **simulé** (mode `mock`, bouton de démonstration, paiement « Continuer en simulation ») porte `simulated: true` dans ses données (`funding_paid`, `step_approved`, `payout_started`, `payout_completed`, `payout_failed`). Les évènements réels n'ont pas cette clé : **leurs hachages et les ancrages déjà publiés ne changent pas**. Le dossier public et ancré ne présente donc plus une simulation comme un paiement réel. |
-| D19 | S3 | `npm audit --omit=dev` : Next.js 14.2.35 a des avis critiques / élevés (déni de service, SSRF des Server Actions, empoisonnement de cache…). Correctif = changement de version majeure. Peu pertinent pour une démonstration locale, à traiter avant un hébergement public. |
+| D19 | S3 | ~~`npm audit --omit=dev` : Next.js 14.2.35 avait des avis critiques / élevés~~ **Corrigé le 1er nov. 2026** : Next 16.4.3, zod 4.6.7, vitest 5 ; `npm audit` (production **et** développement) : 0 faille ; contrôle `npm run audit:prod` dans la CI. |
 | D20 | S3 | `db.ts` : `holder.db` est remplacé **avant** l'écriture sur disque ; si l'écriture échoue, la mémoire a une avance sur le fichier. |
 
 ## 15. Conventions de travail avec le chef de projet

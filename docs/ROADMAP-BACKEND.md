@@ -50,7 +50,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 > **À lire d'abord : `docs/BITNOB-SANDBOX-NOTES.md`.** La spécification officielle de l'API y a été relue : elle révèle **6 écarts avec notre code** (`customer_id` obligatoire pour les factures, `payment_reason` pour les devis, `callback_url` obligatoire, évènement Lightning `transfer.success` mal routé…) et explique **comment alimenter la sandbox** (pas de simulateur Lightning documenté : demander à un mentor).
 
 ### B0.1 Poser la base de référence  `P0 · S`
-- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (281 tests verts), `npm run dev`.
+- Cloner le dépôt, `cd frontend && npm install`, `npm run typecheck`, `npm test` (357 tests verts), `npm run dev`.
 - Faire le parcours de démonstration du README en `mock` (compte démo, valider l'étape 3 de « Résidence à Thiès », envoyer une preuve via `/terrain/demo-villa-thies`, financer, ancrer).
 - Lire dans cet ordre : `server/services.ts`, `server/domain.ts`, `server/webhooks.ts`, `server/bitnob/client.ts`, `server/db.ts`.
 - **Terminé quand :** tout est vert chez vous et vous pouvez expliquer en 2 minutes ce qui se passe quand le financeur clique « Confirmer et payer » (CONTEXTE § 7.2).

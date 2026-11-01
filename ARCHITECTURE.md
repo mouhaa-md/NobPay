@@ -1,6 +1,6 @@
 # Architecture
 
-Un seul projet Next.js 14 (App Router, TypeScript strict) dans `frontend/`. Le « backend » est `frontend/src/server/` (logique) et `frontend/src/app/api/` (routes HTTP). Pas de base externe : un fichier JSON (`.data/db.json`), **un seul processus**.
+Un seul projet Next.js 16 (App Router, TypeScript strict) dans `frontend/`. Le « backend » est `frontend/src/server/` (logique) et `frontend/src/app/api/` (routes HTTP). Pas de base externe : un fichier JSON (`.data/db.json`), **un seul processus**.
 
 ```
 Navigateur (PWA, français)

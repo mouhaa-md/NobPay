@@ -26,7 +26,7 @@ N'envoyez **jamais** de vraie clé, de vrai secret ni de données personnelles d
 - le mode `mock` et ses simulations (par construction, rien n'y est réel) ;
 - le compte de démonstration et le code SMS partagé quand `ALLOW_DEMO=1` (c'est un choix documenté et signalé au démarrage) ;
 - les attaques par déni de service volumétrique (la limitation de débit est en mémoire, pour un seul processus) ;
-- les failles de dépendances déjà connues et listées dans `docs/CONTEXTE-PROJET.md` (D19), tant qu'elles ne sont pas exploitables ici.
+- les failles de dépendances connues et non exploitables ici (`npm run audit:prod` doit rester à zéro faille élevée ou critique ; il tourne dans la CI).
 
 ## Ce que le code garantit, et ce qu'il ne garantit pas
 
