@@ -54,7 +54,7 @@ Limites à connaître :
 
 ## Démarrer
 
-Prérequis : Node.js 20 ou plus récent.
+Prérequis : **Node.js 22** ou plus récent.
 
 ```bash
 cd frontend
@@ -116,7 +116,7 @@ Règles qui comptent :
 ```bash
 cd frontend
 npm run typecheck
-npm test            # ~280 tests, quelques secondes, sans réseau ni clé
+npm test            # ~360 tests, une vingtaine de secondes, sans réseau ni clé
 ```
 
 Ils couvrent : signatures Bitnob, récepteur de webhooks (forgé, rejeu, montant, nom d'évènement), client Bitnob (réponses réelles rejouées, reprises), paiements et reprises après réponse perdue, conversion, solvabilité, sessions, codes SMS, limitation de débit, validation des entrées, fichiers, jeton de la personne de confiance, en-têtes, journaux, registre, OpenTimestamps, vérification navigateur, et des **séquences aléatoires d'évènements** qui vérifient que l'argent ne peut être ni compté ni payé deux fois. La CI GitHub (`.github/workflows/ci.yml`) les lance avec le build et un contrôle de secrets.
