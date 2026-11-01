@@ -1,0 +1,47 @@
+{
+  "rate": 593,
+  "invoices": {
+    "p_villa_s1": {
+      "totalFcfa": 711600,
+      "usd": 1200,
+      "supplier": "CABINET FALL, GÉOMÈTRE",
+      "number": "2026-117"
+    },
+    "p_villa_s2": {
+      "totalFcfa": 2846400,
+      "usd": 4800,
+      "supplier": "QUINCAILLERIE NDIAYE",
+      "number": "0388"
+    },
+    "p_villa_s3": {
+      "totalFcfa": 3558000,
+      "usd": 6000,
+      "supplier": "QUINCAILLERIE NDIAYE",
+      "number": "0412"
+    },
+    "p_champ_s1": {
+      "totalFcfa": 800550,
+      "usd": 1350,
+      "supplier": "COOPÉRATIVE SINE-SALOUM",
+      "number": "C-2026-054"
+    },
+    "p_champ_s2": {
+      "totalFcfa": 800550,
+      "usd": 1350,
+      "supplier": "COOPÉRATIVE SINE-SALOUM",
+      "number": "C-2026-071"
+    },
+    "p_champ_s3": {
+      "totalFcfa": 1601100,
+      "usd": 2700,
+      "supplier": "COOPÉRATIVE SINE-SALOUM",
+      "number": "C-2026-103"
+    },
+    "p_boutique_s1": {
+      "totalFcfa": 593000,
+      "usd": 1000,
+      "supplier": "GROSSISTE TOUBA TEXTILES",
+      "number": "T-5521"
+    }
+  }
+}
