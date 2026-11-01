@@ -1,0 +1,9 @@
+# One site, automatic HTTPS. Caddy adds the real client address to X-Forwarded-For, which the rate limiter reads
+# (TRUSTED_PROXY_HOPS=1: exactly one proxy in front of the app).
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	request_body {
+		max_size 70MB
+	}
+	reverse_proxy app:3000
+}
