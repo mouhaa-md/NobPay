@@ -177,7 +177,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, b
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col px-space-md pb-8 pt-space-sm" key={stage}>
+      <main id="contenu" className="flex flex-1 flex-col px-space-md pb-8 pt-space-sm" key={stage}>
         <div className="nob-rise flex flex-1 flex-col">
           {stage === 'amount' && (
             <>

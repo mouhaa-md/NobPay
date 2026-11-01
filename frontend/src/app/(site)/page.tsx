@@ -48,7 +48,7 @@ const FAQ = [
 const RAILS = [
   { tag: 'Entrée', title: 'Bitcoin Lightning', text: 'Le financeur paie une facture depuis n’importe quel portefeuille.', icon: 'bolt' },
   { tag: 'Garde', title: 'Séquestre Bitnob', text: 'Les fonds restent dans un portefeuille Bitnob, comptés projet par projet.', icon: 'lock' },
-  { tag: 'Sortie', title: 'Mobile money', text: 'Wave, Orange Money ou Free Money : le fournisseur est payé directement.', icon: 'smartphone' },
+  { tag: 'Sortie', title: 'Mobile money', text: 'Wave, Orange Money ou Free Money : le fournisseur est payé directement.', icon: 'mobile' },
   { tag: 'Preuve', title: 'Ancrage Bitcoin', text: 'L’empreinte du dossier est publiée avec OpenTimestamps.', icon: 'currency_bitcoin' },
 ];
 

@@ -24,7 +24,8 @@ const FILTERS: { id: 'all' | Sector; label: string; icon?: string }[] = [
 /** lower case, no accents: « thies » finds « Thiès » */
 const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-export default async function Projects({ searchParams }: { searchParams: { secteur?: string; q?: string } }) {
+export default async function Projects(props: { searchParams: Promise<{ secteur?: string; q?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = (await getSessionUser())!;
   const db = await readDb();
   const all = userProjects(db, user.id);
@@ -49,7 +50,7 @@ export default async function Projects({ searchParams }: { searchParams: { secte
       <AppHeader title="Projets" user={user} />
 
       {/* ---------- phone ---------- */}
-      <main className="px-space-md pb-28 pt-20 lg:hidden">
+      <main id="contenu" className="px-space-md pb-28 pt-20 lg:hidden">
         <div className="mb-space-md flex items-center justify-between">
           <p className="font-body-md text-body-md text-on-surface-variant">
             {all.length} projet{all.length > 1 ? 's' : ''} · une étape payée = une preuve validée

@@ -3,6 +3,7 @@ import { getConfig } from './config';
 import { hmacHex, safeEqual } from './crypto';
 import { withDb } from './db';
 import { HttpError } from './http';
+import { enforce } from './rateLimit';
 import { getSmsProvider } from './sms';
 
 /**
@@ -16,6 +17,8 @@ export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_RESEND_MS = 30_000;
 
 const hash = (phone: string, code: string) => hmacHex('sha256', getConfig().sessionSecret, `otp:${phone}:${code}`);
+
+const smsDailyCap = () => (Number(process.env.SMS_DAILY_CAP) > 0 ? Number(process.env.SMS_DAILY_CAP) : 300);
 
 export type OtpDelivery = { kind: 'demo'; demoCode: string } | { kind: 'sms'; resendIn: number };
 
@@ -32,6 +35,8 @@ export async function requestOtp(phone: string): Promise<OtpDelivery> {
     return { kind: 'demo', demoCode: demoOtp };
   }
   if (phone.replace(/\D/g, '').length < 8) throw new HttpError(400, 'Numéro de téléphone invalide', 'bad_phone');
+  // every real SMS costs money: a ceiling for the whole service per day, so an abuse cannot run up the bill
+  if (provider.name !== 'log') enforce('sms:day', smsDailyCap(), 24 * 3_600_000, 'Le service de connexion par SMS a atteint sa limite du jour');
 
   const now = Date.now();
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');

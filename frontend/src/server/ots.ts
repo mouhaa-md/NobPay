@@ -20,6 +20,19 @@ export const CALENDARS = [
   'https://finney.calendar.eternitywall.com',
 ];
 
+/**
+ * A pending attestation names the calendar to ask for the Bitcoin proof. That name is DATA inside a file, so it is only
+ * followed when it is one of the calendars we stamped with: https and an exact origin match (no SSRF through a file).
+ */
+export function isTrustedCalendar(uri: string): boolean {
+  try {
+    const u = new URL(uri);
+    return u.protocol === 'https:' && !u.username && !u.password && CALENDARS.some((c) => new URL(c).origin === u.origin);
+  } catch {
+    return false;
+  }
+}
+
 const HEADER_MAGIC = Buffer.concat([
   Buffer.from([0x00]),
   Buffer.from('OpenTimestamps', 'latin1'),
@@ -248,6 +261,7 @@ export async function upgrade(ots: Buffer): Promise<UpgradeResult> {
   });
   let changed = false;
   for (const p of pendings) {
+    if (!isTrustedCalendar(p.uri)) continue;
     try {
       const res = await fetch(`${p.uri.replace(/\/$/, '')}/timestamp/${p.node.msg.toString('hex')}`, {
         headers: { Accept: OTS_ACCEPT, 'User-Agent': 'NobPay-prototype/0.1' },

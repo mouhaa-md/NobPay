@@ -35,7 +35,7 @@ export default async function Home() {
       <DesktopTopbar title="Accueil" />
 
       {/* ---------- phone ---------- */}
-      <main className="pb-24 lg:hidden">
+      <main id="contenu" className="pb-24 lg:hidden">
         {/* Ocean header */}
         <section className="pt-safe relative w-full overflow-hidden bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] px-5 pb-12 pt-4 text-white shadow-xl">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary-container/20 blur-3xl" />

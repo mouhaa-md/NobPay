@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /** Anchors the current state of the project's ledger on Bitcoin (OpenTimestamps). */
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     enforce(`anchor-create:${user.id}`, LIMITS.anchorCreate.max, LIMITS.anchorCreate.windowMs);

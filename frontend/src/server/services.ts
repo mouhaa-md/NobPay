@@ -169,7 +169,7 @@ export async function createFunding(
     amountSats,
     description: `NobPay · ${project.name}`.slice(0, 100),
     reference,
-    expirySeconds: 86_400,
+    expirySeconds: getConfig().fundingInvoiceTtlSeconds,
   });
 
   const funding: Funding = {
@@ -448,12 +448,22 @@ export async function assertProjectAccess(actor: Actor, projectId: string): Prom
   return project;
 }
 
-export async function submitProof(actor: Actor, projectId: string, stepId: string, input: ProofInput): Promise<Step> {
-  const project = await assertProjectAccess(actor, projectId);
-  const current = stepOf(project, stepId);
-  if (current.status !== 'active' && current.status !== 'rejected') {
-    throw new HttpError(409, current.status === 'upcoming' ? "Cette étape n'est pas encore débloquée : le séquestre doit la couvrir." : 'Une preuve a déjà été envoyée pour cette étape');
+/** The step must be waiting for a proof. Used before reading an upload AND again inside the transaction. */
+function assertStepAcceptsProof(step: Step): void {
+  if (step.status !== 'active' && step.status !== 'rejected') {
+    throw new HttpError(409, step.status === 'upcoming' ? "Cette étape n'est pas encore débloquée : le séquestre doit la couvrir." : 'Une preuve a déjà été envoyée pour cette étape');
   }
+}
+
+/** Access + step state, checked BEFORE any byte of the upload is read or written. */
+export async function assertCanSubmitProof(actor: Actor, projectId: string, stepId: string): Promise<Step> {
+  const step = stepOf(await assertProjectAccess(actor, projectId), stepId);
+  assertStepAcceptsProof(step);
+  return step;
+}
+
+export async function submitProof(actor: Actor, projectId: string, stepId: string, input: ProofInput): Promise<Step> {
+  const current = await assertCanSubmitProof(actor, projectId, stepId);
   const supplier = input.supplier;
   if (!supplier?.name?.trim() || !supplier.phone?.trim() || !supplier.network) {
     throw new HttpError(400, 'Indiquez qui sera payé (nom, numéro et opérateur mobile money)');
@@ -466,6 +476,7 @@ export async function submitProof(actor: Actor, projectId: string, stepId: strin
   return withDb((d) => {
     const p = findProject(d, projectId)!;
     const step = stepOf(p, stepId);
+    assertStepAcceptsProof(step); // two uploads racing for the same step: only the first one gets in
     step.proof = {
       photos: input.photos.map((f) => ({ ...f, takenAt: f.takenAt ?? submittedAt })),
       invoice: input.invoice,

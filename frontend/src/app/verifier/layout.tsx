@@ -21,7 +21,7 @@ export default function VerifyLayout({ children }: { children: React.ReactNode }
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-2xl px-space-md pb-20 pt-space-lg">{children}</main>
+      <main id="contenu" className="mx-auto max-w-2xl px-space-md pb-20 pt-space-lg">{children}</main>
       <footer className="mx-auto max-w-2xl px-space-md pb-10 text-center font-label-sm text-label-sm text-on-surface-variant">
         Cette page ne demande aucun compte. Le code de NobPay est ouvert : vous pouvez relire la vérification.
       </footer>

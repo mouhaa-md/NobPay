@@ -20,7 +20,8 @@ const LOOK = {
   failed: { icon: 'close', circle: 'bg-error text-on-error', title: 'Paiement non abouti', tone: 'text-error' },
 } as const;
 
-export default async function Receipt({ params }: { params: { token: string } }) {
+export default async function Receipt(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const db = await readDb();
   const found = findReceipt(db, params.token);
   if (!found) notFound();

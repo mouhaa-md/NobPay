@@ -10,11 +10,36 @@ import { maskPhone } from './receipt';
 
 const digitsOnly = (phone: string) => phone.replace(/[^0-9+]/g, '');
 
-export function isAdmin(user: Pick<User, 'phone' | 'demo'> | null | undefined): boolean {
-  if (!user) return false;
+/** `all` = the whole database (numbers listed in ADMIN_PHONES); `demo` = demonstration data only (the shared demo account). */
+export type AdminScope = 'all' | 'demo';
+
+export function adminScope(user: Pick<User, 'phone' | 'demo'> | null | undefined): AdminScope | null {
+  if (!user) return null;
   const cfg = getConfig();
-  if (cfg.adminPhones.includes(digitsOnly(user.phone))) return true;
-  return cfg.allowDemo && !!user.demo;
+  if (cfg.adminPhones.includes(digitsOnly(user.phone))) return 'all';
+  return cfg.allowDemo && !!user.demo ? 'demo' : null;
+}
+
+export const isAdmin = (user: Pick<User, 'phone' | 'demo'> | null | undefined): boolean => adminScope(user) !== null;
+
+/**
+ * What the shared demo account may look at. Anybody can sign in to that account where demos are allowed, so it must
+ * never see what real users did on the same instance: demonstration objects, and what demo accounts created themselves.
+ * A delivery log of webhooks has no owner, so it is not shown at all.
+ */
+export function demoOnly(db: Db): Db {
+  const demoUserIds = new Set(db.users.filter((u) => u.demo).map((u) => u.id));
+  const projects = db.projects.filter((p) => p.demo || demoUserIds.has(p.ownerId));
+  const ids = new Set(projects.map((p) => p.id));
+  return {
+    ...db,
+    users: db.users.filter((u) => u.demo),
+    projects,
+    fundings: db.fundings.filter((f) => ids.has(f.projectId)),
+    ledger: db.ledger.filter((e) => ids.has(e.projectId)),
+    anchors: db.anchors.filter((x) => ids.has(x.projectId)),
+    webhooks: [],
+  };
 }
 
 export interface AdminAlert {
@@ -84,7 +109,8 @@ const BAD_OUTCOME = /mismatch|unknown|invalid|rejected|failed/;
 const zero = <K extends string>(keys: K[]) => Object.fromEntries(keys.map((k) => [k, 0])) as Record<K, number>;
 
 /** Everything the back-office shows, computed from one snapshot of the database (pure: easy to test). */
-export function adminOverview(db: Db, now = Date.now()): AdminOverview {
+export function adminOverview(full: Db, now = Date.now(), scope: AdminScope = 'all'): AdminOverview {
+  const db = scope === 'demo' ? demoOnly(full) : full;
   const projectName = new Map(db.projects.map((p) => [p.id, p.name]));
   const counts: AdminOverview['counts'] = {
     users: db.users.length,

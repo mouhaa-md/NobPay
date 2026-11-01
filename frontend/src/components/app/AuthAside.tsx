@@ -4,7 +4,7 @@ import { Logo } from '@/components/ui/Logo';
 
 const POINTS = [
   { icon: 'fact_check', title: 'Chaque paiement exige une preuve', text: 'Photos, facture, titre foncier : vous regardez, puis vous validez.' },
-  { icon: 'smartphone', title: 'Le fournisseur est payé directement', text: 'En mobile money, sans que l’argent passe par un intermédiaire sur place.' },
+  { icon: 'mobile', title: 'Le fournisseur est payé directement', text: 'En mobile money, sans que l’argent passe par un intermédiaire sur place.' },
   { icon: 'currency_bitcoin', title: 'Un dossier que tout le monde peut vérifier', text: 'Son empreinte est ancrée sur Bitcoin, contrôlable sans compte.' },
 ];
 

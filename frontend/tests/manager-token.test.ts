@@ -153,7 +153,7 @@ describe('creating, using and renewing a link', () => {
       const x = d.projects.find((y) => y.id === p.id)!;
       x.steps[0].proof = { photos: [{ ...file, takenAt: new Date().toISOString() }], submittedAt: new Date().toISOString(), submittedBy: 'manager' };
     });
-    const get = (t?: string) => filesRoute.GET(new Request(`http://localhost/api/files/${p.id}/fl_x${t ? `?t=${encodeURIComponent(t)}` : ''}`), { params: { projectId: p.id, fileId: 'fl_x' } });
+    const get = (t?: string) => filesRoute.GET(new Request(`http://localhost/api/files/${p.id}/fl_x${t ? `?t=${encodeURIComponent(t)}` : ''}`), { params: Promise.resolve({ projectId: p.id, fileId: 'fl_x' }) });
     expect((await get(token)).status).not.toBe(403);
     expect((await get('wrong')).status).toBe(403);
     expect((await get()).status).toBe(403);

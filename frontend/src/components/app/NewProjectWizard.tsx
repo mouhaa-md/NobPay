@@ -180,7 +180,7 @@ export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /
         </div>
       </header>
 
-      <main className="flex-1 px-space-md pb-40 pt-space-md lg:pb-6" key={stage}>
+      <main id="contenu" className="flex-1 px-space-md pb-40 pt-space-md lg:pb-6" key={stage}>
         <div className="nob-rise flex flex-col gap-space-md">
           {stage === 0 && (
             <>

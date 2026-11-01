@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Db } from '@/lib/types';
-import { adminOverview, isAdmin } from '@/server/admin';
+import { adminOverview, adminScope, isAdmin } from '@/server/admin';
 
 beforeEach(() => {
   vi.stubEnv('SESSION_SECRET', 'a-long-random-secret-of-more-than-32-characters');
@@ -100,5 +100,41 @@ describe('adminOverview', () => {
     expect(o.webhooks[0].eventId).toBe('e0');
     expect(o.counts.webhooks).toBe(30);
     expect(o.alerts.some((a) => a.text.includes('1 évènement'))).toBe(true);
+  });
+});
+
+describe('the shared demo account only sees demonstration data', () => {
+  const real = (id: string) => ({ id, ownerId: `u_${id}`, name: `Projet réel ${id}`, steps: [{ id: `${id}_s1`, title: 'Étape', payout: po({ reference: `ref_${id}`, supplier: { name: 'Fournisseur réel', phone: '+221770000001', network: 'wave' } }) }] });
+  const db = {
+    users: [{ id: 'u_aminata', demo: true, phone: '+33600000000' }, { id: 'u_real', demo: false, phone: '+221770000009' }, { id: 'u_demo2', demo: true, phone: '+33600000001' }],
+    projects: [{ id: 'p_demo', ownerId: 'u_aminata', demo: true, name: 'Démo', steps: [] }, { ...real('real'), ownerId: 'u_real' }, { id: 'p_mine', ownerId: 'u_demo2', name: 'Créé pendant la démo', steps: [] }],
+    fundings: [{ id: 'f1', projectId: 'p_demo', status: 'paid', amountCents: 100, createdAt: ago(HOUR), method: 'lightning', mode: 'mock' }, { id: 'f2', projectId: 'real', status: 'paid', amountCents: 999, createdAt: ago(HOUR), method: 'lightning', mode: 'sandbox' }],
+    ledger: [],
+    anchors: [{ id: 'a_real', projectId: 'real', status: 'pending', upToSeq: 1, submittedAt: ago(HOUR) }],
+    webhooks: [{ eventId: 'e1', type: 'payouts.x', at: ago(MIN), outcome: 'payout_completed' }],
+  } as unknown as Db;
+
+  it('scope: ADMIN_PHONES see everything, the demo account only the demo', () => {
+    vi.stubEnv('ALLOW_DEMO', '1');
+    vi.stubEnv('ADMIN_PHONES', '+221770000009');
+    expect(adminScope({ phone: '+221 77 000 00 09', demo: false })).toBe('all');
+    expect(adminScope({ phone: '+33600000000', demo: true })).toBe('demo');
+    expect(adminScope({ phone: '+33611111111', demo: false })).toBeNull();
+  });
+
+  it('hides real users, their payouts, suppliers, anchors and the webhook log from the demo view', () => {
+    const all = adminOverview(db, NOW, 'all');
+    expect(all.counts.users).toBe(3);
+    expect(all.payouts.map((p) => p.supplier)).toContain('Fournisseur réel');
+    expect(all.webhooks).toHaveLength(1);
+
+    const demo = adminOverview(db, NOW, 'demo');
+    expect(demo.counts.users).toBe(2);
+    expect(demo.counts.projects).toBe(2); // the demonstration project and the one a demo account created
+    expect(demo.payouts).toHaveLength(0);
+    expect(demo.fundings.map((f) => f.project)).toEqual(['Démo']);
+    expect(demo.anchors).toHaveLength(0);
+    expect(demo.webhooks).toHaveLength(0);
+    expect(JSON.stringify(demo)).not.toContain('Fournisseur réel');
   });
 });

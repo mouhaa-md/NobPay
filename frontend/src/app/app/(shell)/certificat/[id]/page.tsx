@@ -14,7 +14,8 @@ import { ledgerFor, verifyChain } from '@/server/ledger';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Certificat de preuve' };
 
-export default async function Certificate({ params }: { params: { id: string } }) {
+export default async function Certificate(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
   const db = await readDb();
@@ -28,7 +29,7 @@ export default async function Certificate({ params }: { params: { id: string } }
   const confirmedUpTo = Math.max(0, ...anchors.filter((a) => a.status === 'confirmed').map((a) => a.upToSeq));
 
   return (
-    <main className="min-h-screen pb-16 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pt-8">
+    <main id="contenu" className="min-h-screen pb-16 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pt-8">
       <FlowHeader title="Certificat de preuve" backHref={`/app/projets/${project.id}`} />
       <div className="flex flex-col gap-space-lg px-space-md pt-space-md lg:grid lg:grid-cols-2 lg:grid-rows-[auto_auto_auto_auto_1fr] lg:items-start lg:gap-x-8 lg:gap-y-6 lg:px-0 lg:pt-0">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] p-5 text-white shadow-xl lg:col-span-2 lg:p-8">
@@ -93,7 +94,7 @@ export default async function Certificate({ params }: { params: { id: string } }
                       ) : e.seq <= covered ? (
                         <Icon name="hourglass_top" size={18} className="text-on-surface-variant" />
                       ) : null}
-                      <Icon name="expand_more" size={20} className="text-on-surface-variant transition-transform group-open:rotate-180" />
+                      <Icon name="keyboard_arrow_down" size={20} className="text-on-surface-variant transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="bg-surface-container-low px-3.5 py-3 font-mono text-[11px] leading-relaxed text-on-surface-variant">
                       <p className="break-all">empreinte : {e.hash}</p>

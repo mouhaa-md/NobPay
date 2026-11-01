@@ -111,7 +111,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   </option>
                 ))}
               </select>
-              <Icon name="expand_more" className="pointer-events-none absolute right-4 text-on-surface-variant" />
+              <Icon name="keyboard_arrow_down" className="pointer-events-none absolute right-4 text-on-surface-variant" />
             </span>
           </label>
           <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">

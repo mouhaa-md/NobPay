@@ -6,7 +6,8 @@ import { enforce } from '@/server/rateLimit';
 export const dynamic = 'force-dynamic';
 
 /** The funder renews the private link of the person on site: the old link stops working at once. */
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     enforce(`manager-token:${user.id}`, 10, 60 * 60_000, 'Trop de renouvellements');

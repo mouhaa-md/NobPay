@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/bricolage-grotesque/standard.css';
 import '@fontsource-variable/figtree/index.css';
 import '@fontsource/instrument-serif/latin-400-italic.css';
-import '@fontsource-variable/material-symbols-outlined/fill.css';
 import '../../motion/nobpay-motion.css';
 import './globals.css';
 import { ServiceWorker } from '@/components/ServiceWorker';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 export const metadata: Metadata = {
   title: { default: 'NobPay · Investissez au pays. Avec preuve.', template: '%s · NobPay' },
@@ -43,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // the landing page adds a class to <html> before hydration (see (site)/layout.tsx)
     <html lang="fr" suppressHydrationWarning>
       <body>
+        <SkipLink />
         {children}
         <ServiceWorker />
       </body>

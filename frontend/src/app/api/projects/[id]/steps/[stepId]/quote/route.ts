@@ -6,7 +6,11 @@ import { quoteRelease } from '@/server/services';
 export const dynamic = 'force-dynamic';
 
 /** Step 1 of the release: a time-limited quote (rate, fees, amount received by the supplier). */
-export async function POST(request: Request, { params }: { params: { id: string; stepId: string } }) {
+export async function POST(
+  request: Request,
+  props: { params: Promise<{ id: string; stepId: string }> }
+) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     const body = await readJson(request, quoteSchema);

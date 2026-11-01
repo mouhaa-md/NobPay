@@ -18,7 +18,7 @@ export default async function Notifications() {
   const rest = items.filter((i) => i.kind !== 'proof_pending');
 
   return (
-    <main className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[760px] lg:px-8 lg:pt-8">
+    <main id="contenu" className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[760px] lg:px-8 lg:pt-8">
       <FlowHeader title="Notifications" backHref="/app/accueil" />
       <div className="flex flex-col gap-space-lg px-space-md pt-space-md lg:px-0 lg:pt-0">
         {waiting.length > 0 && (

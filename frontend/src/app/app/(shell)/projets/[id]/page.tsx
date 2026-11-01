@@ -24,7 +24,11 @@ export const metadata = { title: 'Projet' };
 // explicit rows for the two-column layout on computers (written out so Tailwind keeps the classes)
 const ROW = ['lg:row-start-1', 'lg:row-start-2', 'lg:row-start-3', 'lg:row-start-4', 'lg:row-start-5'];
 
-export default async function ProjectPage({ params, searchParams }: { params: { id: string }; searchParams: { cree?: string } }) {
+export default async function ProjectPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ cree?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
   const db = await readDb();
@@ -46,7 +50,7 @@ export default async function ProjectPage({ params, searchParams }: { params: { 
   const done = project.steps.every((st) => st.status === 'paid');
 
   return (
-    <main className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
+    <main id="contenu" className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
       <AutoRefresh active={inFlight} />
       <FlowHeader title={project.name} backHref="/app/projets" />
 

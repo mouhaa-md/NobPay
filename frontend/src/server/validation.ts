@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HttpError } from './http';
+import { HttpError, readTextLimited } from './http';
 
 /**
  * Every route validates its input here, at one place: expected types, lengths, ranges, known fields only.
@@ -16,12 +16,13 @@ function describe(issue: z.ZodIssue): string {
     case 'unrecognized_keys':
       return `Champ inattendu : ${issue.keys.join(', ')}.`;
     case 'invalid_type':
-      return issue.received === 'undefined' ? `Le champ « ${field} » est obligatoire.` : `Le champ « ${field} » n'a pas le bon type.`;
+      // zod 4 words a missing field as "...received undefined"
+      return /received undefined/.test(issue.message) ? `Le champ « ${field} » est obligatoire.` : `Le champ « ${field} » n'a pas le bon type.`;
     case 'too_small':
-      return issue.type === 'string' || issue.type === 'array' ? `Le champ « ${field} » est trop court.` : `Le champ « ${field} » est trop petit.`;
+      return issue.origin === 'string' || issue.origin === 'array' ? `Le champ « ${field} » est trop court.` : `Le champ « ${field} » est trop petit.`;
     case 'too_big':
-      return issue.type === 'string' || issue.type === 'array' ? `Le champ « ${field} » est trop long.` : `Le champ « ${field} » est trop grand.`;
-    case 'invalid_enum_value':
+      return issue.origin === 'string' || issue.origin === 'array' ? `Le champ « ${field} » est trop long.` : `Le champ « ${field} » est trop grand.`;
+    case 'invalid_value':
       return `Le champ « ${field} » a une valeur non autorisée.`;
     default:
       return `Le champ « ${field} » est invalide.`;
@@ -39,8 +40,7 @@ export const MAX_JSON_BYTES = 100_000;
 
 /** Reads a JSON body (size-limited; empty = `{}`) and validates it. */
 export async function readJson<S extends z.ZodTypeAny>(request: Request, schema: S): Promise<z.infer<S>> {
-  const text = await request.text();
-  if (text.length > MAX_JSON_BYTES) throw new HttpError(413, 'Requête trop volumineuse.', 'too_large');
+  const text = await readTextLimited(request, MAX_JSON_BYTES); // 413 as soon as the limit is crossed, not after reading it all
   let raw: unknown = {};
   if (text.trim()) {
     try {
@@ -56,11 +56,16 @@ export async function readJson<S extends z.ZodTypeAny>(request: Request, schema:
  * Schemas
  * ------------------------------------------------------------------------- */
 
-const text = (min: number, max: number, message?: string) => z.string({ required_error: message, invalid_type_error: message }).trim().min(min, message).max(max, message);
-const money = (min: number, max: number, message: string) => z.number({ invalid_type_error: message, required_error: message }).finite(message).int(message).min(min, message).max(max, message);
+const text = (min: number, max: number, message?: string) => z.string(message ? { error: message } : undefined).trim().min(min, message).max(max, message);
+// zod 4: z.number() already refuses NaN and Infinity (reported as an invalid type, which carries our message)
+const money = (min: number, max: number, message: string) => z.number({ error: message }).int(message).min(min, message).max(max, message);
 
-export const phoneField = text(6, 24, 'Numéro de téléphone invalide');
-const codeField = z.string({ invalid_type_error: 'Code incorrect', required_error: 'Entrez le code reçu' }).trim().max(12, 'Code incorrect');
+const INTERNATIONAL_PHONE = /^\+[1-9]\d{7,14}$/;
+export const phoneField = text(6, 24, 'Numéro de téléphone invalide').refine(
+  (v) => INTERNATIONAL_PHONE.test(v.replace(/[^0-9+]/g, '')),
+  'Numéro de téléphone invalide : utilisez le format international (ex. +221 77 123 45 67).',
+);
+const codeField = z.string({ error: (issue) => (issue.input === undefined ? 'Entrez le code reçu' : 'Code incorrect') }).trim().max(12, 'Code incorrect');
 
 export const otpRequestSchema = z.object({ phone: phoneField }).strict();
 export const loginSchema = z.object({ phone: phoneField, otp: codeField }).strict();
@@ -77,7 +82,7 @@ export const registerSchema = z
 export const projectSchema = z
   .object({
     name: text(2, 80, 'Donnez un nom au projet (2 à 80 caractères)'),
-    sector: z.enum(['immobilier', 'agricole', 'commerce'], { errorMap: () => ({ message: 'Secteur invalide' }) }),
+    sector: z.enum(['immobilier', 'agricole', 'commerce'], { error: 'Secteur invalide' }),
     city: text(1, 80, 'Indiquez la ville'),
     budgetCents: money(10_000, 50_000_000, 'Le budget doit être compris entre 100 $ et 500 000 $'),
     managerName: text(1, 80, 'Indiquez la personne de confiance sur place'),
@@ -91,7 +96,7 @@ export const projectSchema = z
             proofKinds: z.array(z.enum(['titre', 'photos', 'facture'])).max(3).optional(),
           })
           .strict(),
-        { invalid_type_error: 'Prévoyez entre 1 et 12 étapes', required_error: 'Prévoyez entre 1 et 12 étapes' },
+        { error: 'Prévoyez entre 1 et 12 étapes' },
       )
       .min(1, 'Prévoyez entre 1 et 12 étapes')
       .max(12, 'Prévoyez entre 1 et 12 étapes'),
@@ -100,7 +105,7 @@ export const projectSchema = z
 
 export const fundingSchema = z
   .object({
-    amountCents: z.number({ invalid_type_error: 'Montant invalide', required_error: 'Montant invalide' }).finite('Montant invalide').min(1, 'Montant invalide').max(100_000_000, 'Montant trop élevé'),
+    amountCents: z.number({ error: 'Montant invalide' }).min(1, 'Montant invalide').max(100_000_000, 'Montant trop élevé'),
     method: z.enum(['lightning', 'usdt', 'usdc']).optional(),
   })
   .strict();
@@ -119,9 +124,9 @@ export const photoMetaSchema = z
           .refine((s) => !Number.isNaN(Date.parse(s)), 'Date de la photo invalide')
           .refine((s) => Date.parse(s) <= Date.now() + 86_400_000, 'Date de la photo dans le futur')
           .optional(),
-        lat: z.number().finite().min(-90).max(90).optional(),
-        lng: z.number().finite().min(-180).max(180).optional(),
-        accuracy: z.number().finite().min(0).max(1_000_000).optional(),
+        lat: z.number().min(-90).max(90).optional(),
+        lng: z.number().min(-180).max(180).optional(),
+        accuracy: z.number().min(0).max(1_000_000).optional(),
       })
       .strict(),
   )
@@ -129,11 +134,10 @@ export const photoMetaSchema = z
 
 export const proofFieldsSchema = z
   .object({
-    token: z.string().max(300),
     supplierName: z.string().max(200),
     supplierPhone: z.string().max(40),
-    supplierNetwork: z.enum(['wave', 'orange_money', 'free_money'], { errorMap: () => ({ message: "Choisissez l'opérateur mobile money du fournisseur" }) }),
-    invoiceAmountFcfa: z.number().finite().min(0).max(1e11).optional(),
+    supplierNetwork: z.enum(['wave', 'orange_money', 'free_money'], { error: "Choisissez l'opérateur mobile money du fournisseur" }),
+    invoiceAmountFcfa: z.number().min(0).max(1e11).optional(),
     note: z.string().max(2000),
   })
   .strict();

@@ -6,7 +6,8 @@ import { HttpError, respond } from '@/server/http';
 export const dynamic = 'force-dynamic';
 
 /** Light status used by the screens that wait for a payout or a webhook. Read-only: the background loop does the work. */
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     const db = await readDb();

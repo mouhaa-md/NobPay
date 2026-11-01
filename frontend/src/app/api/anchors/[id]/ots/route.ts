@@ -5,7 +5,8 @@ import { readDb } from '@/server/db';
 export const dynamic = 'force-dynamic';
 
 /** The detached OpenTimestamps proof. Verify it with the dossier file on https://opentimestamps.org */
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     enforce(`public-read:${clientIp(request)}`, LIMITS.publicRead.max, LIMITS.publicRead.windowMs);
   } catch (err) {

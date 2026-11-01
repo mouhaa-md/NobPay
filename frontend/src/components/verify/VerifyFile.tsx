@@ -51,7 +51,7 @@ export function VerifyFile() {
         <span className="font-title-md text-title-md">{name || 'Choisir un dossier .json'}</span>
         <span className="font-body-sm text-body-sm text-on-surface-variant">Le fichier reste sur votre appareil : rien n&apos;est envoyé.</span>
       </button>
-      <input ref={input} type="file" accept=".json,application/json" className="sr-only" onChange={(e) => load(e.target.files?.[0])} />
+      <input ref={input} type="file" accept=".json,application/json" aria-label="Choisir le fichier du dossier (.json)" className="sr-only" onChange={(e) => load(e.target.files?.[0])} />
       <ErrorNote>{error}</ErrorNote>
 
       {report && (

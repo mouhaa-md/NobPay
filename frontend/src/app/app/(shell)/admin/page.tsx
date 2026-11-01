@@ -4,7 +4,7 @@ import { FlowHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/ui/Icon';
 import { Chip } from '@/components/ui/primitives';
 import { formatDateTime, formatFcfa, formatInt, formatUsd } from '@/lib/money';
-import { adminOverview, isAdmin } from '@/server/admin';
+import { adminOverview, adminScope } from '@/server/admin';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
@@ -60,10 +60,11 @@ function Table({ head, children, empty }: { head: string[]; children: React.Reac
 
 export default async function Admin() {
   const user = await getSessionUser();
-  if (!isAdmin(user)) notFound();
+  const scope = adminScope(user);
+  if (!scope) notFound();
   const db = await readDb();
   const { mode } = getConfig();
-  const o = adminOverview(db);
+  const o = adminOverview(db, Date.now(), scope);
   const sum = (r: Record<string, number>) => Object.values(r).reduce((a, b) => a + b, 0);
 
   const kpis = [
@@ -76,7 +77,7 @@ export default async function Admin() {
   ];
 
   return (
-    <main className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[1200px] lg:px-8 lg:pt-8">
+    <main id="contenu" className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[1200px] lg:px-8 lg:pt-8">
       <FlowHeader title="Administration" backHref="/app/profil" />
       <div className="flex flex-col gap-space-lg px-space-md pt-space-md lg:px-0 lg:pt-0">
         <div className="flex flex-wrap items-center gap-3">
@@ -86,7 +87,10 @@ export default async function Admin() {
           <Chip tone={mode === 'mock' ? 'warning' : 'success'} icon={mode === 'mock' ? 'science' : 'verified_user'}>
             {mode === 'mock' ? 'Démonstration' : 'Sandbox Bitnob'}
           </Chip>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Cette page montre ce qui est bloqué. Elle ne déplace jamais d’argent.</p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Cette page montre ce qui est bloqué. Elle ne déplace jamais d’argent.
+            {scope === 'demo' && ' Vue limitée aux données de démonstration.'}
+          </p>
         </div>
 
         <section aria-label="Chiffres clés" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">

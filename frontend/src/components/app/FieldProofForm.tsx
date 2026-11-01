@@ -124,7 +124,6 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
     setBusy(true);
     try {
       const form = new FormData();
-      form.set('token', token);
       photos.forEach((p) => form.append('photos', p.file, p.file.name));
       form.set(
         'photoMeta',
@@ -137,7 +136,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
       form.set('supplierNetwork', network);
       if (note.trim()) form.set('note', note.trim());
 
-      const res = await fetch(`/api/projects/${projectId}/steps/${step.id}/proof`, { method: 'POST', body: form });
+      const res = await fetch(`/api/projects/${projectId}/steps/${step.id}/proof`, { method: 'POST', headers: { 'x-manager-token': token }, body: form });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? 'L’envoi a échoué. Vérifiez votre connexion et réessayez.');
       setSent(true);
@@ -205,8 +204,8 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               Choisir dans la galerie
             </button>
           )}
-          <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
-          <input ref={gallery} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Prendre une photo" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={gallery} type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Choisir des photos dans la galerie" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
           <p className={`flex items-center gap-1.5 font-label-sm text-label-sm ${gpsState === 'ok' ? 'text-[#15803D]' : gpsState === 'denied' ? 'text-[#B45309]' : 'text-on-surface-variant'}`} role="status">
             <Icon name={gpsState === 'ok' ? 'location_on' : gpsState === 'denied' ? 'location_off' : 'my_location'} size={16} filled={gpsState === 'ok'} />
             {gpsState === 'ok' && gps ? `Position ajoutée (±${Math.round(gps.accuracy ?? 0)} m)` : gpsState === 'asking' ? 'Recherche de la position…' : gpsState === 'denied' ? 'Position non partagée : le financeur aura moins de certitude.' : 'La position de votre téléphone sera jointe aux photos.'}
@@ -235,7 +234,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               <span className="block font-label-sm text-label-sm text-on-surface-variant">{invoice ? 'Touchez pour changer' : 'Photo ou PDF'}</span>
             </span>
           </button>
-          <input ref={invoiceInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="sr-only" onChange={onInvoice} />
+          <input ref={invoiceInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" aria-label="Ajouter la facture du fournisseur" className="sr-only" onChange={onInvoice} />
           <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
             Montant de la facture
             <span className="flex items-center rounded-2xl bg-surface-container-low px-space-md focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">

@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /** Public: checks whether the Bitcoin attestation is available and cross-checks the block. */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return respond(async () => {
     // public and it triggers outgoing calls (OpenTimestamps calendars, blockstream): limit per client and per anchor
     enforce(`anchor-refresh:ip:${clientIp(request)}`, LIMITS.anchorRefreshIp.max, LIMITS.anchorRefreshIp.windowMs);

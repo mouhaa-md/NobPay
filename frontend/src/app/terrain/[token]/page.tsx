@@ -37,7 +37,8 @@ const NEWS: Partial<Record<LedgerType, { icon: string; tone: string }>> = {
   payout_failed: { icon: 'error', tone: 'bg-error-container text-on-error-container' },
 };
 
-export default async function FieldPage({ params }: { params: { token: string } }) {
+export default async function FieldPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const db = await readDb();
   const project = findProjectByManagerToken(db, params.token);
   if (!project) notFound();
@@ -76,7 +77,7 @@ export default async function FieldPage({ params }: { params: { token: string } 
 
   return (
     <div className="app-shell min-h-screen bg-surface-container lg:bg-background">
-      <main className="relative mx-auto min-h-screen w-full max-w-[480px] bg-background pb-16 shadow-2xl lg:max-w-none lg:shadow-none">
+      <main id="contenu" className="relative mx-auto min-h-screen w-full max-w-[480px] bg-background pb-16 shadow-2xl lg:max-w-none lg:shadow-none">
         <AutoRefresh active={!!waiting} everyMs={4000} />
 
         <header className="bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] px-space-md pb-6 pt-[max(1.25rem,env(safe-area-inset-top))] text-white lg:px-8 lg:pb-10 lg:pt-6">

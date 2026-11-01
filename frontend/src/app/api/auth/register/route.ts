@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     enforce(`auth:ip:${clientIp(request)}`, LIMITS.authIp.max, LIMITS.authIp.windowMs);
     enforce(`auth:phone:${normalizePhone(body.phone)}`, LIMITS.authPhone.max, LIMITS.authPhone.windowMs);
     const user = await registerUser(body);
-    startSession(user);
+    await startSession(user);
     return { user: { id: user.id, firstName: user.firstName, lastName: user.lastName } };
   });
 }

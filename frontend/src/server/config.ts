@@ -1,6 +1,9 @@
 import path from 'node:path';
 import type { GatewayMode } from '@/lib/types';
 
+/** Indicative USD -> XOF rate of the demonstration (observed at Bitnob on 18 Oct. 2026: about 593). Override with USD_XOF_RATE. */
+export const DEFAULT_USD_XOF = 593;
+
 /** Development fallback only. It is public (it is in the repository): never accepted where it would matter. */
 export const DEV_SESSION_SECRET = 'nobpay-dev-session-secret';
 const WEAK_SESSION_SECRETS = new Set([DEV_SESSION_SECRET, 'change-me', 'changeme', 'secret']);
@@ -46,7 +49,7 @@ export function getConfig() {
     publicBaseUrl,
     sessionSecret: process.env.SESSION_SECRET || DEV_SESSION_SECRET,
     demoOtp: process.env.DEMO_OTP || '123456',
-    usdXof: Number(process.env.USD_XOF_RATE) || 760,
+    usdXof: Number(process.env.USD_XOF_RATE) || DEFAULT_USD_XOF,
     btcUsd: Number(process.env.BTC_USD_RATE) || 81500,
     dataDir: process.env.DATA_DIR || path.join(process.cwd(), '.data'),
     captureWebhooks: process.env.CAPTURE_WEBHOOKS === '1',
@@ -60,6 +63,8 @@ export function getConfig() {
      * 200 000 XOF (~336 $), so in sandbox a bigger step could never be paid: it is refused when the project is created.
      */
     maxStepUsd: process.env.MAX_STEP_USD !== undefined && process.env.MAX_STEP_USD !== '' ? Number(process.env.MAX_STEP_USD) || 0 : mode === 'sandbox' ? 330 : 0,
+    /** How long a Lightning invoice can be paid. Short on purpose: the escrow is credited in dollars, the bitcoin price moves. */
+    fundingInvoiceTtlSeconds: Math.min(86_400, Math.max(300, Number(process.env.FUNDING_INVOICE_TTL_SECONDS) || 3_600)),
     /** the stablecoin payouts are paid from (and conversions end in) */
     payoutAsset: (process.env.PAYOUT_ASSET || 'USDT').toUpperCase(),
     /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */

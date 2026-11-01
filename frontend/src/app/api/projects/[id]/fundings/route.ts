@@ -6,7 +6,8 @@ import { createFunding } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     enforce(`funding-create:${user.id}`, LIMITS.fundingCreate.max, LIMITS.fundingCreate.windowMs);

@@ -97,7 +97,7 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
       {proof.supplier && (
         <section className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-3.5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Icon name="smartphone" size={22} />
+            <Icon name="mobile" size={22} />
           </span>
           <span className="min-w-0">
             <span className="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Sera payé directement</span>
