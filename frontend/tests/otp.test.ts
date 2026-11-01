@@ -180,3 +180,16 @@ describe('Twilio provider', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('daily SMS ceiling', () => {
+  it('stops sending once the service-wide cap of the day is reached, so an abuse cannot run up the bill', async () => {
+    const { resetRateLimits } = await import('@/server/rateLimit');
+    vi.stubEnv('RATE_LIMIT', '');
+    resetRateLimits();
+    vi.stubEnv('SMS_DAILY_CAP', '3');
+    for (const n of ['+33600000001', '+33600000002', '+33600000003']) await otp.requestOtp(n);
+    await expect(otp.requestOtp('+33600000004')).rejects.toMatchObject({ status: 429, code: 'rate_limited' });
+    expect(sent).toHaveLength(3);
+    resetRateLimits();
+  });
+});

@@ -56,7 +56,7 @@ export function InstallCard() {
   return (
     <div className="relative flex items-start gap-3 rounded-2xl bg-surface-container-low p-4 shadow-sm">
       <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Icon name="install_mobile" size={22} />
+        <Icon name="mobile_arrow_down" size={22} />
       </div>
       <div className="min-w-0 pr-6">
         <p className="mb-1 font-title-md text-title-md text-on-surface">Installer NobPay sur votre écran d&apos;accueil</p>

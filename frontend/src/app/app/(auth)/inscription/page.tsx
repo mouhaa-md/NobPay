@@ -7,7 +7,7 @@ export const metadata = { title: 'Créer un compte' };
 
 export default function Register() {
   return (
-    <main className="flex min-h-screen flex-col lg:min-h-0">
+    <main id="contenu" className="flex min-h-screen flex-col lg:min-h-0">
       <FlowHeader standalone title="Créer un compte" backHref="/app/bienvenue" />
       <section className="relative overflow-hidden bg-ocean px-space-md pb-space-2xl pt-space-md text-on-primary lg:hidden">
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />

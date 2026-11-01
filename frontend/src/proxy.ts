@@ -21,7 +21,7 @@ function allowedHosts(req: NextRequest): Set<string> {
   return hosts;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (SAFE.has(req.method)) return NextResponse.next();
 
   const site = req.headers.get('sec-fetch-site');

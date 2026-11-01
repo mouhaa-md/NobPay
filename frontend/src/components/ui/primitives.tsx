@@ -44,11 +44,12 @@ export function Chip({ tone = 'neutral', icon, children, className = '' }: { ton
   );
 }
 
-export function ProgressBar({ value, className = '' }: { value: number; className?: string }) {
+export function ProgressBar({ value, className = '', label = 'Avancement' }: { value: number; className?: string; label?: string }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
       role="progressbar"
+      aria-label={`${label} : ${Math.round(pct)} %`}
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}

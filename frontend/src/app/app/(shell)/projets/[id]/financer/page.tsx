@@ -11,7 +11,8 @@ import { summarize } from '@/server/views';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Financer' };
 
-export default async function Fund({ params }: { params: { id: string } }) {
+export default async function Fund(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
   const db = await readDb();

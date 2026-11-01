@@ -50,7 +50,7 @@ const json = (body: unknown | string) =>
   new Request('http://localhost/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 const signIn = async () => {
   const user = (await db.readDb()).users.find((u) => u.id === 'u_aminata')!;
-  auth.startSession(user);
+  await auth.startSession(user);
   return user;
 };
 const expect400 = async (res: Response, code = 'invalid_input') => {
@@ -138,6 +138,17 @@ describe('fundings, quotes and rejections', () => {
   });
 });
 
+describe('phone numbers', () => {
+  it.each(['771234567', '0612345678', '00221771234567', '+33 (0)6', '+0123456789', 'abc', '+221 77 12'])('refuses %s: the international format (+indicatif) is required', async (phone) => {
+    await expect400(await routes.otp(json({ phone })));
+  });
+
+  it('accepts the usual spacing of an international number', async () => {
+    const res = await routes.otp(json({ phone: '+221 77 123 45 67' }));
+    expect(res.status, JSON.stringify(await res.clone().json())).toBe(200);
+  });
+});
+
 describe('proof upload (multipart)', () => {
   const setup = async () => {
     const owner = await signIn();
@@ -149,7 +160,6 @@ describe('proof upload (multipart)', () => {
   const png = new Blob([Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(30, 7)])], { type: 'image/png' });
   const form = (token: string, extra: Record<string, string | Blob> = {}) => {
     const f = new FormData();
-    f.set('token', token);
     f.set('photoMeta', JSON.stringify([{ takenAt: new Date().toISOString(), lat: 14.79, lng: -16.93, accuracy: 12 }]));
     f.set('supplierName', 'Quincaillerie Ndiaye');
     f.set('supplierPhone', '+221776543210');
@@ -157,7 +167,26 @@ describe('proof upload (multipart)', () => {
     f.append('photos', png, 'p.png');
     f.set('invoice', png, 'f.png');
     for (const [k, v] of Object.entries(extra)) f.set(k, v);
-    return new Request('http://localhost/x', { method: 'POST', body: f });
+    return new Request('http://localhost/x', { method: 'POST', headers: { 'x-manager-token': token }, body: f });
+  };
+  /** A request whose body is a stream we can watch: `pulled()` says whether anybody started reading it. */
+  const watchedBody = (totalBytes: number, headers: Record<string, string> = {}) => {
+    let pulled = 0;
+    let sent = 0;
+    const stream = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          pulled += 1;
+          const n = Math.min(1_000_000, totalBytes - sent);
+          if (n <= 0) return controller.close();
+          sent += n;
+          controller.enqueue(new Uint8Array(n));
+        },
+      },
+      { highWaterMark: 0 }, // no read-ahead: `pull` only runs when somebody really reads
+    );
+    const request = new Request('http://localhost/x', { method: 'POST', headers: { 'content-type': 'multipart/form-data; boundary=x', ...headers }, body: stream, duplex: 'half' } as RequestInit);
+    return { request, pulled: () => pulled };
   };
 
   it('accepts the form the field screen sends', async () => {
@@ -190,4 +219,52 @@ describe('proof upload (multipart)', () => {
     const step = (await db.readDb()).projects.find((p) => p.id === project.id)!.steps[0];
     expect(step.proof!.photos[0].takenAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
+
+  it('refuses an anonymous upload (401) without reading the body', async () => {
+    const { ctx } = await setup();
+    const { request, pulled } = watchedBody(5_000_000);
+    const res = await routes.proof(request, ctx);
+    expect(res.status).toBe(401);
+    expect(pulled()).toBe(0);
+  });
+
+  it('refuses a wrong link (403) without reading the body', async () => {
+    const { ctx } = await setup();
+    const { request, pulled } = watchedBody(5_000_000, { 'x-manager-token': 'wrong' });
+    expect((await routes.proof(request, ctx)).status).toBe(403);
+    expect(pulled()).toBe(0);
+  });
+
+  it('refuses a step that is not waiting for a proof (409) before reading anything', async () => {
+    const { project, token, ctx } = await setup();
+    await db.withDb((d) => void (d.projects.find((p) => p.id === project.id)!.steps[0].status = 'paid'));
+    const { request, pulled } = watchedBody(5_000_000, { 'x-manager-token': token });
+    expect((await routes.proof(request, ctx)).status).toBe(409);
+    expect(pulled()).toBe(0);
+    expect(existsSync(path.join(dataDir, 'uploads', project.id))).toBe(false);
+  });
+
+  it('stops reading at 60 MB even when no Content-Length is announced (413)', async () => {
+    const { project, token, ctx } = await setup();
+    const { request, pulled } = watchedBody(200_000_000, { 'x-manager-token': token });
+    const res = await routes.proof(request, ctx);
+    expect(res.status).toBe(413);
+    expect(pulled()).toBeLessThan(70); // ~61 chunks of 1 MB, not the 200 the sender had ready
+    expect(existsSync(path.join(dataDir, 'uploads', project.id))).toBe(false);
+  });
+
+  it('a second upload for the same step is refused once the first got in', async () => {
+    const { token, ctx } = await setup();
+    expect((await routes.proof(form(token), ctx)).status).toBe(200);
+    expect((await routes.proof(form(token), ctx)).status).toBe(409);
+  });
 });
+
+describe('webhook body size', () => {
+  it('refuses a body above 256 KB before looking at the signature (413)', async () => {
+    const { POST } = await import('@/app/api/webhooks/bitnob/route');
+    const res = await POST(new Request('http://localhost/api/webhooks/bitnob', { method: 'POST', body: 'x'.repeat(300_000) }));
+    expect(res.status).toBe(413);
+  });
+});
+

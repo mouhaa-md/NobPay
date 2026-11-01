@@ -39,3 +39,31 @@ export async function respond<T>(fn: () => Promise<T>): Promise<NextResponse> {
     );
   }
 }
+
+/**
+ * Reads a request body with a hard ceiling. Bytes are counted AS THEY ARRIVE, so a missing or lying Content-Length
+ * cannot get past it, and nothing larger than `maxBytes` is ever held in memory.
+ */
+export async function readBodyLimited(request: Request, maxBytes: number): Promise<Uint8Array> {
+  const tooBig = () => new HttpError(413, 'Envoi trop volumineux.', 'too_large');
+  if (Number(request.headers.get('content-length') ?? 0) > maxBytes) throw tooBig();
+  if (!request.body) return new Uint8Array(0);
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw tooBig();
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
+export async function readTextLimited(request: Request, maxBytes: number): Promise<string> {
+  return new TextDecoder().decode(await readBodyLimited(request, maxBytes));
+}

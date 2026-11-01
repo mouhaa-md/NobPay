@@ -11,7 +11,7 @@ export const metadata = { title: 'Connexion' };
 
 export default function Login() {
   return (
-    <main className="flex min-h-screen flex-col lg:min-h-0">
+    <main id="contenu" className="flex min-h-screen flex-col lg:min-h-0">
       <FlowHeader standalone title="Connexion" backHref="/app/bienvenue" />
       <section className="flex-1 px-space-md pb-space-xl pt-space-lg lg:flex-none lg:p-0">
         <Link href="/app/bienvenue" className="mb-8 hidden items-center gap-1 font-label-md text-label-md text-on-surface-variant transition hover:text-primary lg:inline-flex">

@@ -99,7 +99,7 @@ describe('routes', () => {
 
   it('public anchor refresh: at most one real check per anchor every 20 seconds', async () => {
     const { POST } = await import('@/app/api/anchors/[id]/refresh/route');
-    const ctx = { params: { id: 'a_unknown' } };
+    const ctx = { params: Promise.resolve({ id: 'a_unknown' }) };
     expect((await POST(req(), ctx)).status).toBe(404); // reaches the service
     const second = await POST(req(), ctx);
     expect(second.status).toBe(429);

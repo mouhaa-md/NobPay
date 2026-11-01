@@ -37,10 +37,9 @@ const nextConfig = {
   poweredByHeader: false,
   // `next dev` and `next start` can run side by side when NEXT_DIST_DIR differs (e.g. .next-dev)
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
-  // runs src/instrumentation.ts at server start (needed on Next 14; stable from Next 15)
-  experimental: { instrumentationHook: true },
+  // Docker image: `NEXT_OUTPUT=standalone` builds a self-contained server (plain `next start` keeps working without it)
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' } : {}),
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

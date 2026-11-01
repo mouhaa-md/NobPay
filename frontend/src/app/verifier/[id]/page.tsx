@@ -10,7 +10,8 @@ import { readDb } from '@/server/db';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Vérification', robots: { index: false, follow: false } };
 
-export default async function VerifyOne({ params }: { params: { id: string } }) {
+export default async function VerifyOne(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const db = await readDb();
   const anchor = db.anchors.find((a) => a.id === params.id);
   if (!anchor) notFound();

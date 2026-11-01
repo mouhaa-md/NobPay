@@ -15,7 +15,7 @@ export default async function Welcome() {
   const mode = getConfig().mode;
 
   return (
-    <main className="flex min-h-screen flex-col lg:min-h-0">
+    <main id="contenu" className="flex min-h-screen flex-col lg:min-h-0">
       <section className="relative overflow-hidden bg-ocean px-6 pb-14 pt-6 text-on-primary pt-safe lg:hidden">
         <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-primary-container/30 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 top-1/3 h-64 w-64 rounded-full bg-[#F7931A]/20 blur-3xl" />

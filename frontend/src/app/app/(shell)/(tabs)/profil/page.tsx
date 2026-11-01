@@ -27,7 +27,7 @@ export default async function Profile() {
   return (
     <>
       <AppHeader title="Profil" user={user} />
-      <main className="flex flex-col gap-space-lg px-space-md pb-28 pt-20 lg:mx-auto lg:grid lg:w-full lg:max-w-[1100px] lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-8">
+      <main id="contenu" className="flex flex-col gap-space-lg px-space-md pb-28 pt-20 lg:mx-auto lg:grid lg:w-full lg:max-w-[1100px] lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-8">
         <section className="flex items-center gap-4 rounded-3xl bg-surface-container-lowest p-4 shadow-sm">
           <Avatar first={user.firstName} last={user.lastName} size="lg" />
           <div className="min-w-0">

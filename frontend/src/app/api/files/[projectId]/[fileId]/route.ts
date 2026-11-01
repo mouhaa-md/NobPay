@@ -10,7 +10,11 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /** Proof photos are private: the funder (session) or the field manager (link token `t`) only. */
-export async function GET(request: Request, { params }: { params: { projectId: string; fileId: string } }) {
+export async function GET(
+  request: Request,
+  props: { params: Promise<{ projectId: string; fileId: string }> }
+) {
+  const params = await props.params;
   try {
     enforce(`file-read:${clientIp(request)}`, LIMITS.fileRead.max, LIMITS.fileRead.windowMs);
   } catch (err) {

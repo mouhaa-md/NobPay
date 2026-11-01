@@ -5,7 +5,11 @@ import { rejectProof } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request, { params }: { params: { id: string; stepId: string } }) {
+export async function POST(
+  request: Request,
+  props: { params: Promise<{ id: string; stepId: string }> }
+) {
+  const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
     const body = await readJson(request, rejectSchema);

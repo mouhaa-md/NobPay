@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
+import { HttpError, readTextLimited } from '@/server/http';
 import { clientIp, hit, LIMITS } from '@/server/rateLimit';
 import { captureWebhook } from '@/server/capture';
 import { handleBitnobWebhook, type WebhookResult } from '@/server/webhooks';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 /** Register `<PUBLIC_BASE_URL>/api/webhooks/bitnob` in the Bitnob dashboard (Webhooks). */
 export async function POST(request: Request) {
@@ -13,8 +16,14 @@ export async function POST(request: Request) {
     // Bitnob retries on a non-2xx answer, so a burst is slowed down, not lost
     return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429, headers: { 'Retry-After': String(verdict.retryAfterSec) } });
   }
-  // The signature covers the raw bytes: read the body as text BEFORE any JSON parsing.
-  const rawBody = await request.text();
+  // The signature covers the raw bytes: read the body as text BEFORE any JSON parsing. Real events are a few KB: 256 KB is generous.
+  let rawBody: string;
+  try {
+    rawBody = await readTextLimited(request, MAX_WEBHOOK_BYTES);
+  } catch (err) {
+    if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });
+    throw err;
+  }
   let result: WebhookResult | undefined;
   try {
     result = await handleBitnobWebhook(rawBody, request.headers.get('x-bitnob-signature'));

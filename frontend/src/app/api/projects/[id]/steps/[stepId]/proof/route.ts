@@ -3,8 +3,8 @@ import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { photoMetaSchema, proofFieldsSchema, validate } from '@/server/validation';
 import { requireUser } from '@/server/auth';
 import { saveUpload } from '@/server/files';
-import { HttpError, respond } from '@/server/http';
-import { assertProjectAccess, submitProof, type Actor } from '@/server/services';
+import { HttpError, readBodyLimited, respond } from '@/server/http';
+import { assertCanSubmitProof, submitProof, type Actor } from '@/server/services';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,19 +21,29 @@ const MAX_REQUEST_BYTES = 60 * 1024 * 1024;
 const isFile = (v: FormDataEntryValue | null): v is File => typeof v === 'object' && v !== null && 'arrayBuffer' in v && v.size > 0;
 
 /**
- * Proof submitted from the field (manager link, `token`) or by the funder (session).
+ * Proof submitted from the field (manager link, header `x-manager-token`) or by the funder (session).
  * multipart/form-data: photos[] + photoMeta (JSON, same order) + invoice + supplier* + note.
+ *
+ * Order matters: who is calling and whether the step takes a proof are settled BEFORE a single byte of the body is
+ * read, and the body itself is read with a ceiling counted as the bytes arrive.
  */
-export async function POST(request: Request, { params }: { params: { id: string; stepId: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string; stepId: string }> }) {
+  const params = await props.params;
   return respond(async () => {
-    // up to 6 photos + 1 invoice of 8 MB each, plus form fields: refuse anything larger before reading it
-    if (Number(request.headers.get('content-length') ?? 0) > MAX_REQUEST_BYTES) throw new HttpError(413, 'Envoi trop volumineux (8 Mo par fichier, 6 photos au plus)', 'too_large');
-    const form = await request.formData();
-    const token = String(form.get('token') ?? '').trim();
-    const actor: Actor = token ? { kind: 'manager', token } : { kind: 'owner', user: await requireUser() };
-    enforce(`proof:${token ? `token:${token}` : `user:${(actor as { user: { id: string } }).user.id}`}`, LIMITS.proof.max, LIMITS.proof.windowMs);
     enforce(`proof:ip:${clientIp(request)}`, LIMITS.proof.max * 3, LIMITS.proof.windowMs);
-    await assertProjectAccess(actor, params.id); // check access BEFORE writing any file
+    const token = (request.headers.get('x-manager-token') ?? '').trim();
+    const actor: Actor = token ? { kind: 'manager', token } : { kind: 'owner', user: await requireUser() };
+    enforce(`proof:${actor.kind === 'manager' ? `token:${actor.token}` : `user:${actor.user.id}`}`, LIMITS.proof.max, LIMITS.proof.windowMs);
+    await assertCanSubmitProof(actor, params.id, params.stepId); // access and step state, BEFORE reading or writing anything
+
+    // up to 6 photos + 1 invoice of 8 MB each, plus form fields
+    const bytes = await readBodyLimited(request, MAX_REQUEST_BYTES);
+    let form: FormData;
+    try {
+      form = await new Response(bytes as unknown as BodyInit, { headers: { 'content-type': request.headers.get('content-type') ?? '' } }).formData();
+    } catch {
+      throw new HttpError(400, 'Envoi illisible : le formulaire est incomplet.', 'invalid_input');
+    }
 
     // validated BEFORE any file is written
     const rawMeta = String(form.get('photoMeta') ?? '[]');
@@ -46,7 +56,6 @@ export async function POST(request: Request, { params }: { params: { id: string;
     const meta: PhotoMeta[] = validate(photoMetaSchema, metaJson);
     const amountRaw = form.get('invoiceAmountFcfa');
     const fields = validate(proofFieldsSchema, {
-      token,
       supplierName: String(form.get('supplierName') ?? ''),
       supplierPhone: String(form.get('supplierPhone') ?? ''),
       supplierNetwork: String(form.get('supplierNetwork') ?? ''),

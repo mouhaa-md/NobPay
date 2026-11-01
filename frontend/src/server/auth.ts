@@ -55,7 +55,7 @@ export function parseSession(value: string | undefined, now = Date.now()): Sessi
 
 async function readSession(): Promise<{ user: User; token: SessionToken } | null> {
   startJobs(); // fallback: the first request starts the background loop if the startup hook did not
-  const token = parseSession(cookies().get(COOKIE)?.value);
+  const token = parseSession((await cookies()).get(COOKIE)?.value);
   if (!token) return null;
   const db = await readDb();
   const user = db.users.find((u) => u.id === token.uid);
@@ -67,8 +67,8 @@ export async function getSessionUser(): Promise<User | null> {
   return (await readSession())?.user ?? null;
 }
 
-function setSessionCookie(user: User): void {
-  cookies().set(COOKIE, sessionValue(user.id, user.sessionVersion ?? 0), {
+async function setSessionCookie(user: User): Promise<void> {
+  (await cookies()).set(COOKIE, sessionValue(user.id, user.sessionVersion ?? 0), {
     httpOnly: true,
     sameSite: 'lax',
     secure: getConfig().secureCookies,
@@ -83,7 +83,7 @@ export async function requireUser(): Promise<User> {
   // Sliding expiry: only route handlers can write cookies, which is where requireUser runs.
   if (session.token.exp - Math.floor(Date.now() / 1000) < SESSION_SECONDS - RENEW_AFTER_SECONDS) {
     try {
-      setSessionCookie(session.user);
+      await setSessionCookie(session.user);
     } catch {
       /* not in a context where cookies can be written */
     }
@@ -91,8 +91,8 @@ export async function requireUser(): Promise<User> {
   return session.user;
 }
 
-export function startSession(user: User): void {
-  setSessionCookie(user);
+export async function startSession(user: User): Promise<void> {
+  await setSessionCookie(user);
 }
 
 /**
@@ -107,7 +107,7 @@ export async function endSession(): Promise<void> {
       if (u) u.sessionVersion = (u.sessionVersion ?? 0) + 1;
     });
   }
-  cookies().delete(COOKIE);
+  (await cookies()).delete(COOKIE);
 }
 
 export const normalizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');

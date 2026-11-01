@@ -103,16 +103,16 @@ describe('cookie lifecycle', () => {
   it('sets an httpOnly, 7-day cookie; Secure only when PUBLIC_BASE_URL is https', async () => {
     const u = await newUser('u_cookie1');
     vi.stubEnv('PUBLIC_BASE_URL', 'http://localhost:3000');
-    auth.startSession(u);
+    await auth.startSession(u);
     expect(jar.get(COOKIE)!.opts).toMatchObject({ httpOnly: true, sameSite: 'lax', secure: false, maxAge: 604800 });
     vi.stubEnv('PUBLIC_BASE_URL', 'https://nobpay.example.com');
-    auth.startSession(u);
+    await auth.startSession(u);
     expect(jar.get(COOKIE)!.opts.secure).toBe(true);
   });
 
   it('signs the user in, then out everywhere: the old cookie stops working', async () => {
     const u = await newUser('u_logout1');
-    auth.startSession(u);
+    await auth.startSession(u);
     const oldCookie = jar.get(COOKIE)!.value;
     expect((await auth.getSessionUser())?.id).toBe('u_logout1');
 
@@ -125,13 +125,13 @@ describe('cookie lifecycle', () => {
     await expect(auth.requireUser()).rejects.toMatchObject({ status: 401 });
 
     const fresh = (await db.readDb()).users.find((x) => x.id === 'u_logout1')!;
-    auth.startSession(fresh); // a new sign-in works
+    await auth.startSession(fresh); // a new sign-in works
     expect((await auth.getSessionUser())?.id).toBe('u_logout1');
   });
 
   it('keeps the shared demo account signed in elsewhere when one visitor signs out', async () => {
     const u = await newUser('u_demo_shared', { demo: true });
-    auth.startSession(u);
+    await auth.startSession(u);
     const other = jar.get(COOKIE)!.value;
     await auth.endSession();
     expect((await db.readDb()).users.find((x) => x.id === 'u_demo_shared')!.sessionVersion).toBeUndefined();

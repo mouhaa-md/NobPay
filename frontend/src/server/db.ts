@@ -62,8 +62,10 @@ export function withDb<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
     const current = await load();
     const draft = structuredClone(current);
     const result = await fn(draft);
-    holder.db = draft;
+    // Disk first, memory second: if the write fails, what the app believes still equals what the file holds
+    // (the other way round, a payment recorded in memory only would vanish at the next restart).
     await persist(draft);
+    holder.db = draft;
     return result;
   });
   holder.queue = run.catch(() => undefined);

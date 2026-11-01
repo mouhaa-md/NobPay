@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   return respond(async () => {
     enforce(`demo:ip:${clientIp(request)}`, LIMITS.demoIp.max, LIMITS.demoIp.windowMs);
     const user = await demoUser();
-    startSession(user);
+    await startSession(user);
     return { user: { id: user.id, firstName: user.firstName, lastName: user.lastName } };
   });
 }

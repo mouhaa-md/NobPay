@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware } from '@/middleware';
+import { proxy as middleware } from '@/proxy';
 
 const call = (method: string, headers: Record<string, string> = {}, url = 'http://localhost:3000/api/projects') =>
   middleware(new NextRequest(url, { method, headers }));

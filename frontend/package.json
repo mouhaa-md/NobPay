@@ -4,33 +4,37 @@
   "private": true,
   "description": "NobPay : l'argent de la diaspora, libéré étape par étape sur preuve et ancré sur Bitcoin.",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/figtree": "^5.3.0",
-    "@fontsource-variable/material-symbols-outlined": "^5.3.9",
     "@fontsource/instrument-serif": "^5.3.0",
     "lenis": "^1.3.27",
-    "next": "14.2.35",
+    "next": "^16.4.3",
     "qrcode.react": "^4.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "zod": "^3.25.76"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
-    "@types/react": "^18.3.31",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.30",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
-    "vitest": "^3.0.0"
+    "vitest": "^5.0.5"
   }
 }

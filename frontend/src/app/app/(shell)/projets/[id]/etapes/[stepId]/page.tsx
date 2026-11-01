@@ -33,7 +33,8 @@ const STATUS = {
   rejected: { tone: 'danger', label: 'Preuve à refaire' },
 } as const;
 
-export default async function StepPage({ params }: { params: { id: string; stepId: string } }) {
+export default async function StepPage(props: { params: Promise<{ id: string; stepId: string }> }) {
+  const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
   const db = await readDb();
@@ -53,7 +54,7 @@ export default async function StepPage({ params }: { params: { id: string; stepI
   const blockedBy = step.status === 'upcoming' ? (previous && previous.status !== 'paid' ? previous : undefined) : undefined;
 
   return (
-    <main className="min-h-screen pb-16 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
+    <main id="contenu" className="min-h-screen pb-16 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
       <AutoRefresh active={step.status === 'releasing'} />
       <FlowHeader title={`Étape ${step.index} sur ${project.steps.length}`} backHref={`/app/projets/${project.id}`} />
 
