@@ -20,3 +20,7 @@ demo-video/
 # demo video renders (large, shared outside Git)
 docs/video/*.mp4
 docs/video/*.mp3
+
+# deployment secrets (the example file deploy/.env.example is tracked, the real one never)
+deploy/.env
+.next-*

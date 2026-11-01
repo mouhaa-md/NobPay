@@ -1,0 +1,12 @@
+node_modules
+.next
+.next-*
+.data
+.env
+.env.*
+!.env.example
+tests
+design-reference
+*.log
+Dockerfile
+.dockerignore
