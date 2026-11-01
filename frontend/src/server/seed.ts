@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Db, Funding, Payout, Project, Step, StoredFile, Supplier, User } from '@/lib/types';
+import { DEFAULT_USD_XOF } from './config';
 import { appendLedger } from './ledger';
 import { mockPaymentHash, mockPreimage } from './bitnob/mock';
 import { sha256Hex } from './crypto';
@@ -121,7 +122,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
     minute: number,
     proofPhotoRel?: string,
   ) => {
-    const rate = 760;
+    const rate = DEFAULT_USD_XOF;
     const submittedAt = at(daysAgo + 1, hour, minute);
     const approvedAt = at(daysAgo, hour, minute);
     const proof: NonNullable<Step['proof']> = {
@@ -139,7 +140,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
             },
           ]
         : [],
-      invoice: seedFile(`seed-facture-${step.id}`, 'facture.svg', 'demo/facture.svg', 'image/svg+xml'),
+      invoice: seedFile(`seed-facture-${step.id}`, `facture-${step.id}.png`, `demo/factures/${step.id}.png`, 'image/png'),
       invoiceAmountFcfa: Math.round((step.amountCents / 100) * rate),
       supplier,
       submittedAt,
@@ -267,8 +268,8 @@ export function buildSeed(nowMs: number = Date.now()): Db {
         gps: { lat: 14.7886, lng: -16.9262, accuracy: 9 },
       },
     ],
-    invoice: seedFile('seed-facture-villa-s3', 'facture-ciment.svg', 'demo/facture.svg', 'image/svg+xml'),
-    invoiceAmountFcfa: 4_560_000,
+    invoice: seedFile('seed-facture-villa-s3', 'facture-ciment.png', 'demo/factures/p_villa_s3.png', 'image/png'),
+    invoiceAmountFcfa: Math.round((s3.amountCents / 100) * DEFAULT_USD_XOF),
     note: 'Murs du rez-de-chaussée terminés, parpaings livrés par la quincaillerie.',
     supplier: ndiaye,
     submittedAt: at(1, 19, 15),
