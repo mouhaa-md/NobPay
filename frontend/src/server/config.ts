@@ -97,6 +97,17 @@ export function getConfig() {
       maxEscrowUsd: positive(process.env.LIGHTNING_MAX_ESCROW_USD, 500),
     },
     /**
+     * The AI's advice on a proof (AI_REVIEW=1 and ANTHROPIC_API_KEY). Opt-in: the photos and the invoice of a proof are sent
+     * to the Anthropic API when the funder asks for the advice, and each review costs money. Set a spending limit on the key.
+     */
+    ai: {
+      requested: process.env.AI_REVIEW === '1',
+      enabled: process.env.AI_REVIEW === '1' && !!process.env.ANTHROPIC_API_KEY,
+      model: process.env.AI_MODEL || 'claude-opus-5-5',
+      /** reviews the whole instance may run in 24 hours */
+      dailyCap: positive(process.env.AI_DAILY_CAP, 50),
+    },
+    /**
      * Commitments of the ledger on Nostr relays (NOSTR_PUBLISH=1). Opt-in like AUTO_ANCHOR: it talks to public relays.
      * Only hashes leave the machine. The signing keys are derived per project from NOSTR_MASTER_KEY.
      */

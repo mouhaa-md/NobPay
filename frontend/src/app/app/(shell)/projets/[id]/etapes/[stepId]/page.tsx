@@ -4,6 +4,7 @@ import { AutoRefresh } from '@/components/app/AutoRefresh';
 import { FlowHeader } from '@/components/app/AppHeader';
 import { PayoutTracker } from '@/components/app/PayoutTracker';
 import { ReceiptCard } from '@/components/app/ReceiptCard';
+import { ProofReviewPanel } from '@/components/app/ProofReviewPanel';
 import { ProofView } from '@/components/app/ProofView';
 import { ReleasePanel } from '@/components/app/ReleasePanel';
 import { ShareManagerLink } from '@/components/app/ShareManagerLink';
@@ -19,6 +20,7 @@ import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject, findStep } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
+import { proofChecks } from '@/server/proofChecks';
 import { receiptToken } from '@/server/receipt';
 
 export const dynamic = 'force-dynamic';
@@ -136,8 +138,15 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
               </div>
             )}
             </div>
-            <div className="lg:col-start-1 lg:row-span-4 lg:row-start-2">
+            <div className="flex flex-col gap-space-lg lg:col-start-1 lg:row-span-4 lg:row-start-2">
               <ProofView proof={step.proof} projectId={project.id} expectedFcfa={(step.amountCents / 100) * usdXof} />
+              <ProofReviewPanel
+                projectId={project.id}
+                stepId={step.id}
+                checks={proofChecks({ db, project, step, usdXof })}
+                aiEnabled={getConfig().ai.enabled}
+                review={step.proof.aiReview}
+              />
             </div>
             {step.proof.supplier && (
               <div className="lg:col-start-2 lg:row-start-3">

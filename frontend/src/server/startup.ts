@@ -57,6 +57,9 @@ export function checkStartupConfig(): StartupCheck {
       );
     }
   }
+  if (process.env.AI_REVIEW === '1' && !process.env.ANTHROPIC_API_KEY) {
+    warnings.push("AI_REVIEW=1 mais ANTHROPIC_API_KEY est absente : l'avis de l'IA sur les preuves est désactivé.");
+  }
   if (process.env.NOSTR_PUBLISH === '1') {
     const key = masterKeyProblem();
     if (key) fatal.push(`NOSTR_MASTER_KEY ${key}.`);

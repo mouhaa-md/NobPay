@@ -65,6 +65,34 @@ export interface Proof {
   supplier?: Supplier;
   submittedAt: string;
   submittedBy: 'manager' | 'owner';
+  /** the advice of the AI, asked for by the funder; advisory only, it never blocks or triggers a payment */
+  aiReview?: AiReview;
+}
+
+export type CheckLevel = 'ok' | 'attention' | 'info';
+
+/** One point of the review of a proof. Computed by code from the data; `attention` asks the funder to look closer. */
+export interface ProofCheck {
+  id: string;
+  level: CheckLevel;
+  text: string;
+}
+
+export interface AiReview {
+  state: 'done' | 'refused' | 'error';
+  model: string;
+  at: string;
+  /** one or two sentences, in French */
+  summary?: string;
+  photos?: { index: number; matchesStep: 'yes' | 'partly' | 'no' | 'unclear'; observation: string; concerns: string[] }[];
+  /** what the AI read on the invoice (extracted by the model, compared by code, see `checks`) */
+  invoice?: { readable: boolean; supplierName: string | null; totalAmount: number | null; currency: string | null; date: string | null; reference: string | null; itemsSummary: string | null; concerns: string[] };
+  flags?: { level: 'info' | 'attention'; text: string }[];
+  /** what the code concluded by comparing the AI's reading with what was declared */
+  checks?: ProofCheck[];
+  /** what we did not send (too big, unreadable), and why a review failed */
+  notes?: string[];
+  error?: string;
 }
 
 export interface PayoutQuote {

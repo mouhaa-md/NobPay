@@ -76,6 +76,7 @@ export const LIMITS = {
   projectCreate: { max: 20, windowMs: HOUR },
   fundingCreate: { max: 30, windowMs: HOUR },
   refund: { max: 10, windowMs: HOUR },
+  aiReview: { max: 10, windowMs: HOUR },
   guestIp: { max: 10, windowMs: HOUR },
   publicRead: { max: 120, windowMs: MIN },
   fileRead: { max: 300, windowMs: MIN },
