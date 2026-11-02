@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app/AppHeader';
 import { ProjectCard } from '@/components/app/ProjectCard';
@@ -11,13 +12,17 @@ import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
 import { Tc } from '@/lib/i18n/client';
+import { fr } from '@/lib/i18n/messages';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Projets' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Projets') };
+}
 
 const FILTERS: { id: 'all' | Sector; label: string; icon?: string }[] = [
-  { id: 'all', label: 'Tous' },
+  { id: 'all', label: fr('Tous') },
   { id: 'immobilier', label: SECTORS.immobilier.label, icon: SECTORS.immobilier.icon },
   { id: 'agricole', label: SECTORS.agricole.label, icon: SECTORS.agricole.icon },
   { id: 'commerce', label: SECTORS.commerce.label, icon: SECTORS.commerce.icon },
@@ -74,7 +79,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                 className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 font-label-md text-label-md transition ${on ? 'bg-primary-container text-on-primary shadow-md' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
               >
                 {f.icon && <Icon name={f.icon} size={16} />}
-                {f.label}
+                {t(f.label)}
                 <span className={`rounded-full px-1.5 text-label-sm ${on ? 'bg-white/20' : 'bg-surface-container-high'}`}>{count}</span>
               </Link>
             );
@@ -142,7 +147,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                   className={`inline-flex h-10 items-center gap-1.5 rounded-full px-4 font-label-md text-label-md shadow-sm transition active:scale-95 ${on ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
                 >
                   {f.icon && <Icon name={f.icon} size={16} />}
-                  {f.id === 'all' ? t('Tous les projets') : f.label}
+                  {f.id === 'all' ? t('Tous les projets') : t(f.label)}
                   <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${on ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>{count}</span>
                 </Link>
               );

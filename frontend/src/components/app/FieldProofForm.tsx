@@ -284,7 +284,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
               autoCorrect="off"
               spellCheck={false}
               maxLength={130}
-              placeholder="nom@portefeuille.com"
+              placeholder={t('nom@portefeuille.com')}
               autoComplete="off"
             />
             <span className="font-body-sm text-body-sm font-normal text-outline">

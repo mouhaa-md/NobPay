@@ -18,11 +18,11 @@ export async function PayoutTracker({ step }: { step: Step }) {
   const failed = payout.status === 'failed';
 
   const phases: Phase[] = [
-    { label: 'Preuve validée', detail: step.decision ? formatDateTime(step.decision.at) : undefined, state: 'done' },
-    { label: payout.lightning ? 'Paiement envoyé sur le réseau Lightning' : 'Paiement demandé à Bitnob', detail: formatDateTime(payout.startedAt), state: 'done' },
+    { label: t('Preuve validée'), detail: step.decision ? formatDateTime(step.decision.at) : undefined, state: 'done' },
+    { label: payout.lightning ? t('Paiement envoyé sur le réseau Lightning') : t('Paiement demandé à Bitnob'), detail: formatDateTime(payout.startedAt), state: 'done' },
     {
-      label: 'Reçu par le fournisseur',
-      detail: done && payout.completedAt ? formatDateTime(payout.completedAt) : failed ? payout.error : `${SUPPLIER_NETWORKS[payout.supplier.network]} · en cours`,
+      label: t('Reçu par le fournisseur'),
+      detail: done && payout.completedAt ? formatDateTime(payout.completedAt) : failed ? payout.error : `${SUPPLIER_NETWORKS[payout.supplier.network]} · ${t('en cours')}`,
       state: done ? 'done' : failed ? 'failed' : 'doing',
     },
   ];
@@ -54,25 +54,25 @@ export async function PayoutTracker({ step }: { step: Step }) {
             <Icon name="check_circle" filled /> <Tc>Fournisseur payé</Tc>
           </p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 font-body-sm text-body-sm">
-            <Item k="Bénéficiaire" v={payout.supplier.name} />
-            <Item k={payout.lightning ? 'Destination' : 'Opérateur'} v={supplierRoute(payout.supplier)} />
-            <Item k="Montant reçu" v={payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)} strong />
-            <Item k="Débité" v={formatUsd(payout.amountUsdCents)} />
+            <Item k={t('Bénéficiaire')} v={payout.supplier.name} />
+            <Item k={payout.lightning ? t('Destination') : t('Opérateur')} v={supplierRoute(payout.supplier)} />
+            <Item k={t('Montant reçu')} v={payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)} strong />
+            <Item k={t('Débité')} v={formatUsd(payout.amountUsdCents)} />
             {payout.lightning ? (
-              <Item k="Prix du bitcoin" v={`1 BTC = ${Math.round(payout.lightning.btcUsd).toLocaleString('fr-FR')} $`} />
+              <Item k={t('Prix du bitcoin')} v={`1 BTC = ${Math.round(payout.lightning.btcUsd).toLocaleString('fr-FR')} $`} />
             ) : (
-              <Item k="Taux" v={`1 $ = ${formatRate(payout.rate)} FCFA`} />
+              <Item k={t('Taux')} v={`1 $ = ${formatRate(payout.rate)} FCFA`} />
             )}
-            <Item k="Référence" v={payout.reference} mono />
+            <Item k={t('Référence')} v={payout.reference} mono />
             {payout.lightning ? (
               <>
-                <Item k="Empreinte du paiement" v={payout.lightning.paymentHash} mono />
-                {payout.lightning.preimage && <Item k="Preuve de paiement" v={payout.lightning.preimage} mono />}
+                <Item k={t('Empreinte du paiement')} v={payout.lightning.paymentHash} mono />
+                {payout.lightning.preimage && <Item k={t('Preuve de paiement')} v={payout.lightning.preimage} mono />}
               </>
             ) : (
-              payout.payoutId && <Item k="Identifiant Bitnob" v={payout.payoutId} mono />
+              payout.payoutId && <Item k={t('Identifiant Bitnob')} v={payout.payoutId} mono />
             )}
-            <Item k="Mode" v={payout.mode === 'mock' ? 'Simulation (aucun argent réel)' : payout.mode === 'nwc' ? 'Bitcoin réel (Lightning)' : 'Sandbox Bitnob (test)'} />
+            <Item k={t('Mode')} v={payout.mode === 'mock' ? t('Simulation (aucun argent réel)') : payout.mode === 'nwc' ? t('Bitcoin réel (Lightning)') : t('Sandbox Bitnob (test)')} />
           </dl>
         </section>
       )}

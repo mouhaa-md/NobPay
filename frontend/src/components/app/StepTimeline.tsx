@@ -5,6 +5,7 @@ import { formatFcfa, formatSats, formatUsdShort, relativeDay } from '@/lib/money
 import { PROOF_LABEL, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
 import { Tc } from '@/lib/i18n/client';
+import { fr } from '@/lib/i18n/messages';
 import { getT } from '@/lib/i18n/server';
 
 interface Look {
@@ -15,12 +16,12 @@ interface Look {
 }
 
 const LOOK: Record<Step['status'], Look> = {
-  paid: { circle: 'bg-[#16A34A] text-white', icon: 'check', label: 'Payée', labelTone: 'text-[#15803D]' },
-  releasing: { circle: 'bg-primary-container text-on-primary', icon: 'sync', label: 'Paiement en cours', labelTone: 'text-primary' },
-  proof_submitted: { circle: 'bg-[#F59E0B] text-white', icon: 'photo_camera', label: 'Preuve à valider', labelTone: 'text-[#B45309]' },
-  rejected: { circle: 'bg-error text-on-error', icon: 'undo', label: 'Preuve à refaire', labelTone: 'text-error' },
-  active: { circle: 'bg-primary-container text-on-primary', icon: 'hourglass_top', label: 'En attente de la preuve', labelTone: 'text-primary' },
-  upcoming: { circle: 'bg-surface-container-high text-on-surface-variant', icon: 'lock', label: 'À venir', labelTone: 'text-on-surface-variant' },
+  paid: { circle: 'bg-[#16A34A] text-white', icon: 'check', label: fr('Payée'), labelTone: 'text-[#15803D]' },
+  releasing: { circle: 'bg-primary-container text-on-primary', icon: 'sync', label: fr('Paiement en cours'), labelTone: 'text-primary' },
+  proof_submitted: { circle: 'bg-[#F59E0B] text-white', icon: 'photo_camera', label: fr('Preuve à valider'), labelTone: 'text-[#B45309]' },
+  rejected: { circle: 'bg-error text-on-error', icon: 'undo', label: fr('Preuve à refaire'), labelTone: 'text-error' },
+  active: { circle: 'bg-primary-container text-on-primary', icon: 'hourglass_top', label: fr('En attente de la preuve'), labelTone: 'text-primary' },
+  upcoming: { circle: 'bg-surface-container-high text-on-surface-variant', icon: 'lock', label: fr('À venir'), labelTone: 'text-on-surface-variant' },
 };
 
 /** Vertical stepper of a project: one card per step, each linking to its own screen. */
@@ -50,7 +51,7 @@ export async function StepTimeline({ projectId, steps }: { projectId: string; st
                 <span className="shrink-0 font-title-md text-title-md font-bold text-on-surface">{formatUsdShort(step.amountCents)}</span>
               </span>
               <span className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
-                <span className={`font-label-md text-label-md font-semibold ${look.labelTone}`}>{look.label}</span>
+                <span className={`font-label-md text-label-md font-semibold ${look.labelTone}`}>{t(look.label)}</span>
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   {step.status === 'paid' && step.payout?.completedAt && relativeDay(step.payout.completedAt, t)}
                   {step.status === 'upcoming' && step.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AutoRefresh } from '@/components/app/AutoRefresh';
@@ -23,7 +24,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Projet' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Projet') };
+}
 
 // explicit rows for the two-column layout on computers (written out so Tailwind keeps the classes)
 const ROW = ['lg:row-start-1', 'lg:row-start-2', 'lg:row-start-3', 'lg:row-start-4', 'lg:row-start-5'];
@@ -41,7 +45,7 @@ export default async function ProjectPage(
   if (!project || project.ownerId !== user.id) notFound();
 
   const s = summarize(db, project);
-  const status = projectStatus(s);
+  const status = projectStatus(s, t);
   const sector = SECTORS[project.sector];
   const { usdXof } = getConfig();
   const anchors = db.anchors.filter((a) => a.projectId === project.id && a.status !== 'failed');
@@ -128,7 +132,7 @@ export default async function ProjectPage(
             simulated={getConfig().lightning.rail !== 'nwc'}
             blockedReason={
               project.steps.some((st) => st.status === 'proof_submitted' || st.status === 'releasing')
-                ? 'Une preuve attend votre décision ou un paiement est en cours : terminez-les d’abord.'
+                ? t('Une preuve attend votre décision ou un paiement est en cours : terminez-les d’abord.')
                 : undefined
             }
           />

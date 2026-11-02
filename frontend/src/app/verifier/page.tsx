@@ -1,12 +1,17 @@
+import type { Metadata } from 'next';
 import { Icon } from '@/components/ui/Icon';
 import { LookupForm } from '@/components/verify/LookupForm';
 import { VerifyFile } from '@/components/verify/VerifyFile';
 import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata = {
-  title: 'Vérifier un dossier',
-  description: "Contrôlez, sans compte et sans faire confiance à NobPay, qu'un dossier de projet n'a pas été modifié et qu'il est ancré sur Bitcoin.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('Vérifier un dossier'),
+    description: t("Contrôlez, sans compte et sans faire confiance à NobPay, qu'un dossier de projet n'a pas été modifié et qu'il est ancré sur Bitcoin."),
+  };
+}
 
 export default function VerifyHome() {
   return (

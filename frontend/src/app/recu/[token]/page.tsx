@@ -12,15 +12,19 @@ import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { readDb } from '@/server/db';
 import { findReceipt, maskPhone } from '@/server/receipt';
 import { Tc } from '@/lib/i18n/client';
+import { fr } from '@/lib/i18n/messages';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Reçu de paiement', robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Reçu de paiement'), robots: { index: false, follow: false } };
+}
 
 const LOOK = {
-  done: { icon: 'check', circle: 'bg-[#16A34A] text-white', title: 'Paiement envoyé', tone: 'text-[#15803D]' },
-  pending: { icon: 'sync', circle: 'bg-primary-container text-on-primary', title: 'Paiement en cours', tone: 'text-primary' },
-  failed: { icon: 'close', circle: 'bg-error text-on-error', title: 'Paiement non abouti', tone: 'text-error' },
+  done: { icon: 'check', circle: 'bg-[#16A34A] text-white', title: fr('Paiement envoyé'), tone: 'text-[#15803D]' },
+  pending: { icon: 'sync', circle: 'bg-primary-container text-on-primary', title: fr('Paiement en cours'), tone: 'text-primary' },
+  failed: { icon: 'close', circle: 'bg-error text-on-error', title: fr('Paiement non abouti'), tone: 'text-error' },
 } as const;
 
 export default async function Receipt(props: { params: Promise<{ token: string }> }) {
@@ -38,10 +42,10 @@ export default async function Receipt(props: { params: Promise<{ token: string }
   const decidedAt = step.decision?.at ?? payout.startedAt;
 
   const phases = [
-    { label: owner ? `${owner.firstName} a validé le travail` : 'Le travail a été validé', at: decidedAt, state: 'done' as const },
-    { label: payout.lightning ? 'Paiement envoyé sur le réseau Lightning' : 'Ordre de paiement envoyé à l’opérateur', at: payout.startedAt, state: 'done' as const },
+    { label: owner ? t('{name} a validé le travail', { name: owner.firstName }) : t('Le travail a été validé'), at: decidedAt, state: 'done' as const },
+    { label: payout.lightning ? t('Paiement envoyé sur le réseau Lightning') : t('Ordre de paiement envoyé à l’opérateur'), at: payout.startedAt, state: 'done' as const },
     {
-      label: state === 'failed' ? 'Paiement refusé par le réseau' : payout.lightning ? 'Paiement confirmé par le réseau Lightning' : 'Paiement confirmé par Bitnob',
+      label: state === 'failed' ? t('Paiement refusé par le réseau') : payout.lightning ? t('Paiement confirmé par le réseau Lightning') : t('Paiement confirmé par Bitnob'),
       at: payout.completedAt,
       state: state === 'done' ? ('done' as const) : state === 'failed' ? ('failed' as const) : ('doing' as const),
     },
@@ -62,7 +66,7 @@ export default async function Receipt(props: { params: Promise<{ token: string }
         <span className={`flex h-16 w-16 items-center justify-center rounded-full shadow-lg ${look.circle} ${state === 'done' ? 'nob-pop' : ''}`}>
           {state === 'pending' ? <Spinner className="h-8 w-8" /> : <Icon name={look.icon} size={36} />}
         </span>
-        <p className={`mt-4 font-title-lg text-title-lg ${look.tone}`}>{look.title}</p>
+        <p className={`mt-4 font-title-lg text-title-lg ${look.tone}`}>{t(look.title)}</p>
         <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)}</p>
         {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa)} <Tc>(taux indicatif)</Tc></p>}
         <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
@@ -85,7 +89,7 @@ export default async function Receipt(props: { params: Promise<{ token: string }
             {project.name}, <Flag code="SN" className="inline-block h-2.5 w-4 align-middle" /> {project.city}
           </span>
         </dd>
-        <dt className="text-on-surface-variant">{payout.lightning ? 'Destination' : t('Mobile money')}</dt>
+        <dt className="text-on-surface-variant">{payout.lightning ? t('Destination') : t('Mobile money')}</dt>
         <dd className="text-right font-medium text-on-surface">
           {SUPPLIER_NETWORKS[payout.supplier.network]}
           <span className="block font-normal text-on-surface-variant">{payout.lightning ? maskAddress(payout.lightning.address) : maskPhone(payout.supplier.phone)}</span>

@@ -103,7 +103,7 @@ export function RefundPanel({ projectId, escrowCents, simulated, blockedReason }
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder="vous@portefeuille.com"
+                    placeholder={t('vous@portefeuille.com')}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     maxLength={130}

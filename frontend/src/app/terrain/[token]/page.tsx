@@ -19,7 +19,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Espace terrain', robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Espace terrain'), robots: { index: false, follow: false } };
+}
 
 const STEP_STATE: Record<Step['status'], string> = {
   paid: 'Payée',
@@ -145,7 +148,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                   <Icon name="lock" size={28} />
                 </span>
                 <p className="font-title-lg text-title-lg"><Tc>Prochaine étape pas encore ouverte</Tc></p>
-                <p className="font-body-md text-body-md text-on-surface-variant">{next ? t('« {title} » s’ouvrira dès que {ownerName} aura alimenté le séquestre.', { title: next.title, ownerName }) : 'Patientez.'}</p>
+                <p className="font-body-md text-body-md text-on-surface-variant">{next ? t('« {title} » s’ouvrira dès que {ownerName} aura alimenté le séquestre.', { title: t(next.title), ownerName }) : t('Patientez.')}</p>
               </section>
             )}
 
@@ -159,7 +162,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
 
             {lastPaid?.payout && lastReceipt && (
               <div>
-                <p className="mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Dernier paiement : «</Tc> {lastPaid.title} »</p>
+                <p className="mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Dernier paiement : «</Tc> {t(lastPaid.title)} »</p>
                 <ReceiptCard token={lastReceipt} supplierName={lastPaid.payout.supplier.name} />
               </div>
             )}

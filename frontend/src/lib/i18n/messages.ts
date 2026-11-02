@@ -16,16 +16,22 @@ export const isLang = (v: unknown): v is Lang => v === 'fr' || v === 'en';
 /** JSX collapses whitespace; keys are stored the same way. */
 export const normalizeKey = (s: string): string => s.replace(/\s+/g, ' ').trim();
 
+/**
+ * Marks a French sentence kept in a table (`label: fr('Payée')`) that is translated where it is shown (`t(row.label)`).
+ * It does nothing at run time; scripts/i18n-missing.mjs reads it like t('…'), so a missing translation is reported.
+ */
+export const fr = (sentence: string): string => sentence;
+
 export type Vars = Record<string, string | number>;
 
-export function translate(lang: Lang, fr: string, vars?: Vars): string {
-  let text = fr;
+export function translate(lang: Lang, sentence: string, vars?: Vars): string {
+  let text = sentence;
   if (lang === 'en') {
-    const key = normalizeKey(fr);
+    const key = normalizeKey(sentence);
     // own entries only: a step the user called « constructor » must not find Object.prototype.constructor
     const found = Object.prototype.hasOwnProperty.call(EN, key) ? EN[key] : undefined;
     // the English sentence takes the French one's leading and trailing spaces, so text built around it still reads right
-    if (found !== undefined) text = (fr.match(/^\s*/)?.[0] ?? '') + found + (fr.match(/\s*$/)?.[0] ?? '');
+    if (found !== undefined) text = (sentence.match(/^\s*/)?.[0] ?? '') + found + (sentence.match(/\s*$/)?.[0] ?? '');
   }
   return vars ? text.replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole)) : text;
 }

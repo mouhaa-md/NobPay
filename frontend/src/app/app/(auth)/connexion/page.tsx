@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthForm } from '@/components/app/AuthForm';
 import { FlowHeader } from '@/components/app/AppHeader';
@@ -9,7 +10,10 @@ import { getT } from '@/lib/i18n/server';
 
 // read at request time: the demo button depends on ALLOW_DEMO, which must not be frozen at build time
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Connexion' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Connexion') };
+}
 
 export default async function Login() {
   const t = await getT();

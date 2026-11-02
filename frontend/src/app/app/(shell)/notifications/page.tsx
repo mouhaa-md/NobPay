@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ActivityList } from '@/components/app/ActivityList';
 import { FlowHeader } from '@/components/app/AppHeader';
@@ -9,7 +10,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Notifications' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Notifications') };
+}
 
 export default async function Notifications() {
   const t = await getT();

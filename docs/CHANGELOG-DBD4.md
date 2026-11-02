@@ -124,5 +124,16 @@ Une relecture du code écrit depuis le début de M1, en cherchant ce qui casse e
 - **Parcours d'un juge.** « Essai rapide » est proposé directement sur le tableau de bord vide (`/app/projets/nouveau?essai=1` ouvre le récapitulatif de l'essai).
 - 742 tests verts sur 50 fichiers.
 
+## Contrôle au format téléphone, et ce qu'il a montré (2 novembre 2026)
+
+Passage de l'application en anglais dans un vrai viewport de 390 px (Chrome piloté par le protocole de débogage, pas une simple fenêtre réduite : la fenêtre ne descend pas sous ~500 px), puis un parcours automatique de ~45 pages avec le compte de démonstration. Il relève tout texte affiché qui est exactement une phrase du dictionnaire anglais : c'est un oubli de branchement, pas une traduction manquante.
+
+- **Aucun débordement horizontal** sur le landing (FR et EN), la vérification, le tableau de bord et l'essai rapide.
+- **Libellés restés en français dans l'interface anglaise**, tous branchés : suivi du paiement et reçu fournisseur (« Preuve validée », « Bénéficiaire », « Montant reçu »…), statuts d'étape et de projet (« Payée », « À venir », « Preuve à valider (n) »), filtres de secteurs, bouton « Continuer », récapitulatif de l'essai rapide (nom, responsable et étapes), montants rapides du financement, légendes du tableau de bord, titres d'étapes passés en variable.
+- **Titres d'onglet et aperçus de lien** traduits (`generateMetadata`, y compris le layout racine et `og:locale`).
+- **Titres d'activité sur deux lignes** plutôt que tronqués : en anglais, la fin du titre dit quel type de paiement c'était.
+- **Un marqueur `fr('…')`** pour les phrases gardées dans des tables : `scripts/i18n-missing.mjs` le lit comme `t('…')`, une traduction manquante est donc signalée (avant, ces phrases échappaient au contrôle, c'est ainsi qu'elles s'étaient perdues).
+- Restent en français, par choix ou limite connue : les noms de projets, de fournisseurs et de personnes (données de l'utilisateur), les notes saisies, les messages d'erreur serveur à texte variable, la page d'administration, les formats de date et de nombre.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

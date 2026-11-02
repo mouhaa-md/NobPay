@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/ui/Icon';
@@ -13,7 +14,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Portefeuille' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Portefeuille') };
+}
 
 const METHOD: Record<Funding['method'], string> = { lightning: 'Bitcoin Lightning', usdt: 'USDT', usdc: 'USDC' };
 const STATUS: Record<Funding['status'], { label: string; tone: 'success' | 'warning' | 'neutral' | 'danger' }> = {

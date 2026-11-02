@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ActivityList } from '@/components/app/ActivityList';
 import { DesktopTopbar } from '@/components/app/DesktopTopbar';
@@ -17,7 +18,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Accueil' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Accueil') };
+}
 
 export default async function Home() {
   const t = await getT();
@@ -75,9 +79,9 @@ export default async function Home() {
           <InstallCard />
 
           <div className="grid grid-cols-3 gap-2">
-            <Stat label={t('En cours')} value={String(totals.projects)} caption={totals.projects > 1 ? 'Projets' : 'Projet'} tone="text-primary" />
-            <Stat label={t('Payées')} value={`${totals.stepsPaid}/${totals.stepsTotal}`} caption="Étapes" tone="text-on-surface" />
-            <Stat label={t('Ancrages')} value={anchorsLabel} caption="Sur Bitcoin" tone="text-[#C26700]" />
+            <Stat label={t('En cours')} value={String(totals.projects)} caption={t(totals.projects > 1 ? 'Projets' : 'Projet')} tone="text-primary" />
+            <Stat label={t('Payées')} value={`${totals.stepsPaid}/${totals.stepsTotal}`} caption={t('Étapes')} tone="text-on-surface" />
+            <Stat label={t('Ancrages')} value={anchorsLabel} caption={t('Sur Bitcoin')} tone="text-[#C26700]" />
           </div>
 
           {teams.length > 0 && (
@@ -131,7 +135,7 @@ export default async function Home() {
               </div>
               <ProgressBar value={focus.progress} className="mb-2 !bg-surface-container-highest" />
               <div className="flex items-center justify-between gap-2 font-label-sm text-label-sm text-on-surface-variant">
-                <span className="truncate">{focus.current?.title ?? t('Toutes les étapes sont payées')}</span>
+                <span className="truncate">{focus.current ? t(focus.current.title) : t('Toutes les étapes sont payées')}</span>
                 <span className="shrink-0 font-medium text-on-surface">
                   {formatUsdShort(focus.released)} / {formatUsdShort(focus.project.budgetCents)} <Tc>libérés</Tc>
                 </span>

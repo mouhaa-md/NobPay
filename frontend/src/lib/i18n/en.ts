@@ -734,6 +734,9 @@ export const EN: Record<string, string> = {
   "Supprimer l'étape {v}": 'Delete step {v}',
   "Montant de l'étape {v}": 'Amount of step {v}',
   'Mamadou Diop': 'Mamadou Diop',
+  'Sur Bitcoin': 'On Bitcoin',
+  'vous@portefeuille.com': 'you@wallet.com',
+  'nom@portefeuille.com': 'name@wallet.com',
   'Créer le projet': 'Create the project',
 
   /* ---- field (terrain), receipt (more) ---- */
@@ -928,4 +931,46 @@ export const EN: Record<string, string> = {
   'Une erreur est survenue de notre côté. Réessayez dans un instant. (référence {requestId})': 'Something went wrong on our side. Try again in a moment. (reference {requestId})',
   'Dossier NobPay': 'NobPay file',
   'Bitcoin Lightning uniquement : le versement se fait en bitcoin sur le réseau Lightning.': 'Bitcoin Lightning only: funding is done in bitcoin over the Lightning network.',
+
+  // payout tracker and receipt
+  'Preuve validée': 'Proof approved',
+  'Paiement envoyé sur le réseau Lightning': 'Payment sent over the Lightning network',
+  'Paiement demandé à Bitnob': 'Payment requested from Bitnob',
+  'Reçu par le fournisseur': 'Received by the supplier',
+  'Bénéficiaire': 'Payee',
+  'Destination': 'Destination',
+  'Montant reçu': 'Amount received',
+  'Débité': 'Debited',
+  'Taux': 'Rate',
+  'Preuve de paiement': 'Proof of payment',
+  'Identifiant Bitnob': 'Bitnob ID',
+  'Mode': 'Mode',
+  'Simulation (aucun argent réel)': 'Simulation (no real money)',
+  'Bitcoin réel (Lightning)': 'Real bitcoin (Lightning)',
+  'Sandbox Bitnob (test)': 'Bitnob sandbox (test)',
+
+  // payment receipt (the page the supplier opens)
+  'Paiement envoyé': 'Payment sent',
+  '{name} a validé le travail': '{name} approved the work',
+  'Le travail a été validé': 'The work was approved',
+  'Ordre de paiement envoyé à l’opérateur': 'Payment order sent to the operator',
+  'Paiement refusé par le réseau': 'Payment refused by the network',
+  'Paiement confirmé par le réseau Lightning': 'Payment confirmed by the Lightning network',
+  'Paiement confirmé par Bitnob': 'Payment confirmed by Bitnob',
+
+  // page titles and link previews
+  'NobPay · Investissez au pays. Avec preuve.': 'NobPay · Pay on proof. Money sent home, released step by step.',
+  "NobPay aide la diaspora à financer des projets, des frais de scolarité et des stocks de commerçants au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.": 'NobPay helps the diaspora fund projects, school fees and merchants’ stock back home: the money stays in escrow and is released step by step, against proof, with a trail anchored on Bitcoin.',
+  "L'argent de la diaspora, libéré étape par étape sur preuve et ancré sur Bitcoin.": 'Diaspora money, released step by step against proof and anchored on Bitcoin.',
+  'Bienvenue': 'Welcome',
+  'Vérification': 'Verification',
+  "Contrôlez, sans compte et sans faire confiance à NobPay, qu'un dossier de projet n'a pas été modifié et qu'il est ancré sur Bitcoin.": 'Check, without an account and without trusting NobPay, that a project file has not been altered and is anchored on Bitcoin.',
+
+  // project cards and filters
+  'Preuve à valider ({n})': 'Proof to approve ({n})',
+  'Tous': 'All',
+  'Étape {n}': 'Step {n}',
+  'Reste du budget': 'Rest of the budget',
+  'Patientez.': 'Hold on.',
+  'Une preuve attend votre décision ou un paiement est en cours : terminez-les d’abord.': 'A proof is waiting for your decision or a payment is in progress: finish them first.',
 };

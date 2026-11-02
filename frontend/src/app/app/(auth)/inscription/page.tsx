@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthForm } from '@/components/app/AuthForm';
 import { FlowHeader } from '@/components/app/AppHeader';
@@ -5,7 +6,10 @@ import { Icon } from '@/components/ui/Icon';
 import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
-export const metadata = { title: 'Créer un compte' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Créer un compte') };
+}
 
 export default async function Register() {
   const t = await getT();
