@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { NewProjectWizard } from '@/components/app/NewProjectWizard';
 import { getSessionUser } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { getConfig, isRealBitcoin } from '@/server/config';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Nouveau projet' };
@@ -13,7 +13,7 @@ export default async function NewProject() {
   return (
     <>
       <DesktopTopbar title="Nouveau projet" backHref="/app/projets" />
-      <NewProjectWizard usdXof={getConfig().usdXof} maxStepUsd={getConfig().maxStepUsd} />
+      <NewProjectWizard usdXof={getConfig().usdXof} maxStepUsd={getConfig().maxStepUsd} minBudgetUsd={getConfig().minBudgetUsd} real={isRealBitcoin()} />
     </>
   );
 }

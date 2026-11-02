@@ -84,6 +84,23 @@ export const STEP_TEMPLATES: Record<Sector, StepTemplate[]> = {
   ],
 };
 
+/**
+ * "Essai rapide": the smallest project that shows the whole path (fund, prove, release, receipt) in a couple of minutes,
+ * for a jury or a first visit. Three steps of 5 $ each, proofs by photo only so nobody needs an invoice file to try it.
+ */
+export const QUICK_TRIAL = {
+  sector: 'commerce' as Sector,
+  name: 'Essai rapide',
+  city: 'Dakar',
+  managerName: 'Moi-même',
+  steps: [
+    { title: 'Achat du stock', amountCents: 500, proofKinds: ['photos'] as ProofKind[] },
+    { title: 'Livraison du stock', amountCents: 500, proofKinds: ['photos'] as ProofKind[] },
+    { title: 'Mise en rayon', amountCents: 500, proofKinds: ['photos'] as ProofKind[] },
+  ],
+} as const;
+export const QUICK_TRIAL_BUDGET_CENTS = QUICK_TRIAL.steps.reduce((n, s) => n + s.amountCents, 0);
+
 /** Splits a budget (in cents) across a template; the last step absorbs rounding. */
 export function allocateBudget(budgetCents: number, template: StepTemplate[]): number[] {
   const amounts = template.map((t) => Math.round((budgetCents * t.share) / 100) * 100);

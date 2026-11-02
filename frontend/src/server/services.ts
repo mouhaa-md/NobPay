@@ -85,8 +85,9 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
   if (!SECTORS[input.sector]) throw new HttpError(400, 'Secteur invalide');
   if (!city) throw new HttpError(400, 'Indiquez la ville');
   if (!managerName) throw new HttpError(400, 'Indiquez la personne de confiance sur place');
-  if (!Number.isInteger(input.budgetCents) || input.budgetCents < 10_000 || input.budgetCents > 50_000_000) {
-    throw new HttpError(400, 'Le budget doit être compris entre 100 $ et 500 000 $');
+  const minBudgetUsd = getConfig().minBudgetUsd;
+  if (!Number.isInteger(input.budgetCents) || input.budgetCents < minBudgetUsd * 100 || input.budgetCents > 50_000_000) {
+    throw new HttpError(400, `Le budget doit être compris entre ${formatInt(minBudgetUsd)} $ et 500 000 $`);
   }
   if (!Array.isArray(input.steps) || input.steps.length < 1 || input.steps.length > 12) {
     throw new HttpError(400, 'Prévoyez entre 1 et 12 étapes');

@@ -75,6 +75,11 @@ export function getConfig() {
      * 200 000 XOF (~336 $), so in sandbox a bigger step could never be paid: it is refused when the project is created.
      */
     maxStepUsd: process.env.MAX_STEP_USD !== undefined && process.env.MAX_STEP_USD !== '' ? Number(process.env.MAX_STEP_USD) || 0 : mode === 'sandbox' ? 330 : 0,
+    /**
+     * Smallest project budget, in dollars. 100 on the Bitnob sandbox (where a payout has real limits), 10 elsewhere so the
+     * "essai rapide" (15 $) exists on the demo and on the real-bitcoin instance. MIN_BUDGET_USD overrides it.
+     */
+    minBudgetUsd: positive(process.env.MIN_BUDGET_USD, mode === 'sandbox' ? 100 : 10),
     /** How long a Lightning invoice can be paid. Short on purpose: the escrow is credited in dollars, the bitcoin price moves. */
     fundingInvoiceTtlSeconds: Math.min(86_400, Math.max(300, Number(process.env.FUNDING_INVOICE_TTL_SECONDS) || 3_600)),
     /**

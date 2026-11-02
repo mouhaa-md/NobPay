@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { QUICK_TRIAL, QUICK_TRIAL_BUDGET_CENTS } from '@/lib/templates';
 import { escrowCents, type Project, type User } from '@/lib/types';
 import { setWalletsForTests } from '@/server/lightning';
 import { setPriceSourcesForTests } from '@/server/lightning/price';
@@ -388,6 +389,33 @@ describe('paying a supplier at a Lightning address', () => {
     await db.withDb((d) => void (d.projects.find((p) => p.id === project.id)!.steps[0].quote!.expiresAt = new Date(Date.now() - 1000).toISOString()));
     await expect(services.confirmRelease(owner, project.id, project.steps[0].id)).rejects.toMatchObject({ code: 'quote_expired' });
     expect(wallet.paid).toHaveLength(0);
+  });
+});
+
+describe('the "essai rapide" with real sats', () => {
+  it('runs the whole path: 15 $ in, three 5 $ steps paid in sats, a refund of nothing left', async () => {
+    const trial = await services.createProject(owner, {
+      name: QUICK_TRIAL.name,
+      sector: QUICK_TRIAL.sector,
+      city: QUICK_TRIAL.city,
+      managerName: QUICK_TRIAL.managerName,
+      budgetCents: QUICK_TRIAL_BUDGET_CENTS,
+      steps: QUICK_TRIAL.steps.map((s) => ({ title: s.title, amountCents: s.amountCents, proofKinds: [...s.proofKinds] })),
+    });
+    const funding = await fund(trial.id, QUICK_TRIAL_BUDGET_CENTS);
+    expect(funding.amountSats).toBe(15_000);
+    expect((await stepOf(trial.id, 0)).status).toBe('active');
+
+    for (let i = 0; i < 3; i++) {
+      const step = await approved(trial, i);
+      expect(step.status).toBe('paid');
+      expect(step.payout!.lightning!.amountSats).toBe(5_000);
+    }
+    expect(wallet.paid).toHaveLength(3);
+    expect(await escrowOf(trial.id)).toBe(0);
+    await expect(flows.requestRefund(owner, trial.id, { amountCents: 100, address: 'moi@wallet.example' })).rejects.toMatchObject({ code: 'insufficient_escrow' });
+    const { verifyChain, ledgerFor } = await import('@/server/ledger');
+    expect(verifyChain(ledgerFor(await db.readDb(), trial.id)).ok).toBe(true);
   });
 });
 
