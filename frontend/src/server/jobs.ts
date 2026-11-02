@@ -2,6 +2,8 @@ import { getConfig } from './config';
 import { logger } from './logger';
 import { autoAnchorProjects, refreshPendingAnchors } from './anchors';
 import { checkWalletSolvency, pollPendingLightningFundings, reconcileRefunds } from './lightningFlows';
+import { attestCommitments } from './nostr/attestation';
+import { publishCommitments } from './nostr/publisher';
 import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings, reconcile } from './services';
 
 /**
@@ -12,6 +14,7 @@ import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings
  *  - sandbox: poll pending invoices (fallback when a webhook is late or lost), convert paid bitcoin to the
  *    stablecoin (retried safely), and every minute check that what we owe is covered by the wallets
  *  - AUTO_ANCHOR=1: anchor a project right after money moved (opt-in: it calls public calendars)
+ *  - NOSTR_PUBLISH=1: publish each ledger event's commitment to the Nostr relays (opt-in: it calls public relays)
  *  - every 10 minutes: ask OpenTimestamps whether pending anchors reached a Bitcoin block
  * Pages and GET routes no longer do any of this while rendering.
  */
@@ -19,6 +22,7 @@ import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings
 interface State {
   timer?: NodeJS.Timeout;
   running: boolean;
+  nostrRunning: boolean;
   lastAnchors: number;
   lastSolvency: number;
   lastWalletSolvency: number;
@@ -29,7 +33,7 @@ const g = globalThis as unknown as { __nobpayJobs?: State };
 const ANCHOR_EVERY_MS = 10 * 60_000;
 const SOLVENCY_EVERY_MS = 60_000;
 
-const stateOf = (): State => (g.__nobpayJobs ??= { running: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastLogged: new Map() });
+const stateOf = (): State => (g.__nobpayJobs ??= { running: false, nostrRunning: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastLogged: new Map() });
 
 async function safely(state: State, name: string, fn: () => Promise<void>): Promise<void> {
   try {
@@ -68,6 +72,16 @@ export async function tick(): Promise<void> {
         state.lastWalletSolvency = Date.now();
         await safely(state, 'wallet-solvency', async () => void (await checkWalletSolvency()));
       }
+    }
+    if (getConfig().nostr.publish && !state.nostrRunning) {
+      // relays can be slow: this runs beside the loop, never in front of the payouts
+      state.nostrRunning = true;
+      void safely(state, 'nostr-commitments', async () => {
+        await publishCommitments();
+        await attestCommitments();
+      }).finally(() => {
+        state.nostrRunning = false;
+      });
     }
     if (Date.now() - state.lastAnchors > ANCHOR_EVERY_MS) {
       state.lastAnchors = Date.now();

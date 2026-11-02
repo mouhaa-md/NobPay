@@ -17,6 +17,7 @@ import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
+import { nostrStatusIn } from '@/server/nostr/publisher';
 import { summarize } from '@/server/views';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,7 @@ export default async function ProjectPage(
   const anchors = db.anchors.filter((a) => a.projectId === project.id && a.status !== 'failed');
   const confirmed = anchors.filter((a) => a.status === 'confirmed').length;
   const events = ledgerFor(db, project.id).length;
+  const nostr = nostrStatusIn(db, project.id);
   const toFund = Math.max(0, project.budgetCents - s.funded);
   const nextLocked = project.steps.find((st) => st.status === 'upcoming');
   const missingForNext = nextLocked && s.escrow < nextLocked.amountCents && !project.steps.some((st) => st.status === 'active' || st.status === 'proof_submitted' || st.status === 'rejected' || st.status === 'releasing') ? nextLocked.amountCents - s.escrow : 0;
@@ -165,6 +167,8 @@ export default async function ProjectPage(
             <span className="block font-body-sm text-body-sm text-on-surface-variant">
               {events} événement{events > 1 ? 's' : ''} enchaîné{events > 1 ? 's' : ''} ·{' '}
               {anchors.length === 0 ? 'pas encore ancré sur Bitcoin' : `${confirmed}/${anchors.length} ancrage${anchors.length > 1 ? 's' : ''} confirmé${confirmed > 1 ? 's' : ''}`}
+              {nostr.enabled && ` · publié sur Nostr ${nostr.confirmed}/${nostr.total}`}
+              {nostr.enabled && nostr.attested > 0 && ` · ${nostr.attested} horodaté${nostr.attested > 1 ? 's' : ''} sur Bitcoin (NIP-03)`}
             </span>
           </span>
           <Icon name="chevron_right" className="text-on-surface-variant" />

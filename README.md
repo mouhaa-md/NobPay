@@ -46,6 +46,12 @@ Avec `LIGHTNING_RAIL=nwc`, une instance utilise de **vrais sats** par Nostr Wall
 
 **État de la vérification :** ce chemin est testé de bout en bout contre un **portefeuille simulé** (réponses perdues, refus, paiement à moitié connu, montant faux, facture falsifiée, adresse piégée) ; il n'a pas encore été essayé avec un vrai portefeuille. Les écrans l'appellent « Bitcoin réel » seulement sur une instance configurée ainsi.
 
+### Le registre répliqué sur Nostr (Dakar Bitcoin Hack #4)
+
+Avec `NOSTR_PUBLISH=1`, chaque événement du registre est aussi publié sur des **relais Nostr** : un petit événement signé par une clé propre au projet, qui ne contient que le numéro et les deux empreintes (ni nom, ni montant). La page de vérification publique **interroge les relais depuis le navigateur du visiteur**, contrôle chaque signature et compare : un registre réécrit ou amputé par l'opérateur ne correspond plus à ce que les relais ont gardé. Les événements où de l'argent a bougé sont de plus **horodatés sur Bitcoin selon NIP-03** (OpenTimestamps). Réglages et limites : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
+
+**État de la vérification :** testé contre de faux relais (refus, silence, panne, événements falsifiés, deuxième version contradictoire) et en lecture seule contre trois relais publics ; la **publication réelle** vers des relais publics n'a pas encore été essayée (`node scripts/nostr-smoke.mjs` le fait, sur demande).
+
 Limites à connaître :
 
 - Hors du mode vrais bitcoins, aucun argent réel n'est géré. En sandbox, le portefeuille se finance avec de l'**USDC de test** (faucet Circle, ~10 min de délai de détection) ; **on ne peut pas payer une facture Lightning de test**, donc l'entrée Lightning et la conversion BTC→stablecoin n'ont pas été vues en vrai (en démonstration, le bouton « Simuler la réception » (`ALLOW_DEMO=1`) crédite le séquestre par un évènement signé par NobPay : ce versement est marqué `simulated` dans le registre public). `GET /api/balances` est instable en sandbox : voir le rapport.

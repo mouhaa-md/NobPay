@@ -63,5 +63,19 @@
 - **560 tests verts sur 40 fichiers** (avant M1 : 357), `tsc --noEmit` sans erreur.
 - Nouveaux : `bolt11` (15), `lnurl` (26), `safe-fetch` (60), `nwc-adapter` (51), **`lightning-flows` (34 : versement, paiement, réponses perdues, factures falsifiées, remboursements, solvabilité, intégrité du registre)**, `guest` (4), démarrage (+14).
 
+## Jalon M2 : le registre répliqué sur Nostr (2 novembre 2026)
+
+> Branche `dbd4/m1-real-bitcoin`. Testé contre de faux relais et en lecture seule contre trois relais publics ; **la publication réelle n'a pas encore été essayée** (`scripts/nostr-smoke.mjs`, sur décision de l'équipe).
+
+- **Engagements** (`NOSTR_PUBLISH=1`, désactivé par défaut) : chaque événement du registre est publié sur des relais (`NOSTR_RELAYS`, par défaut damus, nos.lol, primal) comme un événement Nostr signé de type **8421** qui ne contient que `{numéro, empreinte, empreinte précédente}` : **ni nom, ni montant, ni type**. Type ordinaire, pas remplaçable : une seconde version contradictoire ne prend pas la place de la première, elle apparaît à côté. (8173, premier choix, était déjà utilisé par une autre application sur les relais ; vérifié en lecture.)
+- **Une clé par projet**, dérivée (HKDF-SHA256) de `NOSTR_MASTER_KEY` et de l'identifiant du projet : une seule valeur à sauvegarder, aucun lien public entre deux projets. **La clé publique est inscrite dans le premier événement du registre**, donc dans l'ancrage Bitcoin du dossier. Une clé maîtresse qui a changé est signalée et n'est jamais utilisée pour signer sous une autre clé.
+- **Publication fiable** : en tâche de fond à côté des paiements (jamais devant), un même événement signé renvoyé tel quel, reprise avec pauses croissantes, un engagement compte comme publié quand `NOSTR_MIN_ACKS` relais (2) l'ont accepté ; un relais qui l'a déjà compte comme ayant accepté.
+- **Vérification sans notre serveur** : la page publique et le contrôle d'un fichier de dossier interrogent les relais **depuis le navigateur**, vérifient chaque signature, et disent : confirmé, partiel (événement absent, ou en cours de publication s'il a moins de 3 minutes), **conflit** (un engagement signé dit autre chose que le registre, ou le premier événement suivant ne prolonge pas le dernier) ou relais injoignables. Les adresses de relais venant d'un dossier sont filtrées (wss:// et nom de domaine public seulement).
+- **Horodatage Bitcoin des événements où de l'argent a bougé, selon NIP-03** : l'identifiant de l'engagement est envoyé aux calendriers OpenTimestamps ; une fois le bloc connu, la preuve (réduite à **une seule** attestation Bitcoin, sans attente) est publiée en événement 1040. `NOSTR_ATTEST=0` pour l'éteindre.
+- Page du projet : « publié sur Nostr 7/7 · 2 horodatés sur Bitcoin (NIP-03) ».
+- Politique de sécurité du navigateur : `connect-src` autorise `wss:` (la page de vérification parle aux relais).
+- `scripts/nostr-smoke.mjs` : contrôle des relais choisis, **en lecture seule avec `--read-only`** ; sans, il publie un événement de test signé par une clé jetable.
+- **630 tests verts sur 43 fichiers**, `tsc` et `next build` sans erreur. Tests : `nostr` (50), `nostr-attestation` (8), `ots` (+4 : réduction à une attestation), démarrage (+3). Corrigé : `resetDb` oubliait de vider la collection `nostr`.
+
 ## À venir (voir le plan du rapport d'audit)
-M1 (suite) architecture en ports/adaptateurs et SQLite · M2 Nostr (engagements du registre sur relais, NIP-03, vérification sans notre serveur) · M3 IA consultative · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.
+M1 (suite) architecture en ports/adaptateurs et SQLite · M3 IA consultative · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

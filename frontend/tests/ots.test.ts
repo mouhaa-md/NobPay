@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { inspect, isTrustedCalendar, parseDetached, serializeDetached, upgrade, type TsNode } from '@/server/ots';
+import { inspect, isTrustedCalendar, parseDetached, reduceToBitcoin, serializeDetached, upgrade, type TsNode } from '@/server/ots';
 
 const varUint = (n: number) => Buffer.from([n]); // enough for short values in tests
 const sha256 = (b: Buffer) => createHash('sha256').update(b).digest();
@@ -50,6 +50,54 @@ describe('OpenTimestamps file format', () => {
 
   it('refuses files that are not .ots', () => {
     expect(() => parseDetached(Buffer.from('hello'))).toThrow();
+  });
+});
+
+describe('reduceToBitcoin (the proof NIP-03 wants)', () => {
+  const digest = sha256(Buffer.from('event id'));
+  const pendingTag = Buffer.from('83dfe30d2ef90c8e', 'hex');
+  const bitcoinTag = Buffer.from('0588960d73d71901', 'hex');
+  const uri = Buffer.from('https://alice.btc.calendar.opentimestamps.org');
+  const pending = { tag: pendingTag, payload: Buffer.concat([varUint(uri.length), uri]) };
+  const block = (height: number) => ({ tag: bitcoinTag, payload: Buffer.from([height]) }); // heights under 128 are one LEB128 byte
+
+  const file = (root: TsNode) => serializeDetached({ digest, root });
+
+  it('is null while there is no Bitcoin attestation', () => {
+    expect(reduceToBitcoin(file({ msg: digest, attestations: [pending], ops: [] }))).toBeNull();
+  });
+
+  it('drops the pending attestation and keeps the Bitcoin one', () => {
+    const merged: TsNode = { msg: digest, attestations: [pending, block(100)], ops: [] };
+    const out = reduceToBitcoin(file(merged))!;
+    expect(inspect(parseDetached(out).root)).toEqual({ pending: [], bitcoin: [{ height: 100, commitment: digest.toString('hex') }] });
+    expect(parseDetached(out).digest.equals(digest)).toBe(true);
+  });
+
+  it('keeps a single attestation, the earliest block, and only the branch that leads to it', () => {
+    const leaf = (msg: Buffer, atts: TsNode['attestations']): TsNode => ({ msg, attestations: atts, ops: [] });
+    const a = sha256(Buffer.from('a'));
+    const b = sha256(Buffer.from('b'));
+    const c = sha256(Buffer.from('c'));
+    const root: TsNode = {
+      msg: digest,
+      attestations: [],
+      ops: [
+        { tag: 0x08, child: { msg: a, attestations: [], ops: [{ tag: 0x08, child: leaf(c, [pending]) }] } }, // dead branch: only pending
+        { tag: 0xf0, arg: Buffer.from('01', 'hex'), child: { msg: b, attestations: [block(120)], ops: [] } }, // later block
+        { tag: 0xf0, arg: Buffer.from('02', 'hex'), child: { msg: sha256(b), attestations: [block(90)], ops: [] } }, // the earliest
+      ],
+    };
+    const reduced = reduceToBitcoin(file(root))!;
+    const status = inspect(parseDetached(reduced).root);
+    expect(status.pending).toEqual([]);
+    expect(status.bitcoin.map((x) => x.height)).toEqual([90]);
+    expect(reduced.length).toBeLessThan(file(root).length);
+  });
+
+  it('the result can be reduced again without change', () => {
+    const once = reduceToBitcoin(file({ msg: digest, attestations: [pending, block(7)], ops: [] }))!;
+    expect(reduceToBitcoin(once)!.equals(once)).toBe(true);
   });
 });
 

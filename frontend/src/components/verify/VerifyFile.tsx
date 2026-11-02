@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { CheckRow } from '@/components/verify/CheckRow';
 import { DossierSummary } from '@/components/verify/DossierSummary';
+import { NostrCheck } from '@/components/verify/NostrCheck';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote } from '@/components/ui/primitives';
 import { verifyDossier, type DossierReport } from '@/lib/verify';
@@ -63,6 +64,7 @@ export function VerifyFile() {
               <CheckRow state={report.chainOk && report.headOk ? 'ok' : 'bad'} title="Le registre est cohérent">
                 {report.chainOk && report.headOk ? `${report.eventCount} événements enchaînés, aucune modification détectée.` : `La chaîne est rompue à l'événement ${report.brokenAt ?? '?'} : ce dossier a été modifié.`}
               </CheckRow>
+              {report.dossier && report.chainOk && <NostrCheck ledger={report.dossier.ledger} />}
               <CheckRow state="idle" title="Empreinte du fichier (SHA-256)">
                 <code className="break-all font-mono text-[11px]">{report.digest}</code>
                 <span className="mt-1 block">Comparez-la à celle de la preuve .ots sur opentimestamps.org pour savoir quand ce dossier a été ancré sur Bitcoin.</span>

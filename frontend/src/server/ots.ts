@@ -218,6 +218,38 @@ export function inspect(root: TsNode): OtsStatus {
   return status;
 }
 
+/**
+ * The proof NIP-03 asks for: ONE Bitcoin attestation (the earliest block), no pending attestation and no branch that does
+ * not lead to it. Returns null while the file has no Bitcoin attestation yet. The result is still a standard `.ots` file.
+ */
+export function reduceToBitcoin(ots: Buffer): Buffer | null {
+  const file = parseDetached(ots);
+  const heights = inspect(file.root).bitcoin.map((b) => b.height);
+  if (heights.length === 0) return null;
+  const best = Math.min(...heights);
+  let kept = false;
+  const prune = (node: TsNode): boolean => {
+    const chosen = node.attestations.find((a) => a.tag.equals(TAG_BITCOIN) && new Reader(a.payload).varUint() === best);
+    if (!kept && chosen) {
+      kept = true;
+      node.attestations = [chosen];
+      node.ops = [];
+      return true;
+    }
+    node.attestations = [];
+    for (const op of node.ops) {
+      if (prune(op.child)) {
+        node.ops = [op];
+        return true;
+      }
+    }
+    node.ops = [];
+    return false;
+  };
+  prune(file.root);
+  return serializeDetached(file);
+}
+
 /* ------------------------------ network ------------------------------------- */
 
 const OTS_ACCEPT = 'application/vnd.opentimestamps.v1';
