@@ -16,6 +16,8 @@ interface Props {
   step: { id: string; index: number; title: string; proofKinds: ProofKind[] };
   /** pre-fill after a refusal */
   previous?: Supplier;
+  /** how the supplier is paid on this instance: mobile money (Senegal), or bitcoin to a Lightning address */
+  payTo?: 'mobile' | 'lightning';
 }
 
 interface Photo {
@@ -36,7 +38,7 @@ const NET_DOT: Record<MobileNetwork, string> = { wave: 'bg-[#1DC8FF]', orange_mo
 const nf = { format: formatInt };
 const digits = (v: string) => v.replace(/\D/g, '');
 
-export function FieldProofForm({ token, projectId, step, previous }: Props) {
+export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobile' }: Props) {
   const router = useRouter();
   const wantsTitle = step.proofKinds.includes('titre');
   const wantsPhotos = step.proofKinds.includes('photos') || wantsTitle;
@@ -47,7 +49,9 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
   const [invoiceAmount, setInvoiceAmount] = useState('');
   const [name, setName] = useState(previous?.name ?? '');
   const [phone, setPhone] = useState(previous?.phone.replace(/^\+221/, '') ?? '');
-  const [network, setNetwork] = useState<MobileNetwork | ''>(previous?.network ?? '');
+  const [network, setNetwork] = useState<MobileNetwork | ''>(previous?.network && previous.network !== 'lightning' ? previous.network : '');
+  const [lightningAddress, setLightningAddress] = useState(previous?.lightningAddress ?? '');
+  const lightning = payTo === 'lightning';
   const [note, setNote] = useState('');
   const [gps, setGps] = useState<Gps | null>(null);
   const [gpsState, setGpsState] = useState<'idle' | 'asking' | 'ok' | 'denied'>('idle');
@@ -118,8 +122,14 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
     if (wantsPhotos && photos.length === 0) return setError(wantsTitle ? 'Ajoutez la photo du titre foncier.' : 'Ajoutez au moins une photo.');
     if (wantsInvoice && !invoice) return setError('Ajoutez la facture du fournisseur.');
     if (!name.trim()) return setError('Indiquez le nom de la personne ou de l’entreprise à payer.');
-    if (digits(phone).length < 8) return setError('Indiquez son numéro de téléphone mobile money.');
-    if (!network) return setError('Choisissez son opérateur mobile money.');
+    if (lightning) {
+      if (!/^[a-z0-9._-]{1,64}@([a-z0-9-]{1,63}\.)+[a-z]{2,24}$/i.test(lightningAddress.trim())) {
+        return setError('Indiquez une adresse Lightning valable (elle ressemble à une adresse e-mail : nom@domaine.com).');
+      }
+    } else {
+      if (digits(phone).length < 8) return setError('Indiquez son numéro de téléphone mobile money.');
+      if (!network) return setError('Choisissez son opérateur mobile money.');
+    }
 
     setBusy(true);
     try {
@@ -132,8 +142,9 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
       if (invoice) form.set('invoice', await shrinkImage(invoice));
       if (invoiceAmount) form.set('invoiceAmountFcfa', digits(invoiceAmount));
       form.set('supplierName', name.trim());
-      form.set('supplierPhone', `+221${digits(phone).replace(/^0+/, '')}`);
-      form.set('supplierNetwork', network);
+      form.set('supplierPhone', lightning ? '' : `+221${digits(phone).replace(/^0+/, '')}`);
+      form.set('supplierNetwork', lightning ? 'lightning' : network);
+      if (lightning) form.set('supplierLightningAddress', lightningAddress.trim().toLowerCase());
       if (note.trim()) form.set('note', note.trim());
 
       const res = await fetch(`/api/projects/${projectId}/steps/${step.id}/proof`, { method: 'POST', headers: { 'x-manager-token': token }, body: form });
@@ -251,12 +262,35 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container font-label-md text-label-md font-bold text-on-primary">{(wantsPhotos ? 1 : 0) + (wantsInvoice ? 1 : 0) + 1}</span>
           Qui doit être payé ?
         </h3>
-        <p className="font-body-sm text-body-sm text-on-surface-variant">L&apos;argent est envoyé directement sur son mobile money. Il ne passe pas par vous.</p>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
+          {lightning ? 'Les bitcoins (en sats) sont envoyés directement sur son portefeuille Lightning. Ils ne passent pas par vous.' : 'L’argent est envoyé directement sur son mobile money. Il ne passe pas par vous.'}
+        </p>
         <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
           Nom du fournisseur
           <input className={field} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex. Quincaillerie Ndiaye" autoComplete="off" />
         </label>
-        <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
+        {lightning && (
+          <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
+            Son adresse Lightning
+            <input
+              className={field}
+              value={lightningAddress}
+              onChange={(e) => setLightningAddress(e.target.value)}
+              type="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={130}
+              placeholder="nom@portefeuille.com"
+              autoComplete="off"
+            />
+            <span className="font-body-sm text-body-sm font-normal text-outline">
+              Une adresse Lightning ressemble à une adresse e-mail. Elle se trouve dans l’application de portefeuille Lightning de la personne à payer.
+            </span>
+          </label>
+        )}
+        {!lightning && <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
           Son téléphone mobile money
           <span className="flex items-center gap-2 rounded-2xl bg-surface-container-low p-1.5 focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">
             <span className="flex h-9 items-center gap-1.5 rounded-xl bg-surface-container px-3 font-title-md text-title-md font-bold text-on-surface">
@@ -264,8 +298,8 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
             </span>
             <input className="w-full bg-transparent py-2 pr-3 font-body-lg text-on-surface outline-none placeholder:text-outline" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" inputMode="tel" placeholder="77 123 45 67" autoComplete="off" />
           </span>
-        </label>
-        <fieldset className="flex flex-col gap-1.5">
+        </label>}
+        {!lightning && <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1.5 font-label-md text-label-md text-on-surface-variant">Opérateur</legend>
           <div className="grid grid-cols-3 gap-2">
             {NETWORKS.map((n) => (
@@ -275,7 +309,7 @@ export function FieldProofForm({ token, projectId, step, previous }: Props) {
               </button>
             ))}
           </div>
-        </fieldset>
+        </fieldset>}
         <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
           Un mot pour le financeur <span className="font-normal text-outline">(facultatif)</span>
           <textarea className="min-h-20 w-full resize-none rounded-2xl bg-surface-container-low p-3 font-body-md text-on-surface outline-none placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex. Les fondations sont coulées, le béton a séché trois jours." />

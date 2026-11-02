@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { checkStartupConfig } from '@/server/startup';
+import { checkStartupConfig, nwcUrlProblem } from '@/server/startup';
 
 const STRONG = 'a-long-random-secret-of-more-than-32-characters';
 afterEach(() => vi.unstubAllEnvs());
@@ -43,6 +43,80 @@ describe('startup configuration check', () => {
     const r = checkStartupConfig();
     expect(r.fatal).toEqual([]);
     expect(r.warnings.join(' ')).toMatch(/DEMO_OTP/);
+  });
+
+  describe('real bitcoin (LIGHTNING_RAIL=nwc)', () => {
+    const KEY = 'ab'.repeat(32);
+    const SECRET = 'cd'.repeat(32);
+    const nwc = (over: { host?: string; secret?: string | null; relays?: string[]; scheme?: string } = {}) => {
+      const params = new URLSearchParams();
+      for (const r of over.relays ?? ['wss://relay.example']) params.append('relay', r);
+      if (over.secret !== null) params.set('secret', over.secret ?? SECRET);
+      return `${over.scheme ?? 'nostr+walletconnect'}://${over.host ?? KEY}?${params}`;
+    };
+    const real = () => {
+      vi.stubEnv('LIGHTNING_RAIL', 'nwc');
+      vi.stubEnv('SESSION_SECRET', STRONG);
+      vi.stubEnv('ALLOW_DEMO', '0');
+      vi.stubEnv('NWC_RECEIVE_URL', nwc());
+    };
+
+    it('starts with a valid receive connection and a valid payout connection, nothing to say', () => {
+      real();
+      vi.stubEnv('NWC_PAYOUT_URL', nwc({ secret: 'ef'.repeat(32) }));
+      expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
+    });
+
+    it('starts without a payout connection, and says payments and refunds are then off', () => {
+      real();
+      const r = checkStartupConfig();
+      expect(r.fatal).toEqual([]);
+      expect(r.warnings.join(' ')).toMatch(/NWC_PAYOUT_URL/);
+    });
+
+    it('refuses to start with a weak session secret (the sessions guard real money)', () => {
+      real();
+      vi.stubEnv('SESSION_SECRET', 'change-me');
+      expect(checkStartupConfig().fatal.join(' ')).toMatch(/SESSION_SECRET/);
+    });
+
+    it('refuses to start with the shared demo code on (anyone could open an account that holds real sats)', () => {
+      real();
+      for (const flag of ['1', '']) {
+        vi.stubEnv('ALLOW_DEMO', flag); // unset also counts as on outside sandbox mode
+        expect(checkStartupConfig().fatal.join(' ')).toMatch(/ALLOW_DEMO=0/);
+      }
+    });
+
+    it('refuses to start without a receive connection, or with an unusable one, without ever printing the secret', () => {
+      real();
+      for (const url of ['', 'https://example.com', nwc({ scheme: 'http' }), nwc({ host: 'nothex' }), nwc({ secret: null }), nwc({ secret: 'short' }), nwc({ relays: [] }), nwc({ relays: ['https://not-a-relay'] })]) {
+        vi.stubEnv('NWC_RECEIVE_URL', url);
+        const fatal = checkStartupConfig().fatal.join(' ');
+        expect(fatal, url).toMatch(/NWC_RECEIVE_URL/);
+        expect(fatal).not.toContain(SECRET);
+      }
+    });
+
+    it('refuses to start with a payout connection that is set but unusable', () => {
+      real();
+      vi.stubEnv('NWC_PAYOUT_URL', nwc({ secret: 'oops' }));
+      const r = checkStartupConfig();
+      expect(r.fatal.join(' ')).toMatch(/NWC_PAYOUT_URL/);
+      expect(r.fatal.join(' ')).not.toContain('oops');
+    });
+
+    it.each([
+      [`nostr+walletconnect://${'ab'.repeat(32)}?relay=wss%3A%2F%2Frelay.example&secret=${'cd'.repeat(32)}`, null],
+      [`nostr+walletconnect://${'AB'.repeat(32)}?relay=ws://localhost:7777&secret=${'CD'.repeat(32)}`, null],
+      [`  nostr+walletconnect://${'ab'.repeat(32)}?relay=wss://a.example&relay=wss://b.example&secret=${'cd'.repeat(32)}  `, null],
+      [undefined, 'absente'],
+      ['', 'absente'],
+      ['not a url', 'illisible'],
+      [`nostr+walletconnect:${'ab'.repeat(32)}`, 'clé publique du portefeuille invalide'],
+    ])('nwcUrlProblem(%j) = %j', (value, expected) => {
+      expect(nwcUrlProblem(value)).toBe(expected);
+    });
   });
 
   it('refuses keys that look like production (live) keys, in sandbox mode', () => {

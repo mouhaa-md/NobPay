@@ -153,6 +153,28 @@ export async function loginUser(input: { phone: string; otp: string }): Promise<
   return user;
 }
 
+/**
+ * "Try without an account": a private account for one browser. No phone number, no code; whatever it creates belongs to
+ * it alone, and it can never be an administrator. Meant for a jury or a first look, with real sats under a ceiling.
+ */
+export async function guestUser(): Promise<User> {
+  if (!getConfig().allowGuest) throw new HttpError(403, 'Les comptes invités sont désactivés sur cette instance.', 'guest_disabled');
+  const id = randomId('u_guest', 6);
+  const user: User = {
+    id,
+    firstName: 'Invité',
+    lastName: id.slice(-4).toUpperCase(),
+    country: 'FR',
+    phone: '',
+    createdAt: new Date().toISOString(),
+    guest: true,
+  };
+  await withDb((db) => {
+    db.users.push(user);
+  });
+  return user;
+}
+
 export async function demoUser(): Promise<User> {
   if (!getConfig().allowDemo) throw new HttpError(403, 'Le compte de démonstration est désactivé sur cette instance.', 'demo_disabled');
   const db = await readDb();

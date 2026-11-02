@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
+import { INSTANCE, type InstanceMode } from '@/lib/instance';
 
 const POINTS = [
   { icon: 'fact_check', title: 'Chaque paiement exige une preuve', text: 'Photos, facture, titre foncier : vous regardez, puis vous validez.' },
@@ -9,7 +10,7 @@ const POINTS = [
 ];
 
 /** Brand panel of the sign-in screens on a computer (hidden on phones, where each page has its own hero). */
-export function AuthAside({ mode }: { mode: 'mock' | 'sandbox' }) {
+export function AuthAside({ mode }: { mode: InstanceMode }) {
   return (
     <aside className="relative hidden overflow-hidden bg-ocean text-on-primary lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-between lg:px-12 lg:py-10 xl:px-16">
       <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-primary-container/30 blur-3xl" />
@@ -21,7 +22,7 @@ export function AuthAside({ mode }: { mode: 'mock' | 'sandbox' }) {
         </Link>
         <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-label-sm text-label-sm text-primary-fixed backdrop-blur-md">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          {mode === 'mock' ? 'Mode démo' : 'Sandbox Bitnob'}
+          {INSTANCE[mode].short}
         </span>
       </div>
 

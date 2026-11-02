@@ -1,7 +1,7 @@
 import { Icon } from '@/components/ui/Icon';
 import { formatDateTime, formatFcfa } from '@/lib/money';
 import { shortHash } from '@/lib/ledgerLabels';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { supplierRoute } from '@/lib/supplierLabel';
 import type { Proof, StoredFile } from '@/lib/types';
 
 interface Props {
@@ -97,13 +97,13 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
       {proof.supplier && (
         <section className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-3.5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Icon name="mobile" size={22} />
+            <Icon name={proof.supplier.network === 'lightning' ? 'bolt' : 'mobile'} size={22} />
           </span>
           <span className="min-w-0">
             <span className="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Sera payé directement</span>
             <span className="block truncate font-title-md text-title-md">{proof.supplier.name}</span>
             <span className="block truncate font-body-sm text-body-sm text-on-surface-variant">
-              {MOBILE_NETWORKS[proof.supplier.network]} · {proof.supplier.phone}
+              {supplierRoute(proof.supplier)}
             </span>
           </span>
         </section>

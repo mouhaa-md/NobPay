@@ -3,7 +3,7 @@ import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar } from '@/components/ui/primitives';
 import { formatFcfa, formatUsd, formatUsdShort, relativeDay } from '@/lib/money';
-import { MOBILE_NETWORKS, SECTORS } from '@/lib/templates';
+import { SECTORS, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { ProjectSummary } from '@/server/views';
 import { lastPaidAt } from './ProjectCard';
 
@@ -27,7 +27,7 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
   } else if (done) {
     strip = { tone: 'bg-[#DCFCE7] text-[#14532D]', icon: 'check_circle', text: 'Projet terminé : toutes les étapes sont payées', cta: { href: `/app/certificat/${project.id}`, label: 'Voir le certificat' } };
   } else if (releasing) {
-    strip = { tone: 'bg-surface-container text-on-surface', icon: 'sync', text: `Paiement en cours vers ${releasing.payout?.supplier.name ?? 'le fournisseur'} (${releasing.payout ? MOBILE_NETWORKS[releasing.payout.supplier.network] : 'mobile money'})` };
+    strip = { tone: 'bg-surface-container text-on-surface', icon: 'sync', text: `Paiement en cours vers ${releasing.payout?.supplier.name ?? 'le fournisseur'} (${releasing.payout ? SUPPLIER_NETWORKS[releasing.payout.supplier.network] : 'mobile money'})` };
   } else if (current?.status === 'rejected') {
     strip = { tone: 'bg-error-container text-on-error-container', icon: 'undo', text: `Preuve refusée : ${project.managerName} doit en renvoyer une pour « ${current.title} »` };
   } else if (current?.status === 'active') {

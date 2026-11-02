@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
-import { formatFcfa, formatRate, formatUsd, formatUsdShort } from '@/lib/money';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { formatFcfa, formatInt, formatRate, formatSats, formatUsd, formatUsdShort } from '@/lib/money';
+import { supplierRoute } from '@/lib/supplierLabel';
 import type { PayoutQuote, Supplier } from '@/lib/types';
 
 interface Props {
@@ -148,22 +148,34 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
 
             <div className="mb-space-md flex items-center gap-3 rounded-2xl bg-surface-container-low p-3.5">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Icon name="mobile" size={22} />
+                <Icon name={supplier.network === 'lightning' ? 'bolt' : 'mobile'} size={22} />
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-title-md text-title-md">{supplier.name}</span>
                 <span className="block truncate font-body-sm text-body-sm text-on-surface-variant">
-                  {MOBILE_NETWORKS[supplier.network]} · {supplier.phone}
+                  {supplierRoute(supplier)}
                 </span>
               </span>
             </div>
 
             <dl className="mb-space-md flex flex-col gap-2.5 font-body-md text-body-md">
               <Row label="Débité de votre séquestre" value={formatUsd(quote.amountUsdCents)} />
-              <Row label="Taux appliqué" value={`1 $ = ${formatRate(quote.rate)} FCFA`} />
-              <Row label="Frais" value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents) : 'Aucun frais ajouté'} />
-              <div className="my-1 h-px bg-outline-variant/50" />
-              <Row label="Le fournisseur reçoit" value={formatFcfa(quote.amountFcfa)} strong />
+              {quote.lightning ? (
+                <>
+                  <Row label="Prix du bitcoin" value={`1 BTC = ${formatInt(Math.round(quote.lightning.btcUsd))} $`} />
+                  <Row label="Frais NobPay" value="Aucun frais ajouté" />
+                  <div className="my-1 h-px bg-outline-variant/50" />
+                  <Row label="Le fournisseur reçoit" value={formatSats(quote.lightning.amountSats)} strong />
+                  <p className="-mt-1 text-right font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(quote.amountFcfa)} (taux indicatif)</p>
+                </>
+              ) : (
+                <>
+                  <Row label="Taux appliqué" value={`1 $ = ${formatRate(quote.rate)} FCFA`} />
+                  <Row label="Frais" value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents) : 'Aucun frais ajouté'} />
+                  <div className="my-1 h-px bg-outline-variant/50" />
+                  <Row label="Le fournisseur reçoit" value={formatFcfa(quote.amountFcfa)} strong />
+                </>
+              )}
             </dl>
 
             <p className={`mb-space-sm flex items-center justify-center gap-1.5 font-label-md text-label-md ${expired ? 'text-error' : 'text-on-surface-variant'}`} role="status">
@@ -187,7 +199,9 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
                 Annuler
               </button>
             </div>
-            <p className="mt-2 text-center font-label-sm text-label-sm text-on-surface-variant">Un paiement confirmé ne peut pas être annulé.</p>
+            <p className="mt-2 text-center font-label-sm text-label-sm text-on-surface-variant">
+              {quote.lightning ? 'Un paiement Lightning confirmé ne peut pas être annulé : les sats arrivent directement chez le fournisseur.' : 'Un paiement confirmé ne peut pas être annulé.'}
+            </p>
           </div>
         </div>
       )}

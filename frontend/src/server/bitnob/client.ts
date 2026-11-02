@@ -1,4 +1,4 @@
-import type { PayoutQuote, PayoutStatus, Supplier } from '@/lib/types';
+import type { MobileNetwork, PayoutQuote, PayoutStatus, Supplier } from '@/lib/types';
 import { getConfig } from '../config';
 import { buildAuthHeaders } from './sign';
 import {
@@ -301,7 +301,7 @@ async function quotePayout(input: { amountUsdCents: number; reference: string })
 }
 
 /** Network codes accepted for Senegal mobile money (GET /api/payouts/supported-countries/SN also offers `expresso`). */
-const NETWORK_LABEL: Record<Supplier['network'], string> = { wave: 'wave', orange_money: 'orange', free_money: 'free' };
+const NETWORK_LABEL: Record<MobileNetwork, string> = { wave: 'wave', orange_money: 'orange', free_money: 'free' };
 
 /** Bitnob's own pattern for a Senegalese mobile number: 77 123 45 67, 771234567 or +221771234567. */
 const SN_MOBILE = /^(\+?221[7]\d{8}|[7]\d{8})$/;
@@ -316,6 +316,8 @@ export function toSenegalNumber(phone: string): string {
 
 /** Fields required for SN mobile_money (read from /supported-countries/SN): account_name, account_number, network, sender{account_name,country}. */
 export function buildBeneficiary(supplier: Supplier, sender: { name: string; country: string }): Json {
+  // a Lightning supplier is paid by the wallet flow (lightningFlows.ts), never through the mobile money rail
+  if (supplier.network === 'lightning') throw new GatewayError('Un fournisseur Lightning ne se paie pas par mobile money.', 400, undefined, 'invalid_beneficiary');
   return {
     destination_type: 'mobile_money',
     country: 'SN',

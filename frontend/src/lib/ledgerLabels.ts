@@ -10,6 +10,9 @@ export const LEDGER_LABEL: Record<LedgerType, { label: string; icon: string; ton
   payout_started: { label: 'Paiement lancé', icon: 'send', tone: 'bg-surface-container text-primary' },
   payout_completed: { label: 'Paiement confirmé', icon: 'payments', tone: 'bg-[#DCFCE7] text-[#15803D]' },
   payout_failed: { label: 'Paiement non abouti', icon: 'error', tone: 'bg-error-container text-on-error-container' },
+  refund_started: { label: 'Remboursement demandé', icon: 'undo', tone: 'bg-surface-container text-primary' },
+  refund_completed: { label: 'Séquestre remboursé', icon: 'payments', tone: 'bg-[#DCFCE7] text-[#15803D]' },
+  refund_failed: { label: 'Remboursement non abouti', icon: 'error', tone: 'bg-error-container text-on-error-container' },
 };
 
 export const shortHash = (hash: string, head = 8, tail = 6): string => (hash.length > head + tail + 1 ? `${hash.slice(0, head)}…${hash.slice(-tail)}` : hash);

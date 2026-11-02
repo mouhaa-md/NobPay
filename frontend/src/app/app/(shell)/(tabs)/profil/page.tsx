@@ -9,7 +9,8 @@ import { Avatar, Chip, SectionTitle } from '@/components/ui/primitives';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
 import { isAdmin } from '@/server/admin';
 import { getSessionUser } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { INSTANCE } from '@/lib/instance';
+import { getConfig, instanceMode } from '@/server/config';
 import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { userProjects } from '@/server/views';
@@ -47,13 +48,11 @@ export default async function Profile() {
           <SectionTitle>Mode de fonctionnement</SectionTitle>
           <div className="rounded-2xl bg-surface-container-low p-4">
             <p className="mb-1 flex items-center gap-2 font-title-md text-title-md">
-              <Icon name={mode === 'mock' ? 'science' : 'verified_user'} size={20} className="text-primary" />
-              {mode === 'mock' ? 'Démonstration (Bitnob simulé)' : 'Sandbox Bitnob'}
+              <Icon name={INSTANCE[instanceMode()].icon} size={20} className="text-primary" />
+              {mode === 'mock' ? 'Démonstration (Bitnob simulé)' : INSTANCE[instanceMode()].short}
             </p>
             <p className="font-body-sm text-body-sm leading-relaxed text-on-surface-variant">
-              {mode === 'mock'
-                ? "Les factures Lightning et les paiements mobile money sont simulés localement : aucun argent réel ne circule. La signature des événements, la chaîne de preuves et l'ancrage sur Bitcoin (OpenTimestamps) sont, eux, réels."
-                : "Les appels partent vers l'API Bitnob en mode test. Les factures et les paiements sont créés chez Bitnob ; leur résultat nous parvient par webhook signé."}
+              {INSTANCE[instanceMode()].about}
             </p>
           </div>
         </section>

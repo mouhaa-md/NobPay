@@ -1,18 +1,24 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { DemoLoginButton } from '@/components/app/DemoLoginButton';
+import { GuestLoginButton } from '@/components/app/GuestLoginButton';
 import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { buttonPrimary, buttonSecondary } from '@/components/ui/primitives';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { getSmsProvider } from '@/server/sms';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Bienvenue' };
 
 export default async function Welcome() {
   if (await getSessionUser()) redirect('/app/accueil');
-  const mode = getConfig().mode;
+  const cfg = getConfig();
+  const mode = cfg.mode;
+  const real = cfg.lightning.rail === 'nwc';
+  // a phone number can only sign in where a code can be sent (or where the shared demo code is allowed)
+  const phoneSignIn = cfg.allowDemo || getSmsProvider() !== null;
 
   return (
     <main id="contenu" className="flex min-h-screen flex-col lg:min-h-0">
@@ -24,7 +30,7 @@ export default async function Welcome() {
           <Logo tone="light" className="text-[20px]" />
           <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-label-sm text-label-sm text-primary-fixed backdrop-blur-md">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            {mode === 'mock' ? 'Mode démo' : 'Sandbox Bitnob'}
+            {real ? 'Bitcoin réel · phase pilote' : mode === 'mock' ? 'Mode démo' : 'Sandbox Bitnob'}
           </span>
         </div>
 
@@ -76,14 +82,19 @@ export default async function Welcome() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <Link href="/app/inscription" className={buttonPrimary}>
-            <span>Créer un compte</span>
-            <Icon name="arrow_forward" size={18} />
-          </Link>
-          <Link href="/app/connexion" className={buttonSecondary}>
-            Connexion
-          </Link>
-          {getConfig().allowDemo && <DemoLoginButton />}
+          {phoneSignIn && (
+            <>
+              <Link href="/app/inscription" className={buttonPrimary}>
+                <span>Créer un compte</span>
+                <Icon name="arrow_forward" size={18} />
+              </Link>
+              <Link href="/app/connexion" className={buttonSecondary}>
+                Connexion
+              </Link>
+            </>
+          )}
+          {cfg.allowGuest && <GuestLoginButton primary={!phoneSignIn} />}
+          {cfg.allowDemo && <DemoLoginButton />}
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-3 lg:mt-8 lg:items-start">

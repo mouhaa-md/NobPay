@@ -110,6 +110,13 @@ export const fundingSchema = z
   })
   .strict();
 
+export const refundSchema = z
+  .object({
+    amountCents: money(100, 50_000_000, 'Montant de remboursement invalide'),
+    address: z.string({ error: 'Indiquez votre adresse Lightning' }).trim().min(3, 'Indiquez votre adresse Lightning').max(130, 'Adresse Lightning invalide'),
+  })
+  .strict();
+
 export const quoteSchema = z.object({ simulate: z.boolean().optional() }).strict();
 export const rejectSchema = z.object({ note: z.string().max(1000, 'Note trop longue').optional() }).strict();
 
@@ -136,7 +143,9 @@ export const proofFieldsSchema = z
   .object({
     supplierName: z.string().max(200),
     supplierPhone: z.string().max(40),
-    supplierNetwork: z.enum(['wave', 'orange_money', 'free_money'], { error: "Choisissez l'opérateur mobile money du fournisseur" }),
+    supplierNetwork: z.enum(['wave', 'orange_money', 'free_money', 'lightning'], { error: "Choisissez comment le fournisseur est payé (mobile money ou Bitcoin Lightning)" }),
+    /** only for supplierNetwork = lightning */
+    supplierLightningAddress: z.string().max(130).optional(),
     invoiceAmountFcfa: z.number().min(0).max(1e11).optional(),
     note: z.string().max(2000),
   })

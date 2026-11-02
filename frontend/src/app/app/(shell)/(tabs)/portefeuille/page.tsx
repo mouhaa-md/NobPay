@@ -5,7 +5,8 @@ import { Chip, SectionTitle } from '@/components/ui/primitives';
 import { formatDateTime, formatFcfa, formatSats, formatUsd, formatUsdShort } from '@/lib/money';
 import type { Funding } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { INSTANCE } from '@/lib/instance';
+import { getConfig, instanceMode } from '@/server/config';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
 
@@ -130,7 +131,7 @@ export default async function Wallet() {
 
         {/* Bitnob journal */}
         <section className="lg:col-span-2">
-          <SectionTitle action={<Chip tone={mode === 'mock' ? 'warning' : 'success'}>{mode === 'mock' ? 'Mode démo' : 'Sandbox Bitnob'}</Chip>}>Journal Bitnob</SectionTitle>
+          <SectionTitle action={<Chip tone={INSTANCE[instanceMode()].tone}>{INSTANCE[instanceMode()].short}</Chip>}>Journal des événements</SectionTitle>
           <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">
             Chaque événement reçu de Bitnob est vérifié (signature HMAC) puis appliqué une seule fois. Les doublons sont ignorés.
           </p>

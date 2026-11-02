@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { Spinner } from '@/components/ui/primitives';
-import { formatFcfa, formatUsdShort, relativeDay } from '@/lib/money';
-import { MOBILE_NETWORKS, PROOF_LABEL } from '@/lib/templates';
+import { formatFcfa, formatSats, formatUsdShort, relativeDay } from '@/lib/money';
+import { PROOF_LABEL, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
 
 interface Look {
@@ -57,7 +57,7 @@ export function StepTimeline({ projectId, steps }: { projectId: string; steps: S
               </span>
               {step.status === 'paid' && step.payout && (
                 <span className="mt-1.5 flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
-                  <Icon name="payments" size={14} /> {supplier?.name} · {supplier && MOBILE_NETWORKS[supplier.network]} · {formatFcfa(step.payout.amountFcfa)}
+                  <Icon name="payments" size={14} /> {supplier?.name} · {supplier && SUPPLIER_NETWORKS[supplier.network]} · {step.payout.lightning ? formatSats(step.payout.lightning.amountSats) : formatFcfa(step.payout.amountFcfa)}
                 </span>
               )}
               {step.status === 'rejected' && step.decision?.note && <span className="mt-1.5 block font-label-sm text-label-sm text-error">« {step.decision.note} »</span>}

@@ -2,13 +2,14 @@ import {
   currentStep,
   escrowCents,
   fundedCents,
+  refundedCents,
   progressPercent,
   releasedCents,
   type Db,
   type Project,
   type Step,
 } from '@/lib/types';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { ledgerFor } from './ledger';
 
 /** Read models for the screens: everything shown in the app is computed here from the one database. */
@@ -27,7 +28,7 @@ export interface ProjectSummary {
 export function summarize(db: Db, project: Project): ProjectSummary {
   return {
     project,
-    funded: fundedCents(db, project.id),
+    funded: fundedCents(db, project.id) - refundedCents(db, project.id),
     released: releasedCents(project),
     escrow: escrowCents(db, project),
     progress: progressPercent(project),
@@ -117,7 +118,7 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
             items.push({
               ...base,
               kind: 'payout',
-              title: `Paiement fournisseur · ${MOBILE_NETWORKS[step.payout.supplier.network]}`,
+              title: `Paiement fournisseur · ${SUPPLIER_NETWORKS[step.payout.supplier.network]}`,
               subtitle: step.payout.supplier.name,
               icon: 'payments',
               amountCents: step.payout.amountUsdCents,
