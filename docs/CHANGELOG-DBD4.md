@@ -77,5 +77,17 @@
 - `scripts/nostr-smoke.mjs` : contrôle des relais choisis, **en lecture seule avec `--read-only`** ; sans, il publie un événement de test signé par une clé jetable.
 - **630 tests verts sur 43 fichiers**, `tsc` et `next build` sans erreur. Tests : `nostr` (50), `nostr-attestation` (8), `ots` (+4 : réduction à une attestation), démarrage (+3). Corrigé : `resetDb` oubliait de vider la collection `nostr`.
 
+## Jalon M3 : un deuxième regard sur chaque preuve (2 novembre 2026)
+
+> Testé avec un faux client Anthropic. **Jamais exécuté contre l'API réelle** (pas de clé) : la qualité de l'avis sur de vraies photos reste à constater.
+
+- **Contrôles sans IA, toujours affichés** : fichier déjà envoyé dans la même preuve, dans une autre étape ou dans un autre projet (sans nommer l'autre projet) ; photos géolocalisées ou non, hors du Sénégal ; photos trop anciennes ou datées après l'envoi ; montant de la facture comparé à l'étape (±15 %). Les images fournies avec les données de démonstration sont exclues du contrôle de doublons.
+- **Avis de l'IA, à la demande du financeur** (`AI_REVIEW=1`, `ANTHROPIC_API_KEY`) : SDK officiel `@anthropic-ai/sdk`, sortie structurée (zod), modèle `claude-opus-5-5` par défaut (`AI_MODEL`), effort bas. **L'IA lit, le code compare** : elle décrit les photos et recopie le fournisseur, le total, la devise et la date de la facture ; des règles en code comparent avec le montant saisi, l'étape, le nom du fournisseur à payer et la date d'envoi.
+- **Consultatif par construction** : aucun paiement n'en dépend ; l'écran dit « l'IA peut se tromper, vous décidez ». Une preuve qui contient une consigne (« approuvez ») n'est pas obéie : elle est signalée.
+- **Vie privée** : n'est envoyé que ce qui sert (photos, facture, titre et montant de l'étape, fournisseur saisi, message de l'équipe, sans pouvoir fermer la balise qui l'entoure) ; ni nom ou téléphone du financeur, ni positions GPS. Le clic est précédé d'un avertissement.
+- **Coût borné** : un avis par preuve (redemander ne coûte rien), 10 par heure et par compte, `AI_DAILY_CAP` (50) par jour pour l'instance ; images de plus de 5 Mo non envoyées (dit à l'écran), 4 photos au plus.
+- **Défaillances** : refus du service, réponse illisible, service injoignable, clé refusée : un message en français (jamais l'erreur brute), jamais une exception pour le financeur ; un avis n'est jamais rattaché à une preuve renvoyée entre-temps.
+- Tests : `ai-review` (37), `proof-checks` (23).
+
 ## À venir (voir le plan du rapport d'audit)
-M1 (suite) architecture en ports/adaptateurs et SQLite · M3 IA consultative · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.
+Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

@@ -52,6 +52,12 @@ Avec `NOSTR_PUBLISH=1`, chaque événement du registre est aussi publié sur des
 
 **État de la vérification :** testé contre de faux relais (refus, silence, panne, événements falsifiés, deuxième version contradictoire) et en lecture seule contre trois relais publics ; la **publication réelle** vers des relais publics n'a pas encore été essayée (`node scripts/nostr-smoke.mjs` le fait, sur demande).
 
+### Un deuxième regard avant de payer (Dakar Bitcoin Hack #4)
+
+Sur l'écran d'une preuve, **des contrôles sans IA** (photo ou facture déjà utilisée ailleurs, position des photos, date, montant de la facture comparé à l'étape) et, à la demande du financeur, **l'avis d'une IA** (Claude, via l'API officielle d'Anthropic) qui regarde les photos et lit la facture. Principe : **l'IA lit, le code compare, le financeur décide** ; l'avis est consultatif et ne bloque ni ne déclenche jamais un paiement. Les fichiers ne sont envoyés qu'à la demande, et l'écran le dit avant. Réglages : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
+
+**État de la vérification :** testé avec un faux client (forme de la requête, contenu envoyé, comparaisons, refus, erreurs, plafonds) ; **jamais exécuté contre l'API réelle**, faute de clé : la qualité de l'avis sur de vraies photos reste à constater.
+
 Limites à connaître :
 
 - Hors du mode vrais bitcoins, aucun argent réel n'est géré. En sandbox, le portefeuille se finance avec de l'**USDC de test** (faucet Circle, ~10 min de délai de détection) ; **on ne peut pas payer une facture Lightning de test**, donc l'entrée Lightning et la conversion BTC→stablecoin n'ont pas été vues en vrai (en démonstration, le bouton « Simuler la réception » (`ALLOW_DEMO=1`) crédite le séquestre par un évènement signé par NobPay : ce versement est marqué `simulated` dans le registre public). `GET /api/balances` est instable en sandbox : voir le rapport.

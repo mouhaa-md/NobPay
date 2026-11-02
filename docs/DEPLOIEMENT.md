@@ -49,6 +49,17 @@ Avec `NOSTR_PUBLISH=1`, chaque événement du registre est publié sur des relai
 - **Ce que Nostr ne garantit pas** : un relais peut supprimer des événements. Ce qui est garanti, c'est qu'une seconde version contradictoire d'un engagement **apparaît à côté de la première** (type « ordinaire », non remplaçable) et que quiconque a gardé une copie, ou le dossier ancré sur Bitcoin, peut le prouver. Une surveillance indépendante (le jury, un tiers qui archive les relais) renforce encore cette garantie.
 - La politique de sécurité du navigateur autorise `wss:` en connexion : la page de vérification interroge les relais elle-même, sans passer par ce serveur.
 
+### L'avis de l'IA sur une preuve (optionnel)
+
+Avec `AI_REVIEW=1` et une clé `ANTHROPIC_API_KEY`, le financeur peut demander à Claude de regarder les photos et de lire la facture d'une preuve. **L'IA lit, le code compare, le financeur décide** : le modèle décrit et recopie (ce que montrent les photos, le total, le fournisseur et la date de la facture) ; ce sont des règles écrites en code qui comparent avec ce qui a été saisi et affichent des points d'attention. L'avis ne bloque et ne déclenche jamais un paiement.
+
+- **Ce qui part chez Anthropic, uniquement à la demande du financeur** : les photos et la facture de cette preuve, le titre et le montant de l'étape, le nom du fournisseur saisi et le message de l'équipe sur place. Ni le nom ou le téléphone du financeur, ni les positions GPS. L'écran le dit avant le clic.
+- **Un avis coûte de l'argent** : **fixez une limite de dépense sur la clé** dans la console Anthropic. Plafonds côté serveur : `AI_DAILY_CAP` (50 par jour pour toute l'instance), 10 par heure et par compte, un seul avis par preuve (redemander ne coûte rien).
+- Modèle : `claude-opus-5-5` par défaut ; `AI_MODEL` le change (essayez un modèle moins cher sur quelques vraies preuves et gardez celui dont l'avis vous convainc).
+- Contenu des fichiers traité comme des **données** : le message système interdit de suivre une consigne trouvée dans une image, une facture ou le message de l'équipe, et la signale en point d'attention.
+- **Les contrôles sans IA sont toujours affichés**, clé ou pas : fichier déjà utilisé ailleurs (photo ou facture réutilisée), position des photos (au Sénégal ?), date des photos, montant de la facture comparé à l'étape.
+- Limite connue : les images de plus de 5 Mo ne sont pas envoyées (l'écran le dit) et seules les 4 premières photos sont lues.
+
 ## 2. Prérequis
 
 - Un serveur Linux avec Docker et Docker Compose (un VPS de 1 à 2 Go de mémoire suffit).
