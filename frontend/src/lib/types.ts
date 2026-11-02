@@ -296,6 +296,40 @@ export interface Db {
   otps?: OtpRecord[];
   /** missing in databases created before refunds existed */
   refunds?: Refund[];
+  /** where each ledger event stands on the Nostr relays; missing in databases created before commitments existed */
+  nostr?: NostrCommit[];
+}
+
+/** One ledger event published (or being published) on Nostr relays as a signed commitment. */
+export interface NostrCommit {
+  projectId: string;
+  seq: number;
+  /** the exact signed event: a retry sends the very same one */
+  event: { id: string; pubkey: string; created_at: number; kind: number; tags: string[][]; content: string; sig: string };
+  /** relays that accepted it */
+  relays: string[];
+  attempts: number;
+  lastAttemptAt?: string;
+  /** what the relays that refused it said */
+  lastError?: string;
+  /** enough relays have it */
+  confirmedAt?: string;
+  /** NIP-03: the id of this event stamped on Bitcoin through OpenTimestamps, for the events where money moved */
+  attest?: NostrAttestation;
+}
+
+export interface NostrAttestation {
+  /** the .ots file of the event id (pending, then upgraded) */
+  otsBase64: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  submittedAt: string;
+  lastCheckAt?: string;
+  bitcoinBlock?: number;
+  /** the kind 1040 event carrying the proof, signed once and sent again as is */
+  proofEvent?: NostrCommit['event'];
+  /** relays that accepted the proof event */
+  proofRelays: string[];
+  error?: string;
 }
 
 // ---- Derived helpers (pure) -------------------------------------------------

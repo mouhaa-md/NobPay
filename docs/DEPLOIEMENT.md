@@ -37,6 +37,18 @@ Ce que le serveur vérifie tout seul : un versement n'est crédité que lorsque 
 
 **Contrôle avant d'ouvrir au jury** (5 minutes, avec 1 à 2 $) : financer 1 $ depuis un portefeuille personnel → l'étape se débloque ; envoyer une preuve avec votre propre adresse Lightning comme fournisseur → valider → les sats arrivent chez vous et le reçu montre la preuve de paiement ; demander le remboursement du reste.
 
+### Le registre répliqué sur Nostr (toutes les instances)
+
+Avec `NOSTR_PUBLISH=1`, chaque événement du registre est publié sur des relais Nostr sous forme d'un petit événement signé (type 8421 : le numéro et les deux empreintes, **ni nom, ni montant, ni type d'événement**), par une clé propre au projet. Cela répond à un reproche fait à tout registre tenu par l'opérateur : il pourrait réécrire ou omettre des événements entre deux ancrages Bitcoin. Les relais conservent une copie que l'opérateur ne contrôle pas ; le navigateur d'un visiteur la compare au dossier (page de vérification, ligne « répliqué sur Nostr »).
+
+- **`NOSTR_MASTER_KEY`** (`openssl rand -hex 32`) : **à sauvegarder avec la base**. Toutes les clés de projets en sont dérivées ; sans elle, l'instance ne peut plus signer pour les projets existants (le serveur le signale dans ses journaux et ne signe pas sous une autre clé). Sans cette variable, les clés dérivent de `SESSION_SECRET`.
+- **Seuls les projets créés avec `NOSTR_PUBLISH=1` ont des engagements** : la clé est inscrite dans le premier événement de leur registre, donc dans l'ancrage Bitcoin.
+- **Contrôle des relais avant la mise en ligne** : `node scripts/nostr-smoke.mjs --read-only` (lecture seule). Sans `--read-only`, le script **publie un événement de test** signé par une clé jetable sur chaque relais : à faire une fois, volontairement.
+- Un relais peut refuser notre type d'événement ou limiter le débit : le serveur réessaie avec des pauses croissantes, et un engagement compte comme publié dès que `NOSTR_MIN_ACKS` relais (2 par défaut) l'ont accepté.
+- **Horodatage Bitcoin des événements où de l'argent a bougé (NIP-03)** : leur identifiant est envoyé aux calendriers OpenTimestamps, et la preuve est publiée en événement 1040 une fois le bloc connu (quelques heures). Désactivable : `NOSTR_ATTEST=0`.
+- **Ce que Nostr ne garantit pas** : un relais peut supprimer des événements. Ce qui est garanti, c'est qu'une seconde version contradictoire d'un engagement **apparaît à côté de la première** (type « ordinaire », non remplaçable) et que quiconque a gardé une copie, ou le dossier ancré sur Bitcoin, peut le prouver. Une surveillance indépendante (le jury, un tiers qui archive les relais) renforce encore cette garantie.
+- La politique de sécurité du navigateur autorise `wss:` en connexion : la page de vérification interroge les relais elle-même, sans passer par ce serveur.
+
 ## 2. Prérequis
 
 - Un serveur Linux avec Docker et Docker Compose (un VPS de 1 à 2 Go de mémoire suffit).

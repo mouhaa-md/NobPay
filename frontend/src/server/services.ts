@@ -18,6 +18,7 @@ import {
   type User,
 } from '@/lib/types';
 import { formatInt, formatUsdShort, usdToSats } from '@/lib/money';
+import { LEDGER_COMMIT_KIND } from '@/lib/nostr/commitment';
 import { SECTORS } from '@/lib/templates';
 import { gatewayFor, getGateway } from './bitnob';
 import type { PayoutStart } from './bitnob/types';
@@ -31,6 +32,7 @@ import { logger } from './logger';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
 import { lightningPayoutsEnabled } from './lightning';
+import { configuredRelays, nostrPublishing, projectPublicKey } from './nostr/keys';
 import { normalizeLightningAddress } from './lightning/lnurl';
 import {
   assertLightningSupplier,
@@ -147,6 +149,8 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
       city,
       budgetCents: project.budgetCents,
       steps: project.steps.map((s) => ({ index: s.index, title: s.title, amountCents: s.amountCents })),
+      // the chain itself names the Nostr key its commitments are signed with (and so does its Bitcoin anchor)
+      ...(nostrPublishing() ? { nostr: { pubkey: projectPublicKey(id), kind: LEDGER_COMMIT_KIND, relays: configuredRelays() } } : {}),
     });
   });
   return project;

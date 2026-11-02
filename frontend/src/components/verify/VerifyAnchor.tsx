@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CheckRow, type CheckState } from '@/components/verify/CheckRow';
 import { DossierSummary } from '@/components/verify/DossierSummary';
+import { NostrCheck } from '@/components/verify/NostrCheck';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { shortHash } from '@/lib/ledgerLabels';
@@ -81,6 +82,7 @@ export function VerifyAnchor({ initial }: { initial: AnchorView }) {
               ? `${report.eventCount} événements enchaînés : chaque empreinte contient celle de la précédente.`
               : report.error ?? `La chaîne est rompue à l'événement ${report.brokenAt ?? '?'}.`}
         </CheckRow>
+        {report?.dossier && report.chainOk && <NostrCheck ledger={report.dossier.ledger} />}
         <CheckRow state={btcState} title="L’empreinte est dans la blockchain Bitcoin">
           {anchor.status === 'confirmed' ? (
             <>

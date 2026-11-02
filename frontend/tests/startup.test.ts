@@ -119,6 +119,33 @@ describe('startup configuration check', () => {
     });
   });
 
+  describe('Nostr commitments (NOSTR_PUBLISH=1)', () => {
+    it('says nothing while publishing is off, whatever the key', () => {
+      vi.stubEnv('NOSTR_MASTER_KEY', 'not hex');
+      expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
+    });
+
+    it('refuses a master key that is not 64 hexadecimal characters', () => {
+      vi.stubEnv('NOSTR_PUBLISH', '1');
+      for (const bad of ['abc', 'zz'.repeat(32), 'ab'.repeat(33)]) {
+        vi.stubEnv('NOSTR_MASTER_KEY', bad);
+        expect(checkStartupConfig().fatal.join(' ')).toMatch(/NOSTR_MASTER_KEY/);
+      }
+    });
+
+    it('accepts a good master key; warns about the fallback only where it matters (production, real bitcoin)', () => {
+      vi.stubEnv('NOSTR_PUBLISH', '1');
+      vi.stubEnv('NOSTR_MASTER_KEY', 'ab'.repeat(32));
+      expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
+
+      vi.stubEnv('NOSTR_MASTER_KEY', '');
+      expect(checkStartupConfig().warnings).toEqual([]); // a local demo may derive the keys from SESSION_SECRET
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('SESSION_SECRET', STRONG);
+      expect(checkStartupConfig().warnings.join(' ')).toMatch(/NOSTR_MASTER_KEY/);
+    });
+  });
+
   it('refuses keys that look like production (live) keys, in sandbox mode', () => {
     vi.stubEnv('BITNOB_MODE', 'sandbox');
     vi.stubEnv('SESSION_SECRET', STRONG);

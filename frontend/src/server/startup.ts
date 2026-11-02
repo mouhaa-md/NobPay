@@ -1,4 +1,5 @@
 import { isDemoAllowed, isRealBitcoin, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
+import { masterKeyProblem } from './nostr/keys';
 
 export interface StartupCheck {
   /** the server must not start */
@@ -53,6 +54,16 @@ export function checkStartupConfig(): StartupCheck {
       fatal.push(
         'LIGHTNING_RAIL=nwc exige ALLOW_DEMO=0 : le code de connexion partagé du mode démonstration permettrait de prendre un compte qui contient de vrais sats. ' +
           'Utilisez ALLOW_GUEST=1 pour que le jury essaie sans compte, ou un vrai fournisseur SMS.',
+      );
+    }
+  }
+  if (process.env.NOSTR_PUBLISH === '1') {
+    const key = masterKeyProblem();
+    if (key) fatal.push(`NOSTR_MASTER_KEY ${key}.`);
+    else if (!process.env.NOSTR_MASTER_KEY && (isRealBitcoin() || process.env.NODE_ENV === 'production')) {
+      warnings.push(
+        'NOSTR_PUBLISH=1 sans NOSTR_MASTER_KEY : les clés Nostr des projets sont dérivées de SESSION_SECRET, et changer ce secret en changerait toutes les clés. ' +
+          'Définissez NOSTR_MASTER_KEY (openssl rand -hex 32) et sauvegardez-la : elle seule permet de continuer à signer les engagements des projets existants.',
       );
     }
   }

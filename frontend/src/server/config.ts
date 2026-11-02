@@ -96,6 +96,19 @@ export function getConfig() {
       /** total real escrow all projects together may hold, in dollars */
       maxEscrowUsd: positive(process.env.LIGHTNING_MAX_ESCROW_USD, 500),
     },
+    /**
+     * Commitments of the ledger on Nostr relays (NOSTR_PUBLISH=1). Opt-in like AUTO_ANCHOR: it talks to public relays.
+     * Only hashes leave the machine. The signing keys are derived per project from NOSTR_MASTER_KEY.
+     */
+    nostr: {
+      publish: process.env.NOSTR_PUBLISH === '1',
+      relays: (process.env.NOSTR_RELAYS || '')
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean),
+      /** relays that must accept a commitment before it counts as published (or all of them, if fewer are configured) */
+      minAcks: positive(process.env.NOSTR_MIN_ACKS, 2),
+    },
     /** "Try without an account": a private guest account per visitor, no phone number (ALLOW_GUEST=1) */
     allowGuest: process.env.ALLOW_GUEST === '1',
     /** the stablecoin payouts are paid from (and conversions end in) */

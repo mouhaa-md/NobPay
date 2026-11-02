@@ -2,8 +2,10 @@ const dev = process.env.NODE_ENV !== 'production';
 
 /**
  * Content-Security-Policy. The app loads nothing from other sites (fonts, images, scripts are local; the browser
- * only talks to this origin: Bitnob, OpenTimestamps and blockstream are called by the SERVER). Next.js App Router
- * emits inline bootstrap scripts, hence 'unsafe-inline' for scripts; `eval` is only needed by the dev server.
+ * only talks to this origin: Bitnob, OpenTimestamps and blockstream are called by the SERVER). The one exception is the
+ * public verification page, which asks Nostr relays itself (secure WebSockets) so that a visitor does not have to trust
+ * this server: the relays are named by the project and by a default list, so `wss:` is allowed, not one fixed host.
+ * Next.js App Router emits inline bootstrap scripts, hence 'unsafe-inline' for scripts; `eval` is only needed by the dev server.
  */
 const csp = [
   "default-src 'self'",
@@ -11,7 +13,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self'${dev ? ' ws: wss:' : ''}`,
+  `connect-src 'self' wss:${dev ? ' ws:' : ''}`,
   "worker-src 'self'",
   "manifest-src 'self'",
   "object-src 'none'",
