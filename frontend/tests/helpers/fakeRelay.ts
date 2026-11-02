@@ -13,15 +13,30 @@ export interface RelayBehaviour {
   closeReads?: string;
 }
 
+interface Subscription {
+  deliver: (msg: unknown[]) => void;
+  id: unknown;
+  filters: Filter[];
+}
+
 class FakeRelay {
   events: Event[] = [];
   behaviour: RelayBehaviour = {};
   received = 0;
+  subs = new Set<Subscription>();
 
+  /** NIP-01 filter semantics: every field present must match; `#x` filters match an event's `x` tags. */
   matches(e: Event, f: Filter): boolean {
     if (f.kinds && !f.kinds.includes(e.kind)) return false;
     if (f.authors && !f.authors.includes(e.pubkey)) return false;
     if (f.ids && !f.ids.includes(e.id)) return false;
+    if (f.since !== undefined && e.created_at < f.since) return false;
+    if (f.until !== undefined && e.created_at > f.until) return false;
+    for (const [key, wanted] of Object.entries(f)) {
+      if (!key.startsWith('#') || !Array.isArray(wanted)) continue;
+      const name = key.slice(1);
+      if (!e.tags.some((t) => t[0] === name && wanted.includes(t[1]))) return false;
+    }
     return true;
   }
 }
@@ -48,22 +63,32 @@ export class FakeRelayNetwork {
   get WebSocketImpl(): WebSocketCtor {
     const network = this;
     return class implements WebSocketLike {
+      // what nostr-tools reads when it drives this object as a browser WebSocket
+      static readonly CONNECTING = 0;
+      static readonly OPEN = 1;
+      static readonly CLOSING = 2;
+      static readonly CLOSED = 3;
+      readyState = 0;
       onopen: WebSocketLike['onopen'] = null;
       onmessage: WebSocketLike['onmessage'] = null;
       onerror: WebSocketLike['onerror'] = null;
       onclose: WebSocketLike['onclose'] = null;
       private readonly relay: FakeRelay;
       private open = true;
+      private readonly mine = new Set<Subscription>();
       constructor(url: string) {
         this.relay = network.relay(url);
         setTimeout(() => {
           if (this.relay.behaviour.down) return this.onerror?.({});
+          this.readyState = 1;
           this.onopen?.({});
         }, 0);
       }
       private reply(...msg: unknown[]) {
         if (!this.open) return;
-        setTimeout(() => this.onmessage?.({ data: JSON.stringify(msg) }), 0);
+        setTimeout(() => {
+          if (this.open) this.onmessage?.({ data: JSON.stringify(msg) });
+        }, 0);
       }
       send(data: string) {
         const relay = this.relay;
@@ -76,18 +101,29 @@ export class FakeRelayNetwork {
           if (!verifyEvent(ev)) return this.reply('OK', ev.id, false, 'invalid: bad signature');
           if (relay.events.some((e) => e.id === ev.id)) return this.reply('OK', ev.id, true, 'duplicate: already have this event');
           relay.events.push(ev);
-          return this.reply('OK', ev.id, true, '');
+          this.reply('OK', ev.id, true, '');
+          // live subscriptions (of any connection) that match get the event
+          for (const sub of relay.subs) if (sub.filters.some((f) => relay.matches(ev, f))) sub.deliver(['EVENT', sub.id, ev]);
+          return;
         }
         if (msg[0] === 'REQ') {
-          const sub = msg[1];
-          if (relay.behaviour.closeReads) return this.reply('CLOSED', sub, relay.behaviour.closeReads);
-          const filter = msg[2] as Filter;
-          for (const e of relay.events.filter((x) => relay.matches(x, filter))) this.reply('EVENT', sub, e);
-          this.reply('EOSE', sub);
+          const sub: Subscription = { id: msg[1], filters: msg.slice(2) as Filter[], deliver: (m) => this.reply(...m) };
+          if (relay.behaviour.closeReads) return this.reply('CLOSED', sub.id, relay.behaviour.closeReads);
+          for (const e of relay.events.filter((x) => sub.filters.some((f) => relay.matches(x, f)))) this.reply('EVENT', sub.id, e);
+          this.reply('EOSE', sub.id);
+          relay.subs.add(sub);
+          this.mine.add(sub);
+          return;
+        }
+        if (msg[0] === 'CLOSE') {
+          for (const sub of this.mine) if (sub.id === msg[1]) (relay.subs.delete(sub), this.mine.delete(sub));
         }
       }
       close() {
         this.open = false;
+        this.readyState = 3;
+        for (const sub of this.mine) this.relay.subs.delete(sub);
+        this.mine.clear();
       }
     };
   }
