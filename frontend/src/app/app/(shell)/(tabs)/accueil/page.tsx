@@ -9,7 +9,8 @@ import { Avatar, ProgressBar, SectionTitle } from '@/components/ui/primitives';
 import { formatUsdShort } from '@/lib/money';
 import { RESIDENCE_COUNTRIES, SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { INSTANCE } from '@/lib/instance';
+import { getConfig, instanceMode } from '@/server/config';
 import { readDb } from '@/server/db';
 import { buildActivity, totalsOf, userProjects } from '@/server/views';
 
@@ -62,8 +63,7 @@ export default async function Home() {
           <BalanceCard escrowCents={totals.escrow} rate={usdXof} />
           <p className="relative z-10 mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-surface-variant/80">
             <Icon name="lock" size={14} />
-            Fonds conservés dans vos portefeuilles Bitnob, libérés étape par étape
-            {mode === 'mock' ? ' · mode démonstration' : ''}
+            {INSTANCE[instanceMode()].custody}
           </p>
         </section>
 
@@ -167,7 +167,7 @@ export default async function Home() {
                   : 'Vos fonds restent en séquestre et ne sont libérés que sur preuve.'}
               </p>
               <p className="flex items-center gap-1.5 font-label-md text-label-md text-surface-variant/80">
-                <Icon name="lock" size={16} /> Fonds conservés dans vos portefeuilles Bitnob{mode === 'mock' ? ' · mode démonstration' : ''}
+                <Icon name="lock" size={16} /> {INSTANCE[instanceMode()].custody}
               </p>
             </div>
             <BalanceCard escrowCents={totals.escrow} rate={usdXof} />

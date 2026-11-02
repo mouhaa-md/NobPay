@@ -59,6 +59,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       supplierName: String(form.get('supplierName') ?? ''),
       supplierPhone: String(form.get('supplierPhone') ?? ''),
       supplierNetwork: String(form.get('supplierNetwork') ?? ''),
+      supplierLightningAddress: String(form.get('supplierLightningAddress') ?? '') || undefined,
       invoiceAmountFcfa: amountRaw === null || amountRaw === '' ? undefined : Number(amountRaw),
       note: String(form.get('note') ?? ''),
     });
@@ -87,7 +88,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       invoice,
       invoiceAmountFcfa: fields.invoiceAmountFcfa || undefined,
       note: fields.note,
-      supplier: { name: fields.supplierName, phone: fields.supplierPhone, network: fields.supplierNetwork },
+      supplier: {
+        name: fields.supplierName,
+        phone: fields.supplierPhone,
+        network: fields.supplierNetwork,
+        ...(fields.supplierNetwork === 'lightning' ? { lightningAddress: fields.supplierLightningAddress } : {}),
+      },
     });
     return { step: { id: step.id, status: step.status } };
   });

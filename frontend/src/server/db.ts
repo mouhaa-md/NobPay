@@ -75,6 +75,7 @@ export function withDb<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
 export async function resetDb(): Promise<void> {
   await withDb((db) => {
     const fresh = buildSeed();
+    delete db.refunds; // optional collections the seed does not carry must not survive a reset
     Object.assign(db, fresh);
   });
 }

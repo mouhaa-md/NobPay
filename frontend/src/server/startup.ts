@@ -1,4 +1,4 @@
-import { isDemoAllowed, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
+import { isDemoAllowed, isRealBitcoin, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
 
 export interface StartupCheck {
   /** the server must not start */
@@ -35,5 +35,46 @@ export function checkStartupConfig(): StartupCheck {
   if (process.env.BITNOB_MODE === 'sandbox' && [process.env.BITNOB_CLIENT_ID, process.env.BITNOB_CLIENT_SECRET].some((k) => LIVE_KEY.test(k ?? ''))) {
     fatal.push("Les clés Bitnob ressemblent à des clés de production (live). NobPay ne s'utilise qu'avec des clés sandbox : révoquez-les et créez-en en mode Sandbox.");
   }
+  if (isRealBitcoin()) {
+    const receive = nwcUrlProblem(process.env.NWC_RECEIVE_URL);
+    if (receive) {
+      fatal.push(
+        `LIGHTNING_RAIL=nwc demande NWC_RECEIVE_URL, une chaîne « nostr+walletconnect://… » avec relay et secret (${receive}). ` +
+          'Créez la connexion dans votre portefeuille avec les droits : créer des factures, les consulter, lire le solde.',
+      );
+    }
+    if (process.env.NWC_PAYOUT_URL) {
+      const payout = nwcUrlProblem(process.env.NWC_PAYOUT_URL);
+      if (payout) fatal.push(`NWC_PAYOUT_URL n’est pas une chaîne « nostr+walletconnect://… » valable (${payout}).`);
+    } else {
+      warnings.push('NWC_PAYOUT_URL est absent : les paiements vers une adresse Lightning et les remboursements sont désactivés (le financement reste possible).');
+    }
+    if (isDemoAllowed()) {
+      fatal.push(
+        'LIGHTNING_RAIL=nwc exige ALLOW_DEMO=0 : le code de connexion partagé du mode démonstration permettrait de prendre un compte qui contient de vrais sats. ' +
+          'Utilisez ALLOW_GUEST=1 pour que le jury essaie sans compte, ou un vrai fournisseur SMS.',
+      );
+    }
+  }
   return { fatal, warnings };
+}
+
+/**
+ * Why a Nostr Wallet Connect string cannot be used, or null when it is fine:
+ * nostr+walletconnect://<wallet pubkey, 64 hex>?relay=wss://...&secret=<64 hex>.
+ */
+export function nwcUrlProblem(value: string | undefined): string | null {
+  if (!value) return 'absente';
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return 'illisible';
+  }
+  if (url.protocol !== 'nostr+walletconnect:') return 'mauvais préfixe';
+  if (!/^[0-9a-f]{64}$/i.test(url.host)) return 'clé publique du portefeuille invalide';
+  if (!/^[0-9a-f]{64}$/i.test(url.searchParams.get('secret') ?? '')) return 'secret absent ou invalide';
+  const relays = url.searchParams.getAll('relay');
+  if (relays.length === 0 || relays.some((r) => !/^wss?:\/\/[^\s]+$/i.test(r))) return 'relais absent ou invalide';
+  return null;
 }

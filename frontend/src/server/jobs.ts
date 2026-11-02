@@ -1,6 +1,7 @@
 import { getConfig } from './config';
 import { logger } from './logger';
 import { autoAnchorProjects, refreshPendingAnchors } from './anchors';
+import { checkWalletSolvency, pollPendingLightningFundings, reconcileRefunds } from './lightningFlows';
 import { checkSolvency, convertPaidFundings, expireFundings, pollPendingFundings, reconcile } from './services';
 
 /**
@@ -20,6 +21,7 @@ interface State {
   running: boolean;
   lastAnchors: number;
   lastSolvency: number;
+  lastWalletSolvency: number;
   lastLogged: Map<string, number>;
 }
 const g = globalThis as unknown as { __nobpayJobs?: State };
@@ -27,7 +29,7 @@ const g = globalThis as unknown as { __nobpayJobs?: State };
 const ANCHOR_EVERY_MS = 10 * 60_000;
 const SOLVENCY_EVERY_MS = 60_000;
 
-const stateOf = (): State => (g.__nobpayJobs ??= { running: false, lastAnchors: 0, lastSolvency: 0, lastLogged: new Map() });
+const stateOf = (): State => (g.__nobpayJobs ??= { running: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastLogged: new Map() });
 
 async function safely(state: State, name: string, fn: () => Promise<void>): Promise<void> {
   try {
@@ -56,6 +58,15 @@ export async function tick(): Promise<void> {
       if (Date.now() - state.lastSolvency > SOLVENCY_EVERY_MS) {
         state.lastSolvency = Date.now();
         await safely(state, 'solvency', async () => void (await checkSolvency()));
+      }
+    }
+    if (getConfig().lightning.rail === 'nwc') {
+      // real bitcoin: credit invoices as soon as the wallet says "settled", finish refunds, check the books every minute
+      await safely(state, 'lightning-invoices', pollPendingLightningFundings);
+      await safely(state, 'lightning-refunds', reconcileRefunds);
+      if (Date.now() - state.lastWalletSolvency > SOLVENCY_EVERY_MS) {
+        state.lastWalletSolvency = Date.now();
+        await safely(state, 'wallet-solvency', async () => void (await checkWalletSolvency()));
       }
     }
     if (Date.now() - state.lastAnchors > ANCHOR_EVERY_MS) {

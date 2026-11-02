@@ -1,3 +1,4 @@
+import type { InstanceMode } from '@/lib/instance';
 import { Sidebar } from '@/components/app/Sidebar';
 
 export interface FrameUser {
@@ -14,7 +15,7 @@ export interface FrameUser {
  *  - below 1024 px: a phone-width column (bottom bar, fixed header), centered on the screen;
  *  - from 1024 px: a fixed sidebar and the content on the whole remaining width (each page sets its own max width).
  */
-export function AppFrame({ user, mode, children }: { user: FrameUser; mode: 'mock' | 'sandbox'; children: React.ReactNode }) {
+export function AppFrame({ user, mode, children }: { user: FrameUser; mode: InstanceMode; children: React.ReactNode }) {
   return (
     <div className="app-shell min-h-screen bg-surface-container lg:bg-background">
       <Sidebar user={user} mode={mode} />

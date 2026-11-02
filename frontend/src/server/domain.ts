@@ -1,4 +1,4 @@
-import { fundedCents, type Db, type Funding, type Project, type Step } from '@/lib/types';
+import { fundedCents, refundedCents, type Db, type Funding, type Project, type Step } from '@/lib/types';
 import { appendLedger } from './ledger';
 
 /**
@@ -27,7 +27,7 @@ export function activateSteps(db: Db, project: Project): void {
   const next = project.steps.find((s) => s.status === 'upcoming');
   if (!next) return;
   const paid = project.steps.filter((s) => s.status === 'paid').reduce((sum, s) => sum + s.amountCents, 0);
-  if (fundedCents(db, project.id) - paid >= next.amountCents) next.status = 'active';
+  if (fundedCents(db, project.id) - refundedCents(db, project.id) - paid >= next.amountCents) next.status = 'active';
 }
 
 /** Credits the escrow once. Returns false if the funding was already settled (idempotent). */
@@ -60,19 +60,32 @@ export function applyPayoutCompleted(
   db: Db,
   project: Project,
   step: Step,
-  info: { payoutId?: string; at?: string } = {},
+  info: { payoutId?: string; at?: string; preimage?: string; feesSats?: number } = {},
 ): boolean {
   if (!step.payout || step.status === 'paid') return false;
   const at = info.at ?? new Date().toISOString();
   step.payout.status = 'completed';
   step.payout.completedAt = at;
   if (info.payoutId) step.payout.payoutId = info.payoutId;
+  const ln = step.payout.lightning;
+  if (ln) {
+    if (info.preimage) ln.preimage = info.preimage;
+    if (info.feesSats !== undefined) ln.feesSats = info.feesSats;
+  }
   step.status = 'paid';
   appendLedger(
     db,
     project.id,
     'payout_completed',
-    { stepId: step.id, index: step.index, reference: step.payout.reference, payoutId: step.payout.payoutId, ...simulatedMark(step.payout.mode === 'mock') },
+    {
+      stepId: step.id,
+      index: step.index,
+      reference: step.payout.reference,
+      payoutId: step.payout.payoutId,
+      // a Lightning payment comes with its own proof: the preimage hashes to the payment hash of the invoice that was paid
+      ...(ln ? { rail: 'lightning', amountSats: ln.amountSats, paymentHash: ln.paymentHash, preimage: ln.preimage } : {}),
+      ...simulatedMark(step.payout.mode === 'mock'),
+    },
     at,
   );
   activateSteps(db, project);

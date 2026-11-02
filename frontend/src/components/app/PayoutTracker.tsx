@@ -1,7 +1,8 @@
 import { Icon } from '@/components/ui/Icon';
 import { Spinner } from '@/components/ui/primitives';
-import { formatDateTime, formatFcfa, formatRate, formatUsd } from '@/lib/money';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { formatDateTime, formatFcfa, formatRate, formatSats, formatUsd } from '@/lib/money';
+import { supplierRoute } from '@/lib/supplierLabel';
+import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
 
 type Phase = { label: string; detail?: string; state: 'done' | 'doing' | 'todo' | 'failed' };
@@ -15,10 +16,10 @@ export function PayoutTracker({ step }: { step: Step }) {
 
   const phases: Phase[] = [
     { label: 'Preuve validée', detail: step.decision ? formatDateTime(step.decision.at) : undefined, state: 'done' },
-    { label: 'Paiement demandé à Bitnob', detail: formatDateTime(payout.startedAt), state: 'done' },
+    { label: payout.lightning ? 'Paiement envoyé sur le réseau Lightning' : 'Paiement demandé à Bitnob', detail: formatDateTime(payout.startedAt), state: 'done' },
     {
       label: 'Reçu par le fournisseur',
-      detail: done && payout.completedAt ? formatDateTime(payout.completedAt) : failed ? payout.error : `${MOBILE_NETWORKS[payout.supplier.network]} · en cours`,
+      detail: done && payout.completedAt ? formatDateTime(payout.completedAt) : failed ? payout.error : `${SUPPLIER_NETWORKS[payout.supplier.network]} · en cours`,
       state: done ? 'done' : failed ? 'failed' : 'doing',
     },
   ];
@@ -51,13 +52,24 @@ export function PayoutTracker({ step }: { step: Step }) {
           </p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 font-body-sm text-body-sm">
             <Item k="Bénéficiaire" v={payout.supplier.name} />
-            <Item k="Opérateur" v={`${MOBILE_NETWORKS[payout.supplier.network]} · ${payout.supplier.phone}`} />
-            <Item k="Montant reçu" v={formatFcfa(payout.amountFcfa)} strong />
+            <Item k={payout.lightning ? 'Destination' : 'Opérateur'} v={supplierRoute(payout.supplier)} />
+            <Item k="Montant reçu" v={payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)} strong />
             <Item k="Débité" v={formatUsd(payout.amountUsdCents)} />
-            <Item k="Taux" v={`1 $ = ${formatRate(payout.rate)} FCFA`} />
+            {payout.lightning ? (
+              <Item k="Prix du bitcoin" v={`1 BTC = ${Math.round(payout.lightning.btcUsd).toLocaleString('fr-FR')} $`} />
+            ) : (
+              <Item k="Taux" v={`1 $ = ${formatRate(payout.rate)} FCFA`} />
+            )}
             <Item k="Référence" v={payout.reference} mono />
-            {payout.payoutId && <Item k="Identifiant Bitnob" v={payout.payoutId} mono />}
-            <Item k="Mode" v={payout.mode === 'mock' ? 'Simulation (aucun argent réel)' : 'Sandbox Bitnob (test)'} />
+            {payout.lightning ? (
+              <>
+                <Item k="Empreinte du paiement" v={payout.lightning.paymentHash} mono />
+                {payout.lightning.preimage && <Item k="Preuve de paiement" v={payout.lightning.preimage} mono />}
+              </>
+            ) : (
+              payout.payoutId && <Item k="Identifiant Bitnob" v={payout.payoutId} mono />
+            )}
+            <Item k="Mode" v={payout.mode === 'mock' ? 'Simulation (aucun argent réel)' : payout.mode === 'nwc' ? 'Bitcoin réel (Lightning)' : 'Sandbox Bitnob (test)'} />
           </dl>
         </section>
       )}

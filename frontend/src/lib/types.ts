@@ -4,7 +4,12 @@
 export type Sector = 'immobilier' | 'agricole' | 'commerce';
 export type ProofKind = 'titre' | 'photos' | 'facture';
 export type MobileNetwork = 'wave' | 'orange_money' | 'free_money';
+/** Where a supplier is paid: a mobile money operator (Senegal), or bitcoin straight to a Lightning address. */
+export type SupplierNetwork = MobileNetwork | 'lightning';
+/** The Bitnob gateway mode: a local simulation or the Bitnob sandbox. */
 export type GatewayMode = 'mock' | 'sandbox';
+/** What a funding or a payout went through: the Bitnob gateway, or a real Lightning wallet reached with NWC. */
+export type RailMode = GatewayMode | 'nwc';
 
 export type StepStatus =
   | 'upcoming' // not started
@@ -22,14 +27,19 @@ export interface User {
   phone: string;
   createdAt: string;
   demo?: boolean;
+  /** a private account created by "try without an account": no phone number, never an administrator */
+  guest?: boolean;
   /** raised to sign the user out everywhere (cookies carry the version they were issued with); missing = 0 */
   sessionVersion?: number;
 }
 
 export interface Supplier {
   name: string;
-  network: MobileNetwork;
+  network: SupplierNetwork;
+  /** mobile money number; empty for a Lightning supplier */
   phone: string;
+  /** network === 'lightning': user@domain, the address the sats are sent to */
+  lightningAddress?: string;
 }
 
 export interface StoredFile {
@@ -65,7 +75,16 @@ export interface PayoutQuote {
   feeUsdCents: number;
   amountFcfa: number;
   expiresAt: string;
-  mode: GatewayMode;
+  mode: RailMode;
+  /** Lightning payouts only: the invoice the supplier's domain gave us for exactly this amount, already checked */
+  lightning?: {
+    amountSats: number;
+    btcUsd: number;
+    address: string;
+    bolt11: string;
+    paymentHash: string;
+    invoiceExpiresAt: string;
+  };
 }
 
 export type PayoutStatus = 'initiated' | 'pending' | 'completed' | 'failed';
@@ -80,12 +99,22 @@ export interface Payout {
   rate: number;
   feeUsdCents: number;
   supplier: Supplier;
-  mode: GatewayMode;
+  mode: RailMode;
   startedAt: string;
   completedAt?: string;
   error?: string;
   /** `finalize` got no clear answer: the money may have moved, so the funds stay reserved until Bitnob says */
   uncertain?: boolean;
+  /** Lightning payouts: what was sent and the proof of payment (the preimage hashes to paymentHash) */
+  lightning?: {
+    amountSats: number;
+    btcUsd: number;
+    address: string;
+    bolt11: string;
+    paymentHash: string;
+    feesSats?: number;
+    preimage?: string;
+  };
 }
 
 export interface StepDecision {
@@ -142,7 +171,7 @@ export interface Funding {
   method: FundingMethod;
   status: FundingStatus;
   reference: string;
-  mode: GatewayMode;
+  mode: RailMode;
   createdAt: string;
   // Lightning
   invoiceId?: string;
@@ -183,7 +212,10 @@ export type LedgerType =
   | 'step_rejected'
   | 'payout_started'
   | 'payout_completed'
-  | 'payout_failed';
+  | 'payout_failed'
+  | 'refund_started'
+  | 'refund_completed'
+  | 'refund_failed';
 
 export interface LedgerEvent {
   seq: number; // per project, starts at 1
@@ -232,6 +264,26 @@ export interface OtpRecord {
   usedAt?: string;
 }
 
+export type RefundStatus = 'pending' | 'completed' | 'failed';
+
+/** Unused escrow given back to the funder. While `pending` the amount is already out of the escrow. */
+export interface Refund {
+  id: string;
+  projectId: string;
+  amountCents: number;
+  status: RefundStatus;
+  reference: string;
+  /** `lightning`: real sats sent through the payout wallet; `simulated`: no money moved (mock and sandbox) */
+  rail: 'lightning' | 'simulated';
+  address: string;
+  createdAt: string;
+  completedAt?: string;
+  error?: string;
+  /** the wallet gave no clear answer: the sats may have left, the amount stays reserved until a lookup says */
+  uncertain?: boolean;
+  lightning?: { amountSats: number; btcUsd: number; bolt11: string; paymentHash: string; feesSats?: number; preimage?: string };
+}
+
 export interface Db {
   version: 1;
   users: User[];
@@ -242,6 +294,8 @@ export interface Db {
   webhooks: WebhookRecord[];
   /** missing in databases created before real SMS codes existed */
   otps?: OtpRecord[];
+  /** missing in databases created before refunds existed */
+  refunds?: Refund[];
 }
 
 // ---- Derived helpers (pure) -------------------------------------------------
@@ -260,9 +314,14 @@ export function reservedCents(project: Project): number {
   return project.steps.filter((s) => s.status === 'releasing').reduce((sum, s) => sum + s.amountCents, 0);
 }
 
-/** Money still held in escrow for the project (funded minus released/reserved). */
-export function escrowCents(db: Pick<Db, 'fundings'>, project: Project): number {
-  return Math.max(0, fundedCents(db, project.id) - releasedCents(project) - reservedCents(project));
+/** Escrow handed back to the funder (a refund that failed gave nothing back; a pending one already left the escrow). */
+export function refundedCents(db: { refunds?: Refund[] }, projectId: string): number {
+  return (db.refunds ?? []).filter((r) => r.projectId === projectId && r.status !== 'failed').reduce((sum, r) => sum + r.amountCents, 0);
+}
+
+/** Money still held in escrow for the project (funded minus released, reserved and refunded). */
+export function escrowCents(db: Pick<Db, 'fundings'> & { refunds?: Refund[] }, project: Project): number {
+  return Math.max(0, fundedCents(db, project.id) - releasedCents(project) - reservedCents(project) - refundedCents(db, project.id));
 }
 
 export function currentStep(project: Project): Step | undefined {

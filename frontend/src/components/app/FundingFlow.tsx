@@ -17,6 +17,8 @@ interface Props {
   mode: 'mock' | 'sandbox';
   /** demo conveniences are allowed on this instance (ALLOW_DEMO) */
   allowDemo?: boolean;
+  /** real bitcoin: the invoice comes from a real wallet, nothing is simulated */
+  real?: boolean;
   btcUsd: number;
   usdXof: number;
   /** quick amounts computed on the server (cents) */
@@ -46,7 +48,7 @@ function useCountdown(iso?: string): string {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${m}:${String(s % 60).padStart(2, '0')}`;
 }
 
-export function FundingFlow({ projectId, projectName, mode, allowDemo = false, btcUsd, usdXof, suggestions, steps }: Props) {
+export function FundingFlow({ projectId, projectName, mode, allowDemo = false, real = false, btcUsd, usdXof, suggestions, steps }: Props) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('amount');
   const [digits, setDigits] = useState('');
@@ -236,20 +238,14 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, b
                   </span>
                   <Icon name="check_circle" filled className="text-primary" />
                 </button>
-                {(['USDT', 'USDC'] as const).map((coin) => (
-                  <div key={coin} aria-disabled="true" className="flex items-center gap-4 rounded-3xl bg-surface-container-low p-4 opacity-70">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container-high font-label-md text-label-md font-bold text-on-surface-variant">{coin[3] === 'T' ? '₮' : '$'}</span>
-                    <span className="flex-1">
-                      <span className="block font-title-md text-title-md">{coin}</span>
-                      <span className="block font-body-sm text-body-sm text-on-surface-variant">Dépôt par adresse de portefeuille.</span>
-                    </span>
-                    <Chip>Bientôt</Chip>
-                  </div>
-                ))}
               </div>
               <div className="mt-space-md flex items-start gap-3 rounded-2xl bg-surface-container-low p-3.5">
                 <Icon name="shield_lock" size={22} className="mt-0.5 text-primary" />
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Les fonds arrivent dans un portefeuille Bitnob et sont comptés pour ce projet. Ils ne sont libérés qu&apos;à votre validation.</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  {real
+                    ? 'Les sats arrivent dans le portefeuille Lightning de NobPay et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation, et vous pouvez reprendre ce qui n’est pas utilisé.'
+                    : 'Les fonds arrivent dans un portefeuille Bitnob et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation.'}
+                </p>
               </div>
               <div className="mt-auto flex flex-col gap-3 pt-space-md">
                 <ErrorNote>{error}</ErrorNote>
@@ -269,6 +265,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, b
             <>
               <div className="flex flex-col items-center gap-3 py-space-sm text-center">
                 {mode === 'mock' && funding.mode === 'mock' && <Chip tone="warning" icon="science">Facture de démonstration · non payable</Chip>}
+                {funding.mode === 'nwc' && <Chip tone="success" icon="bolt">Bitcoin réel · phase pilote, montants plafonnés</Chip>}
                 <p className="font-headline-md text-headline-md font-bold">{formatUsd(funding.amountCents)}</p>
                 <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(funding.amountSats ?? 0)}</p>
               </div>
@@ -294,6 +291,15 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, b
                   </a>
                 </div>
                 <p className="max-w-xs break-all text-center font-mono text-[11px] leading-snug text-outline">{bolt11.slice(0, 28)}…{bolt11.slice(-10)}</p>
+                <details className="mt-1 w-full max-w-sm rounded-2xl bg-surface-container-low p-3 text-left">
+                  <summary className="cursor-pointer font-label-md text-label-md font-semibold text-primary">Comment payer avec Lightning ?</summary>
+                  <ol className="mt-2 list-decimal space-y-1 pl-5 font-body-sm text-body-sm text-on-surface-variant">
+                    <li>Ouvrez un portefeuille Lightning (n’importe lequel : le paiement ne passe pas par une application imposée).</li>
+                    <li>Scannez ce code, ou collez la facture copiée.</li>
+                    <li>Confirmez le montant. Cette page se met à jour toute seule dès que le portefeuille de NobPay a reçu les sats.</li>
+                  </ol>
+                  <p className="mt-2 font-label-sm text-label-sm text-outline">Lightning est le réseau de paiement de Bitcoin : rapide et sans intermédiaire bancaire.</p>
+                </details>
               </div>
 
               <div className="mt-auto flex flex-col gap-3 pt-space-lg">

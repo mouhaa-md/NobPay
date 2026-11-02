@@ -6,7 +6,8 @@ import { Chip } from '@/components/ui/primitives';
 import { formatDateTime, formatFcfa, formatInt, formatUsd } from '@/lib/money';
 import { adminOverview, adminScope } from '@/server/admin';
 import { getSessionUser } from '@/server/auth';
-import { getConfig } from '@/server/config';
+import { INSTANCE } from '@/lib/instance';
+import { getConfig, instanceMode } from '@/server/config';
 import { readDb } from '@/server/db';
 
 export const dynamic = 'force-dynamic';
@@ -84,8 +85,8 @@ export default async function Admin() {
           <Chip tone="neutral" icon="visibility">
             Lecture seule
           </Chip>
-          <Chip tone={mode === 'mock' ? 'warning' : 'success'} icon={mode === 'mock' ? 'science' : 'verified_user'}>
-            {mode === 'mock' ? 'Démonstration' : 'Sandbox Bitnob'}
+          <Chip tone={INSTANCE[instanceMode()].tone} icon={INSTANCE[instanceMode()].icon}>
+            {INSTANCE[instanceMode()].short}
           </Chip>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
             Cette page montre ce qui est bloqué. Elle ne déplace jamais d’argent.

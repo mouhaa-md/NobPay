@@ -98,6 +98,9 @@ export const MOBILE_NETWORKS = {
   free_money: 'Free Money',
 } as const;
 
+/** How any supplier is named on screen: a mobile money operator, or Bitcoin Lightning (sats straight to a wallet). */
+export const SUPPLIER_NETWORKS = { ...MOBILE_NETWORKS, lightning: 'Bitcoin Lightning' } as const;
+
 /** Countries where the funder can live (diaspora). Flags are rendered with SVG, never emoji. */
 export const RESIDENCE_COUNTRIES: { code: string; name: string; dial: string }[] = [
   { code: 'FR', name: 'France', dial: '+33' },

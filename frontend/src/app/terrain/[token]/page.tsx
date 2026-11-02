@@ -8,8 +8,9 @@ import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { Chip, ProgressBar } from '@/components/ui/primitives';
 import { formatDate, formatDateTime, formatUsdShort, relativeDay } from '@/lib/money';
-import { MOBILE_NETWORKS, PROOF_LABEL, SECTORS } from '@/lib/templates';
+import { PROOF_LABEL, SECTORS, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { LedgerType, Step } from '@/lib/types';
+import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { ledgerFor } from '@/server/ledger';
 import { findProjectByManagerToken, managerTokenState } from '@/server/managerToken';
@@ -117,7 +118,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                     </p>
                   )}
                 </div>
-                <FieldProofForm token={params.token} projectId={project.id} step={{ id: todo.id, index: todo.index, title: todo.title, proofKinds: todo.proofKinds }} previous={todo.proof?.supplier} />
+                <FieldProofForm token={params.token} projectId={project.id} step={{ id: todo.id, index: todo.index, title: todo.title, proofKinds: todo.proofKinds }} previous={todo.proof?.supplier} payTo={getConfig().lightning.rail === 'nwc' ? 'lightning' : 'mobile'} />
               </section>
             )}
 
@@ -225,7 +226,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                         {s.payout && (
                           <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-label-sm text-label-sm text-on-surface-variant">
                             <Icon name="payments" size={14} />
-                            {s.payout.supplier.name} · {MOBILE_NETWORKS[s.payout.supplier.network]} ·{' '}
+                            {s.payout.supplier.name} · {SUPPLIER_NETWORKS[s.payout.supplier.network]} ·{' '}
                             {s.payout.status === 'completed' ? 'payé' : s.payout.status === 'failed' ? 'paiement refusé' : 'en cours'}
                             {receipt && (
                               <a href={`/recu/${receipt}`} className="font-semibold text-primary hover:underline">

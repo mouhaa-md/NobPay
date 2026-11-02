@@ -1,8 +1,11 @@
 import {
   escrowCents,
+  fundedCents,
+  refundedCents,
   type Db,
   type Funding,
   type FundingMethod,
+  type GatewayMode,
   type Payout,
   type PayoutQuote,
   type Project,
@@ -27,6 +30,19 @@ import { HttpError } from './http';
 import { logger } from './logger';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
+import { lightningPayoutsEnabled } from './lightning';
+import { normalizeLightningAddress } from './lightning/lnurl';
+import {
+  assertLightningSupplier,
+  buildLightningPayout,
+  createLightningFunding,
+  lightningHttpError,
+  lightningPayoutLedger,
+  quoteLightningPayout,
+  reconcileLightningPayout,
+  sendLightningPayment,
+  settleLightningFunding,
+} from './lightningFlows';
 import { amountMatches } from './webhooks';
 
 const MAX_LIGHTNING_SATS = 20_000_000; // per-invoice limit documented by Bitnob
@@ -148,13 +164,15 @@ export async function createFunding(
   const project = ownedProject(db, owner, projectId);
   const amountCents = Math.round(Number(input.amountCents));
   if (!Number.isFinite(amountCents) || amountCents < 500) throw new HttpError(400, 'Montant minimum : 5 $');
-  const remainingBudget = project.budgetCents - db.fundings.filter((f) => f.projectId === projectId && f.status === 'paid').reduce((s, f) => s + f.amountCents, 0);
+  const remainingBudget = project.budgetCents - (fundedCents(db, projectId) - refundedCents(db, projectId));
   if (amountCents > Math.max(remainingBudget, 0) + 500_00) {
     throw new HttpError(400, `Le projet est déjà financé à presque 100 % (reste ${formatUsdShort(Math.max(remainingBudget, 0))}).`);
   }
   if (input.method !== 'lightning') {
     throw new HttpError(400, 'Le dépôt en USDT/USDC arrive bientôt. Utilisez Bitcoin Lightning.', 'method_unavailable');
   }
+
+  if (getConfig().lightning.rail === 'nwc') return createLightningFunding(owner, projectId, amountCents); // real bitcoin
 
   const gateway = getGateway();
   const id = randomId('f', 5);
@@ -257,7 +275,8 @@ export async function refreshFunding(owner: User, fundingId: string): Promise<Fu
   if (funding.status === 'pending') {
     await expireFundings();
     try {
-      await settleFromGateway(fundingId);
+      if (funding.mode === 'nwc') await settleLightningFunding(fundingId);
+      else await settleFromGateway(fundingId);
     } catch {
       /* the webhook remains the source of truth; try again on the next poll */
     }
@@ -409,6 +428,7 @@ export async function simulateFundingPaid(owner: User, fundingId: string): Promi
   const funding = db.fundings.find((f) => f.id === fundingId);
   if (!funding) throw new HttpError(404, 'Versement introuvable');
   ownedProject(db, owner, funding.projectId);
+  if (funding.mode === 'nwc') throw new HttpError(403, 'Ce versement est réel : il ne se simule pas. Payez la facture avec un portefeuille Lightning.', 'real_funding');
   if (funding.status === 'pending') {
     // In sandbox the invoice is real at Bitnob but nobody can pay it there: our own signed event credits it, and the
     // funding is marked so the ledger, the solvency check and the conversion job never treat it as real money.
@@ -465,8 +485,20 @@ export async function assertCanSubmitProof(actor: Actor, projectId: string, step
 export async function submitProof(actor: Actor, projectId: string, stepId: string, input: ProofInput): Promise<Step> {
   const current = await assertCanSubmitProof(actor, projectId, stepId);
   const supplier = input.supplier;
-  if (!supplier?.name?.trim() || !supplier.phone?.trim() || !supplier.network) {
-    throw new HttpError(400, 'Indiquez qui sera payé (nom, numéro et opérateur mobile money)');
+  if (!supplier?.name?.trim() || !supplier.network) {
+    throw new HttpError(400, 'Indiquez qui sera payé (nom, numéro et opérateur mobile money, ou adresse Lightning)');
+  }
+  let lightningAddress: string | undefined;
+  if (supplier.network === 'lightning') {
+    if (!lightningPayoutsEnabled()) {
+      throw new HttpError(400, 'Le paiement en Bitcoin Lightning n’est pas disponible sur cette instance.', 'lightning_payout_unavailable');
+    }
+    lightningAddress = assertLightningSupplier(supplier);
+  } else {
+    if (getConfig().lightning.rail === 'nwc') {
+      throw new HttpError(400, 'Sur cette instance (vrais bitcoins), le fournisseur est payé en Bitcoin Lightning : indiquez son adresse Lightning.', 'lightning_only');
+    }
+    if (!supplier.phone?.trim()) throw new HttpError(400, 'Indiquez qui sera payé (nom, numéro et opérateur mobile money)');
   }
   const needsPhoto = current.proofKinds.includes('photos') || current.proofKinds.includes('titre');
   if (needsPhoto && input.photos.length === 0) throw new HttpError(400, 'Ajoutez au moins une photo');
@@ -482,7 +514,12 @@ export async function submitProof(actor: Actor, projectId: string, stepId: strin
       invoice: input.invoice,
       invoiceAmountFcfa: input.invoiceAmountFcfa,
       note: input.note?.trim().slice(0, 500) || undefined,
-      supplier: { name: supplier.name.trim().slice(0, 80), phone: supplier.phone.trim(), network: supplier.network },
+      supplier: {
+        name: supplier.name.trim().slice(0, 80),
+        phone: lightningAddress ? '' : supplier.phone.trim(),
+        network: supplier.network,
+        ...(lightningAddress ? { lightningAddress } : {}),
+      },
       submittedAt,
       submittedBy: actor.kind === 'owner' ? 'owner' : 'manager',
     };
@@ -533,6 +570,14 @@ export async function quoteRelease(owner: User, projectId: string, stepId: strin
   if (escrow < step.amountCents) {
     throw new HttpError(409, `Le séquestre (${formatUsdShort(escrow)}) ne couvre pas cette étape (${formatUsdShort(step.amountCents)}). Financez le projet.`, 'insufficient_escrow');
   }
+  if (step.proof.supplier.network === 'lightning') {
+    if (opts.simulate) throw new HttpError(400, 'Un paiement Bitcoin réel ne se simule pas.', 'invalid_input');
+    const lightningQuote = await quoteLightningPayout(step, step.proof.supplier);
+    await withDb((d) => {
+      stepOf(findProject(d, projectId)!, stepId).quote = lightningQuote;
+    });
+    return lightningQuote;
+  }
   if (opts.simulate && !getConfig().allowDemo) {
     throw new HttpError(403, 'Le mode démonstration est désactivé sur cette instance', 'demo_disabled');
   }
@@ -562,7 +607,8 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
   if (Date.parse(quote.expiresAt) < Date.now()) throw new HttpError(409, 'Le devis a expiré. Demandez-en un nouveau.', 'quote_expired');
   const supplier = step0.proof!.supplier!;
   if (escrowCents(snapshot, project0) < step0.amountCents) throw new HttpError(409, 'Séquestre insuffisant', 'insufficient_escrow');
-  if (quote.mode === 'sandbox') await assertPayoutCovered(step0.amountCents);
+  const isLightning = quote.mode === 'nwc' && !!quote.lightning;
+  if (!isLightning && quote.mode === 'sandbox') await assertPayoutCovered(step0.amountCents);
 
   // Phase 1: record the decision and reserve the funds.
   const startedAt = new Date().toISOString();
@@ -570,18 +616,20 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     const project = ownedProject(db, owner, projectId);
     const step = stepOf(project, stepId);
     if (step.status !== 'proof_submitted') throw new HttpError(409, 'Cette étape a déjà été traitée');
-    const payout: Payout = {
-      reference: quote.reference,
-      quoteId: quote.quoteId,
-      status: 'initiated',
-      amountUsdCents: quote.amountUsdCents,
-      amountFcfa: quote.amountFcfa,
-      rate: quote.rate,
-      feeUsdCents: quote.feeUsdCents,
-      supplier,
-      mode: quote.mode,
-      startedAt,
-    };
+    const payout: Payout = isLightning
+      ? buildLightningPayout(quote, supplier, startedAt)
+      : {
+          reference: quote.reference,
+          quoteId: quote.quoteId,
+          status: 'initiated',
+          amountUsdCents: quote.amountUsdCents,
+          amountFcfa: quote.amountFcfa,
+          rate: quote.rate,
+          feeUsdCents: quote.feeUsdCents,
+          supplier,
+          mode: quote.mode,
+          startedAt,
+        };
     step.status = 'releasing';
     step.decision = { kind: 'approved', at: startedAt };
     step.payout = payout;
@@ -600,17 +648,45 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
         amountFcfa: payout.amountFcfa,
         rate: payout.rate,
         supplier: { name: supplier.name, network: supplier.network },
+        ...(isLightning ? lightningPayoutLedger(payout) : {}),
         ...simulatedMark(quote.mode === 'mock'),
       },
       startedAt,
     );
   });
 
+  // Phase 2 (real bitcoin): the wallet pays. A refusal puts the escrow back; an unreadable answer keeps it reserved.
+  if (isLightning) {
+    let sent: Awaited<ReturnType<typeof sendLightningPayment>>;
+    try {
+      sent = await sendLightningPayment(quote);
+    } catch (err) {
+      const e = lightningHttpError(err);
+      await withDb((db) => {
+        const project = findProject(db, projectId)!;
+        applyPayoutFailed(db, project, stepOf(project, stepId), e.message);
+      });
+      throw new HttpError(502, `Paiement non exécuté : ${e.message}`, 'gateway_error');
+    }
+    return withDb((db) => {
+      const project = findProject(db, projectId)!;
+      const step = stepOf(project, stepId);
+      if (step.payout && step.status === 'releasing') {
+        if (sent.kind === 'paid') applyPayoutCompleted(db, project, step, { payoutId: step.payout.payoutId, preimage: sent.preimage, feesSats: sent.feesSats });
+        else {
+          step.payout.status = 'pending';
+          step.payout.uncertain = true; // reconcile() asks the wallet by payment hash
+        }
+      }
+      return structuredClone(step);
+    });
+  }
+
   // Phase 2: ask the gateway to move the money (outside the database lock).
   const { publicBaseUrl } = getConfig();
   let start: PayoutStart;
   try {
-    start = await gatewayFor(quote.mode).startPayout({
+    start = await gatewayFor(quote.mode as GatewayMode).startPayout({
       quote,
       reference: quote.reference,
       supplier,
@@ -668,6 +744,14 @@ export async function reconcile(): Promise<void> {
       const age = Date.now() - Date.parse(payout.startedAt);
       if (payout.mode === 'mock') {
         if (age > 2500) await simulatePayoutCompleted(step);
+      } else if (payout.mode === 'nwc') {
+        if (age > 3000) {
+          try {
+            await reconcileLightningPayout(project.id, step.id, payout, age);
+          } catch {
+            /* wallet unreachable: next round */
+          }
+        }
       } else if (age > 4000) {
         try {
           await reconcileSandboxPayout(project.id, step.id, payout, age);

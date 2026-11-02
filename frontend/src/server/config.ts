@@ -29,7 +29,19 @@ export function isDemoAllowed(): boolean {
 
 /** The session secret must be strong as soon as Bitnob keys are in play, or in production without demo mode. */
 export function sessionSecretMustBeStrong(): boolean {
-  return process.env.BITNOB_MODE === 'sandbox' || (process.env.NODE_ENV === 'production' && !isDemoAllowed());
+  return process.env.BITNOB_MODE === 'sandbox' || isRealBitcoin() || (process.env.NODE_ENV === 'production' && !isDemoAllowed());
+}
+
+/** Real sats move through a Nostr Wallet Connect wallet (LIGHTNING_RAIL=nwc): everything about this instance is serious. */
+export function isRealBitcoin(): boolean {
+  return (process.env.LIGHTNING_RAIL || '').toLowerCase() === 'nwc';
+}
+
+const positive = (value: string | undefined, fallback: number): number => (Number(value) > 0 ? Number(value) : fallback);
+
+/** How the screens call this instance: simulation, Bitnob test API, or real bitcoin. */
+export function instanceMode(): 'mock' | 'sandbox' | 'real' {
+  return isRealBitcoin() ? 'real' : process.env.BITNOB_MODE === 'sandbox' ? 'sandbox' : 'mock';
 }
 
 /** Read lazily so tests and `.env.local` changes are picked up. */
@@ -65,6 +77,22 @@ export function getConfig() {
     maxStepUsd: process.env.MAX_STEP_USD !== undefined && process.env.MAX_STEP_USD !== '' ? Number(process.env.MAX_STEP_USD) || 0 : mode === 'sandbox' ? 330 : 0,
     /** How long a Lightning invoice can be paid. Short on purpose: the escrow is credited in dollars, the bitcoin price moves. */
     fundingInvoiceTtlSeconds: Math.min(86_400, Math.max(300, Number(process.env.FUNDING_INVOICE_TTL_SECONDS) || 3_600)),
+    /**
+     * Real Bitcoin over Lightning, through wallets we reach with Nostr Wallet Connect (NIP-47). The RECEIVE connection
+     * should only be allowed to make invoices and look them up; the PAYOUT connection pays, and should carry a budget.
+     * The ceilings bound what a pilot or a public demo can ever put at risk.
+     */
+    lightning: {
+      rail: (isRealBitcoin() ? 'nwc' : '') as 'nwc' | '',
+      receiveUrl: process.env.NWC_RECEIVE_URL || '',
+      payoutUrl: process.env.NWC_PAYOUT_URL || '',
+      maxFundingUsd: positive(process.env.LIGHTNING_MAX_FUNDING_USD, 100),
+      maxPayoutUsd: positive(process.env.LIGHTNING_MAX_PAYOUT_USD, 100),
+      /** total real escrow all projects together may hold, in dollars */
+      maxEscrowUsd: positive(process.env.LIGHTNING_MAX_ESCROW_USD, 500),
+    },
+    /** "Try without an account": a private guest account per visitor, no phone number (ALLOW_GUEST=1) */
+    allowGuest: process.env.ALLOW_GUEST === '1',
     /** the stablecoin payouts are paid from (and conversions end in) */
     payoutAsset: (process.env.PAYOUT_ASSET || 'USDT').toUpperCase(),
     /** '' = no SMS provider (demo code only), 'log' = codes written to the server console, 'twilio' */

@@ -441,7 +441,7 @@ export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /
               <div className="flex items-start gap-3 rounded-2xl bg-surface-container-low p-3.5">
                 <Icon name="shield_lock" size={22} className="mt-0.5 text-primary" />
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Votre argent reste en séquestre dans un portefeuille Bitnob. Il n&apos;est libéré, étape par étape, que si vous validez la preuve. Chaque décision est ensuite ancrée sur Bitcoin.
+                  Votre argent reste en séquestre, compté projet par projet. Il n&apos;est libéré, étape par étape, que si vous validez la preuve, et vous pouvez reprendre ce qui n&apos;est pas utilisé. Chaque décision est ensuite ancrée sur Bitcoin.
                 </p>
               </div>
             </>

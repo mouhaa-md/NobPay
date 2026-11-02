@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
+import { INSTANCE, type InstanceMode } from '@/lib/instance';
 import { Logo } from '@/components/ui/Logo';
 import { Avatar } from '@/components/ui/primitives';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
@@ -17,7 +18,7 @@ const ITEMS = [
 ];
 
 /** Left navigation of the computer layout. Hidden on phones, where the bottom bar does the job. */
-export function Sidebar({ user, mode }: { user: FrameUser; mode: 'mock' | 'sandbox' }) {
+export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode }) {
   const pathname = usePathname();
   const country = RESIDENCE_COUNTRIES.find((c) => c.code === user.country)?.name;
 
@@ -67,9 +68,9 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: 'mock' | 'sandb
       </div>
 
       <div className="flex flex-col gap-space-xs">
-        <p className={`flex items-center gap-1.5 rounded-xl px-space-sm py-space-xs font-label-sm text-label-sm ${mode === 'mock' ? 'bg-[#FEF3C7] text-[#B45309]' : 'bg-[#DCFCE7] text-[#15803D]'}`}>
-          <Icon name={mode === 'mock' ? 'science' : 'verified_user'} size={16} />
-          {mode === 'mock' ? 'Mode démonstration : paiements simulés' : 'Sandbox Bitnob'}
+        <p className={`flex items-center gap-1.5 rounded-xl px-space-sm py-space-xs font-label-sm text-label-sm ${INSTANCE[mode].tone === 'warning' ? 'bg-[#FEF3C7] text-[#B45309]' : 'bg-[#DCFCE7] text-[#15803D]'}`}>
+          <Icon name={INSTANCE[mode].icon} size={16} />
+          {INSTANCE[mode].long}
         </p>
         <Link href="/app/profil" className="flex items-center gap-space-xs rounded-lg bg-surface-container-low p-space-sm transition hover:bg-surface-container">
           <Avatar first={user.firstName} last={user.lastName} size="sm" />

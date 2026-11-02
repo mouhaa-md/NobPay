@@ -6,8 +6,9 @@ import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { Spinner } from '@/components/ui/primitives';
-import { formatDateTime, formatFcfa } from '@/lib/money';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { formatDateTime, formatFcfa, formatSats } from '@/lib/money';
+import { maskAddress } from '@/lib/supplierLabel';
+import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { readDb } from '@/server/db';
 import { findReceipt, maskPhone } from '@/server/receipt';
 
@@ -35,9 +36,9 @@ export default async function Receipt(props: { params: Promise<{ token: string }
 
   const phases = [
     { label: owner ? `${owner.firstName} a validé le travail` : 'Le travail a été validé', at: decidedAt, state: 'done' as const },
-    { label: 'Ordre de paiement envoyé à l’opérateur', at: payout.startedAt, state: 'done' as const },
+    { label: payout.lightning ? 'Paiement envoyé sur le réseau Lightning' : 'Ordre de paiement envoyé à l’opérateur', at: payout.startedAt, state: 'done' as const },
     {
-      label: state === 'failed' ? 'Paiement refusé par le réseau' : 'Paiement confirmé par Bitnob',
+      label: state === 'failed' ? 'Paiement refusé par le réseau' : payout.lightning ? 'Paiement confirmé par le réseau Lightning' : 'Paiement confirmé par Bitnob',
       at: payout.completedAt,
       state: state === 'done' ? ('done' as const) : state === 'failed' ? ('failed' as const) : ('doing' as const),
     },
@@ -59,7 +60,8 @@ export default async function Receipt(props: { params: Promise<{ token: string }
           {state === 'pending' ? <Spinner className="h-8 w-8" /> : <Icon name={look.icon} size={36} />}
         </span>
         <p className={`mt-4 font-title-lg text-title-lg ${look.tone}`}>{look.title}</p>
-        <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{formatFcfa(payout.amountFcfa)}</p>
+        <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)}</p>
+        {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa)} (taux indicatif)</p>}
         <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
           pour <strong className="text-on-surface">{payout.supplier.name}</strong>
         </p>
@@ -80,11 +82,17 @@ export default async function Receipt(props: { params: Promise<{ token: string }
             {project.name}, <Flag code="SN" className="inline-block h-2.5 w-4 align-middle" /> {project.city}
           </span>
         </dd>
-        <dt className="text-on-surface-variant">Mobile money</dt>
+        <dt className="text-on-surface-variant">{payout.lightning ? 'Destination' : 'Mobile money'}</dt>
         <dd className="text-right font-medium text-on-surface">
-          {MOBILE_NETWORKS[payout.supplier.network]}
-          <span className="block font-normal text-on-surface-variant">{maskPhone(payout.supplier.phone)}</span>
+          {SUPPLIER_NETWORKS[payout.supplier.network]}
+          <span className="block font-normal text-on-surface-variant">{payout.lightning ? maskAddress(payout.lightning.address) : maskPhone(payout.supplier.phone)}</span>
         </dd>
+        {payout.lightning && (
+          <>
+            <dt className="text-on-surface-variant">Empreinte du paiement</dt>
+            <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.lightning.paymentHash}</dd>
+          </>
+        )}
         <dt className="text-on-surface-variant">Date</dt>
         <dd className="text-right font-medium text-on-surface">{formatDateTime(payout.completedAt ?? payout.startedAt)}</dd>
         <dt className="text-on-surface-variant">Référence</dt>

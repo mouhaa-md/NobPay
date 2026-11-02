@@ -43,6 +43,7 @@ export default async function Fund(props: { params: Promise<{ id: string }> }) {
         projectName={project.name}
         mode={mode}
         allowDemo={allowDemo}
+        real={getConfig().lightning.rail === 'nwc'}
         btcUsd={btcUsd}
         usdXof={usdXof}
         suggestions={suggestions.filter((x) => x.cents >= 500)}

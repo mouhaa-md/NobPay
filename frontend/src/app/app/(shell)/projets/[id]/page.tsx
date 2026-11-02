@@ -6,6 +6,7 @@ import { ShareManagerLink } from '@/components/app/ShareManagerLink';
 import { StepTimeline } from '@/components/app/StepTimeline';
 import { projectStatus } from '@/components/app/ProjectCard';
 import { Flag } from '@/components/ui/Flag';
+import { RefundPanel } from '@/components/app/RefundPanel';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, Chip, ProgressBar, SectionTitle } from '@/components/ui/primitives';
 import { formatFcfa, formatUsd, formatUsdShort } from '@/lib/money';
@@ -116,6 +117,16 @@ export default async function ProjectPage(
               </Link>
             </div>
           )}
+          <RefundPanel
+            projectId={project.id}
+            escrowCents={s.escrow}
+            simulated={getConfig().lightning.rail !== 'nwc'}
+            blockedReason={
+              project.steps.some((st) => st.status === 'proof_submitted' || st.status === 'releasing')
+                ? 'Une preuve attend votre décision ou un paiement est en cours : terminez-les d’abord.'
+                : undefined
+            }
+          />
         </section>
 
         {/* Steps */}
