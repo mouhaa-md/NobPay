@@ -70,7 +70,7 @@ export default async function Welcome() {
             <span className="font-accent text-[1.14em] font-normal italic tracking-normal text-primary-container">Avec preuve.</span>
           </h2>
           <p className="mx-auto max-w-sm font-body-md text-body-md leading-relaxed text-on-surface-variant">
-            Financez vos projets immobiliers, agricoles et commerciaux au pays. Vos fonds restent en séquestre et ne sont libérés que sur preuve.
+            Financez un projet, une scolarité ou le stock d’un commerçant au pays. Vos fonds restent en séquestre et ne sont libérés que sur preuve.
           </p>
         </div>
 

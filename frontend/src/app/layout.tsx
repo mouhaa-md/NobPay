@@ -10,7 +10,7 @@ import { SkipLink } from '@/components/ui/SkipLink';
 export const metadata: Metadata = {
   title: { default: 'NobPay · Investissez au pays. Avec preuve.', template: '%s · NobPay' },
   description:
-    "NobPay aide la diaspora à financer des projets immobiliers, agricoles et commerciaux au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.",
+    "NobPay aide la diaspora à financer des projets, des frais de scolarité et des stocks de commerçants au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.",
   applicationName: 'NobPay',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'NobPay', statusBarStyle: 'black-translucent' },

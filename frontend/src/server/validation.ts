@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { SECTORS } from '@/lib/templates';
+import type { Sector } from '@/lib/types';
 import { HttpError, readTextLimited } from './http';
 
 /**
@@ -82,7 +84,7 @@ export const registerSchema = z
 export const projectSchema = z
   .object({
     name: text(2, 80, 'Donnez un nom au projet (2 à 80 caractères)'),
-    sector: z.enum(['immobilier', 'agricole', 'commerce'], { error: 'Secteur invalide' }),
+    sector: z.enum(Object.keys(SECTORS) as [Sector, ...Sector[]], { error: 'Secteur invalide' }), // one list, in templates.ts
     city: text(1, 80, 'Indiquez la ville'),
     // the absolute floor; the instance may ask for more (config minBudgetUsd, checked in createProject)
     budgetCents: money(1_000, 50_000_000, 'Le budget doit être compris entre 10 $ et 500 000 $'),

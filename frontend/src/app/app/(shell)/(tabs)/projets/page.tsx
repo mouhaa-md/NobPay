@@ -19,6 +19,8 @@ const FILTERS: { id: 'all' | Sector; label: string; icon?: string }[] = [
   { id: 'immobilier', label: SECTORS.immobilier.label, icon: SECTORS.immobilier.icon },
   { id: 'agricole', label: SECTORS.agricole.label, icon: SECTORS.agricole.icon },
   { id: 'commerce', label: SECTORS.commerce.label, icon: SECTORS.commerce.icon },
+  { id: 'scolarite', label: SECTORS.scolarite.label, icon: SECTORS.scolarite.icon },
+  { id: 'approvisionnement', label: SECTORS.approvisionnement.label, icon: SECTORS.approvisionnement.icon },
 ];
 
 /** lower case, no accents: « thies » finds « Thiès » */
@@ -100,7 +102,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                 <Icon name="lock" size={14} /> Fonds en séquestre, libérés sur preuve
               </span>
               <h2 className="font-headline-lg text-headline-lg tracking-tight text-on-surface">Projets de la diaspora</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Suivi des chantiers, exploitations agricoles et commerces que vous financez, étape par étape.</p>
+              <p className="font-body-md text-body-md text-on-surface-variant">Suivi des projets, scolarités et stocks que vous financez, étape par étape.</p>
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Pill icon="folder_special">
                   <strong className="font-title-md text-title-md">{totals.projects}</strong> projet{totals.projects > 1 ? 's' : ''}

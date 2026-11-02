@@ -47,7 +47,7 @@ export function BottomNav() {
               </span>
               <span>
                 <span className="block font-title-md text-title-md">Nouveau projet</span>
-                <span className="block font-body-sm text-body-sm text-on-surface-variant">Immobilier, agricole ou commerce</span>
+                <span className="block font-body-sm text-body-sm text-on-surface-variant">Un projet, une scolarité ou un stock</span>
               </span>
             </Link>
             <Link href="/app/projets" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl p-3 hover:bg-surface-container-low">

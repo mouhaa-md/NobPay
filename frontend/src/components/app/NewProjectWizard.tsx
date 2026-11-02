@@ -18,16 +18,20 @@ interface DraftStep {
   proofKinds: ProofKind[];
 }
 
-const SECTOR_ORDER: Sector[] = ['immobilier', 'agricole', 'commerce'];
+const SECTOR_ORDER: Sector[] = ['immobilier', 'agricole', 'commerce', 'scolarite', 'approvisionnement'];
 const PRESETS: Record<Sector, number[]> = {
   immobilier: [10_000, 24_000, 50_000],
   agricole: [3_000, 9_000, 20_000],
   commerce: [2_000, 5_000, 15_000],
+  scolarite: [300, 800, 2_000],
+  approvisionnement: [500, 1_500, 5_000],
 };
 const PLACEHOLDER: Record<Sector, { name: string; city: string }> = {
   immobilier: { name: 'Villa familiale', city: 'Thiès' },
   agricole: { name: "Champ d'arachide", city: 'Kaolack' },
   commerce: { name: 'Boutique de quartier', city: 'Dakar' },
+  scolarite: { name: 'Scolarité de Fatou', city: 'Dakar' },
+  approvisionnement: { name: 'Stock de la boutique', city: 'Touba' },
 };
 const STEP_LABELS = ['Secteur', 'Projet', 'Étapes', 'Équipe', 'Récapitulatif'];
 const MAX_STEPS = 12;

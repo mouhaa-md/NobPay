@@ -12,14 +12,16 @@ import type { Sector } from '@/lib/types';
 export const metadata: Metadata = {
   title: { absolute: 'NobPay · Investissez au pays. Avec preuve.' },
   description:
-    "NobPay aide la diaspora à financer des projets immobiliers, agricoles et commerciaux au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.",
+    "NobPay aide la diaspora à financer des projets, des frais de scolarité et des stocks de commerçants au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.",
 };
 
-const SECTOR_ORDER: Sector[] = ['immobilier', 'agricole', 'commerce'];
+const SECTOR_ORDER: Sector[] = ['immobilier', 'agricole', 'commerce', 'scolarite', 'approvisionnement'];
 const SECTOR_NOTE: Record<Sector, string> = {
   immobilier: 'Titre foncier vérifié avant le premier paiement, puis chaque phase du chantier sur photos datées.',
   agricole: 'Intrants, semis, récolte : chaque achat est prouvé par une facture et une photo du terrain.',
   commerce: 'Du premier achat de stock à la mise en rayon : le fournisseur est payé quand la marchandise arrive.',
+  scolarite: 'Les frais d’école d’un enfant, payés à l’école trimestre après trimestre, sur présentation du reçu.',
+  approvisionnement: 'Le commerçant commande, le grossiste est payé à la livraison : plus d’avance perdue ni de livraison contestée.',
 };
 
 const FAQ = [
@@ -245,10 +247,10 @@ export default function Landing() {
         {/* ============ SECTORS ============ */}
         <section className="wrap sectors" id="secteurs">
           <div className="section-head">
-            <div className="eyebrow">Trois secteurs</div>
+            <div className="eyebrow">Trois couloirs, un moteur</div>
             <h2 data-nm-reveal="words">Un même moteur pour <em>vos projets au pays</em></h2>
             <p data-nm-reveal="lines" data-nm-margin="10">
-              Chaque secteur a ses étapes types. Vous les ajustez, puis chaque paiement dépend d&apos;une preuve.
+              Un projet au pays, une scolarité, le stock d’un commerçant : chacun a ses étapes types. Vous les ajustez, puis chaque paiement dépend d&apos;une preuve.
             </p>
           </div>
           <div className="sector-grid">
