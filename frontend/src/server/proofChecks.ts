@@ -74,7 +74,7 @@ export function proofChecks({ db, project, step, usdXof }: ChecksInput): ProofCh
     const future = proof.photos.filter((p) => Date.parse(p.takenAt) - submitted > 10 * 60_000);
     if (future.length > 0) checks.push({ id: 'date-future', level: 'attention', text: 'La date d’une photo est postérieure à son envoi : l’horloge de l’appareil est peut-être fausse.' });
     if (old.length > 0) checks.push({ id: 'date-old', level: 'attention', text: `${old.length === 1 ? 'Une photo date' : `${old.length} photos datent`} de plus d’une semaine avant l’envoi : a-t-elle été prise pour cette étape ?` });
-    if (old.length === 0 && future.length === 0) checks.push({ id: 'date', level: 'ok', text: 'Les photos ont été prises juste avant l’envoi.' });
+    if (old.length === 0 && future.length === 0) checks.push({ id: 'date', level: 'ok', text: 'Les photos ont été prises dans la semaine qui précède l’envoi.' });
   }
 
   // 4. The invoice against the step (indicative rate).

@@ -1,7 +1,8 @@
 // Shared domain types (used by the server and by the UI).
 // All money is stored as integer USD cents to avoid floating point errors.
 
-export type Sector = 'immobilier' | 'agricole' | 'commerce';
+/** The three corridors of one engine: a project at home, school fees, and a merchant's restock; `commerce` is the shop itself. */
+export type Sector = 'immobilier' | 'agricole' | 'commerce' | 'scolarite' | 'approvisionnement';
 export type ProofKind = 'titre' | 'photos' | 'facture';
 export type MobileNetwork = 'wave' | 'orange_money' | 'free_money';
 /** Where a supplier is paid: a mobile money operator (Senegal), or bitcoin straight to a Lightning address. */

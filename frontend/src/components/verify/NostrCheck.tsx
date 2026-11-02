@@ -56,9 +56,10 @@ export function NostrCheck({ ledger }: { ledger: DossierEventLike[] }) {
       )}
       {report.state === 'partial' && (
         <>
-          {report.confirmed}/{report.total} engagements retrouvés sur {reached} relais.
+          {report.confirmed}/{report.total} engagement{report.total > 1 ? 's' : ''} retrouvé{report.confirmed > 1 ? 's' : ''} sur {reached} relais.
           {missing.length > 0 && ` Absents des relais : événement${missing.length > 1 ? 's' : ''} ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? '…' : ''}.`}
-          {pending > 0 && ` ${pending} en cours de publication.`} Un relais peut être lent ou ne pas tout garder : relancez, ou comparez avec un autre client Nostr.{retry}
+          {pending > 0 && ` ${pending} en cours de publication (quelques secondes à quelques minutes).`}
+          {missing.length > 0 && ' Un relais peut être lent ou ne pas tout garder : relancez, ou comparez avec un autre client Nostr.'} {retry}
         </>
       )}
       {report.state === 'conflict' && (

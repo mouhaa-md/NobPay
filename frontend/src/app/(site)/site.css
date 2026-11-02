@@ -545,8 +545,18 @@ html:has(.site) {
 }
 .sector-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 2.2rem;
+}
+.sector-grid > .sector {
+  grid-column: span 2;
+}
+/* five cards: three on the first row, the last two centred under them */
+.sector-grid > .sector:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+.sector-grid > .sector:nth-child(5) {
+  grid-column: 4 / span 2;
 }
 .sector {
   border-radius: 3rem;
@@ -1008,6 +1018,11 @@ html:has(.site) {
   .peek-grid {
     grid-template-columns: 1fr;
     gap: 4rem;
+  }
+  .sector-grid > .sector,
+  .sector-grid > .sector:nth-child(4),
+  .sector-grid > .sector:nth-child(5) {
+    grid-column: auto;
   }
   .why-copy {
     position: static;

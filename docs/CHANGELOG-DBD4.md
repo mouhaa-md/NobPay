@@ -89,5 +89,14 @@
 - **Défaillances** : refus du service, réponse illisible, service injoignable, clé refusée : un message en français (jamais l'erreur brute), jamais une exception pour le financeur ; un avis n'est jamais rattaché à une preuve renvoyée entre-temps.
 - Tests : `ai-review` (37), `proof-checks` (23).
 
+## Jalon M4 (début) : trois couloirs sur un seul moteur (2 novembre 2026)
+
+- **Deux secteurs de plus** : **Scolarité** (la famille à l'étranger paie l'école, trimestre après trimestre, sur présentation du reçu : inscription, fournitures et uniforme, trois trimestres) et **Réapprovisionnement** (le commerçant commande, le grossiste est payé quand la marchandise est livrée : commande confirmée, livraison, mise en rayon). Avec le projet au pays (immobilier, agricole, commerce), cela fait les **trois couloirs** du plan sur le même moteur : séquestre, preuve, paiement direct, registre, Nostr, IA.
+- Un seul endroit liste les secteurs (`templates.ts`) : la validation du serveur en dérive. Deux illustrations originales (SVG dessinés pour le projet, donc sans question de provenance d'image).
+- **Défaut corrigé** : avec le budget minimum abaissé à 10 $ (essai rapide), le découpage automatique d'un secteur à six étapes donnait une étape à 0 $ ; `allocateBudget` n'en produit plus sous 1 $ (les dollars manquants sont repris sur les plus grosses étapes).
+- Page d'accueil, assistant, filtre des projets et textes mis à jour (cinq cartes, deux lignes centrées).
+- **Contrôle visuel dans un vrai navigateur** (serveur de production local, données jetables) : page d'accueil (cinq cartes), assistant avec l'essai rapide, page d'une preuve en attente (contrôles), page de vérification publique avec la ligne Nostr **interrogeant de vrais relais en lecture depuis le navigateur** (la CSP autorise bien `wss:`). Corrigés grâce à lui : formulation « juste avant l'envoi » (le seuil est d'une semaine), « 1 événements », « donner à Moi-même son lien », texte inutilement alarmiste quand les engagements sont seulement en cours de publication. **Pas vu en navigateur** : le panneau d'avis de l'IA une fois la clé configurée, les écrans de vrais bitcoins (pas de portefeuille), le rendu mobile.
+- Tests : `sectors` (13). **Pas encore fait de M4** : version anglaise, wolof, gabarits propres à chaque couloir (libellés « reçu de l'école »).
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

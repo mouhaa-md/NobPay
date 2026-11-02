@@ -79,7 +79,7 @@ export function VerifyAnchor({ initial }: { initial: AnchorView }) {
               ? ''
               : 'Contrôle de chaque événement…'
             : report.chainOk && report.headOk
-              ? `${report.eventCount} événements enchaînés : chaque empreinte contient celle de la précédente.`
+              ? `${report.eventCount} événement${report.eventCount > 1 ? 's' : ''} enchaîné${report.eventCount > 1 ? 's' : ''} : chaque empreinte contient celle de la précédente.`
               : report.error ?? `La chaîne est rompue à l'événement ${report.brokenAt ?? '?'}.`}
         </CheckRow>
         {report?.dossier && report.chainOk && <NostrCheck ledger={report.dossier.ledger} />}

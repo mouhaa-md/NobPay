@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Une boutique de quartier qui reçoit sa marchandise">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd8a8"/>
+      <stop offset="1" stop-color="#f7931a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="1000" cy="170" r="80" fill="#fff3d6" opacity="0.8"/>
+  <rect y="600" width="1200" height="200" fill="#b86f2a"/>
+  <rect y="600" width="1200" height="14" fill="#9c5a1f"/>
+  <!-- shop -->
+  <rect x="180" y="300" width="560" height="310" fill="#fdf6e6"/>
+  <rect x="180" y="300" width="560" height="16" fill="#eadfc6"/>
+  <!-- awning -->
+  <g>
+    <polygon points="150,300 770,300 735,215 185,215" fill="#1d4ed8"/>
+    <g fill="#ffffff">
+      <polygon points="185,215 255,215 262,300 192,300"/><polygon points="325,215 395,215 400,300 330,300"/>
+      <polygon points="465,215 535,215 538,300 468,300"/><polygon points="605,215 675,215 676,300 606,300"/>
+    </g>
+  </g>
+  <!-- shelves with goods -->
+  <rect x="215" y="360" width="490" height="220" fill="#e7d9b8"/>
+  <g stroke="#b9a275" stroke-width="8"><path d="M215 440H705M215 520H705"/></g>
+  <g>
+    <rect x="235" y="388" width="46" height="52" rx="6" fill="#16a34a"/><rect x="290" y="378" width="40" height="62" rx="6" fill="#ba1a1a"/>
+    <rect x="340" y="392" width="58" height="48" rx="6" fill="#f7931a"/><rect x="410" y="384" width="42" height="56" rx="6" fill="#1d4ed8"/>
+    <rect x="470" y="396" width="64" height="44" rx="6" fill="#673900"/><rect x="546" y="380" width="44" height="60" rx="6" fill="#16a34a"/>
+    <rect x="604" y="392" width="62" height="48" rx="6" fill="#ba1a1a"/>
+    <rect x="235" y="470" width="62" height="50" rx="6" fill="#1d4ed8"/><rect x="310" y="462" width="46" height="58" rx="6" fill="#f7931a"/>
+    <rect x="370" y="476" width="70" height="44" rx="6" fill="#16a34a"/><rect x="456" y="464" width="48" height="56" rx="6" fill="#ba1a1a"/>
+    <rect x="520" y="474" width="66" height="46" rx="6" fill="#673900"/><rect x="602" y="466" width="50" height="54" rx="6" fill="#1d4ed8"/>
+  </g>
+  <!-- counter -->
+  <rect x="180" y="548" width="560" height="62" fill="#8a5a20"/>
+  <rect x="180" y="540" width="560" height="14" fill="#a8702a"/>
+  <!-- delivery: stacked crates and a handcart -->
+  <g>
+    <rect x="800" y="520" width="120" height="90" rx="4" fill="#d9a35a"/><rect x="800" y="520" width="120" height="14" fill="#b9833a"/>
+    <path d="M830 545v50M860 545v50M890 545v50" stroke="#9c6a28" stroke-width="5"/>
+    <rect x="830" y="430" width="120" height="90" rx="4" fill="#e3b268"/><rect x="830" y="430" width="120" height="14" fill="#b9833a"/>
+    <path d="M860 455v50M890 455v50M920 455v50" stroke="#9c6a28" stroke-width="5"/>
+    <rect x="960" y="500" width="130" height="110" rx="4" fill="#d9a35a"/><rect x="960" y="500" width="130" height="14" fill="#b9833a"/>
+    <path d="M990 525v60M1025 525v60M1060 525v60" stroke="#9c6a28" stroke-width="5"/>
+    <circle cx="1008" cy="640" r="30" fill="#2b2b2b"/><circle cx="1008" cy="640" r="12" fill="#8a8a8a"/>
+    <path d="M920 612H1130" stroke="#2b2b2b" stroke-width="8" stroke-linecap="round"/>
+    <path d="M1130 612L1160 470" stroke="#2b2b2b" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <!-- merchant -->
+  <g>
+    <circle cx="640" cy="475" r="26" fill="#4a3220"/><rect x="610" y="502" width="60" height="50" rx="16" fill="#ffffff"/>
+  </g>
+  <!-- sign -->
+  <rect x="320" y="150" width="280" height="50" rx="10" fill="#0b1c30"/>
+  <g fill="#f7931a"><rect x="345" y="170" width="60" height="10" rx="5"/><rect x="420" y="170" width="150" height="10" rx="5"/></g>
+</svg>

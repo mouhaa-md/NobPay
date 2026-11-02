@@ -38,6 +38,24 @@ export const SECTORS: Record<Sector, SectorMeta> = {
     iconColor: 'text-secondary',
     cover: '/covers/commerce.jpg',
   },
+  scolarite: {
+    id: 'scolarite',
+    label: 'Scolarité',
+    tagline: 'Frais d’inscription, trimestres et fournitures, payés à l’école',
+    icon: 'school',
+    chip: 'bg-primary-fixed text-primary',
+    iconColor: 'text-primary',
+    cover: '/covers/scolarite.svg',
+  },
+  approvisionnement: {
+    id: 'approvisionnement',
+    label: 'Réapprovisionnement',
+    tagline: 'Commande au grossiste, livraison et mise en rayon',
+    icon: 'local_shipping',
+    chip: 'bg-tertiary-fixed text-on-tertiary-fixed',
+    iconColor: 'text-tertiary',
+    cover: '/covers/approvisionnement.svg',
+  },
 };
 
 export const PROOF_LABEL: Record<ProofKind, string> = {
@@ -82,6 +100,20 @@ export const STEP_TEMPLATES: Record<Sector, StepTemplate[]> = {
     { title: 'Mise en rayon', share: 0.1, proofKinds: ['photos'] },
     { title: 'Réapprovisionnement', share: 0.3, proofKinds: ['facture'] },
   ],
+  // Family abroad -> a child's school. The school (or its cashier) is the one paid; the receipt is the proof.
+  scolarite: [
+    { title: 'Inscription et frais d’entrée', share: 0.2, proofKinds: ['facture'] },
+    { title: 'Fournitures et uniforme', share: 0.1, proofKinds: ['photos', 'facture'] },
+    { title: '1er trimestre', share: 0.25, proofKinds: ['facture'] },
+    { title: '2e trimestre', share: 0.25, proofKinds: ['facture'] },
+    { title: '3e trimestre', share: 0.2, proofKinds: ['facture'] },
+  ],
+  // A merchant (or the relative who backs them) -> the wholesaler: paid when the goods are in the shop.
+  approvisionnement: [
+    { title: 'Commande confirmée par le grossiste', share: 0.3, proofKinds: ['facture'] },
+    { title: 'Livraison de la marchandise', share: 0.5, proofKinds: ['photos', 'facture'] },
+    { title: 'Mise en rayon', share: 0.2, proofKinds: ['photos'] },
+  ],
 };
 
 /**
@@ -92,7 +124,7 @@ export const QUICK_TRIAL = {
   sector: 'commerce' as Sector,
   name: 'Essai rapide',
   city: 'Dakar',
-  managerName: 'Moi-même',
+  managerName: 'Moussa (essai)',
   steps: [
     { title: 'Achat du stock', amountCents: 500, proofKinds: ['photos'] as ProofKind[] },
     { title: 'Livraison du stock', amountCents: 500, proofKinds: ['photos'] as ProofKind[] },
@@ -101,11 +133,21 @@ export const QUICK_TRIAL = {
 } as const;
 export const QUICK_TRIAL_BUDGET_CENTS = QUICK_TRIAL.steps.reduce((n, s) => n + s.amountCents, 0);
 
-/** Splits a budget (in cents) across a template; the last step absorbs rounding. */
+/**
+ * Splits a budget (in cents) across a template in whole dollars; the last step absorbs rounding. No step is ever under
+ * 1 $ (a small budget would round a small share down to nothing): the missing dollars come from the biggest steps.
+ */
 export function allocateBudget(budgetCents: number, template: StepTemplate[]): number[] {
-  const amounts = template.map((t) => Math.round((budgetCents * t.share) / 100) * 100);
-  const diff = budgetCents - amounts.reduce((a, b) => a + b, 0);
-  amounts[amounts.length - 1] += diff;
+  const amounts = template.map((t) => Math.max(100, Math.round((budgetCents * t.share) / 100) * 100));
+  amounts[amounts.length - 1] += budgetCents - amounts.reduce((a, b) => a + b, 0);
+  for (let guard = 0; guard < 10_000; guard++) {
+    const low = amounts.findIndex((a) => a < 100);
+    if (low < 0) break;
+    const big = amounts.indexOf(Math.max(...amounts));
+    if (amounts[big] <= 100) break; // the budget cannot give every step 1 $
+    amounts[big] -= 100;
+    amounts[low] += 100;
+  }
   return amounts;
 }
 
