@@ -1,5 +1,6 @@
 import { requireUser } from '@/server/auth';
 import { respond } from '@/server/http';
+import { enforce, LIMITS } from '@/server/rateLimit';
 import { quoteSchema, readJson } from '@/server/validation';
 import { quoteRelease } from '@/server/services';
 
@@ -13,6 +14,7 @@ export async function POST(
   const params = await props.params;
   return respond(async () => {
     const user = await requireUser();
+    enforce(`quote:${user.id}`, LIMITS.quote.max, LIMITS.quote.windowMs);
     const body = await readJson(request, quoteSchema);
     const quote = await quoteRelease(user, params.id, params.stepId, { simulate: body.simulate === true });
     return { quote };

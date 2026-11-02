@@ -12,6 +12,34 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
+describe('wallet secrets', () => {
+  const SECRET = 'cd'.repeat(32);
+  const NWC = `nostr+walletconnect://${'ab'.repeat(32)}?relay=wss%3A%2F%2Frelay.example&secret=${SECRET}`;
+
+  it('a wallet connection string is masked wherever it appears in a text', () => {
+    for (const text of [`Invalid URL: ${NWC}`, `bad "${NWC}" given`, `(${NWC})`, `nostr+walletconnect%3A%2F%2F${'ab'.repeat(32)}%3Fsecret%3D${SECRET}`, `?relay=x&secret=${SECRET}`]) {
+      const out = scrub(text);
+      expect(out, text).not.toContain(SECRET);
+    }
+    expect(scrub(`Invalid URL: ${NWC}`)).toBe('Invalid URL: nostr+walletconnect://***');
+  });
+
+  it('an nsec private key is masked', () => {
+    const nsec = 'nsec1' + 'q'.repeat(58);
+    expect(scrub(`key ${nsec} leaked`)).toBe('key nsec1*** leaked');
+  });
+
+  it('an error logged with the string inside it never writes the secret', () => {
+    logger.error('lightning_unexpected', { error: new Error(`Invalid URL: ${NWC}`), also: NWC });
+    expect(lines.join('\n')).not.toContain(SECRET);
+  });
+
+  it('ordinary hashes and identifiers are left alone', () => {
+    const hash = 'ab'.repeat(32);
+    expect(scrub(`paymentHash ${hash}`)).toBe(`paymentHash ${hash}`);
+  });
+});
+
 describe('masking', () => {
   it('replaces the value of every sensitive key, at any depth and in any case', () => {
     const out = mask({

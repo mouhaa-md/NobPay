@@ -7,9 +7,10 @@ import { readDb, withDb } from './db';
 import { applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject } from './domain';
 import { HttpError } from './http';
 import { appendLedger } from './ledger';
-import { getPayoutWallet, getReceiveWallet, walletNetwork, WalletError } from './lightning';
+import { getPayoutWallet, getReceiveWallet, walletNetwork, WalletError, type LightningWallet } from './lightning';
+import { decodeBolt11 } from './lightning/bolt11';
 import { LnurlError, normalizeLightningAddress, requestInvoice } from './lightning/lnurl';
-import { getBtcUsd } from './lightning/price';
+import { getBtcUsdForMoney } from './lightning/price';
 import { logger } from './logger';
 
 /**
@@ -21,8 +22,23 @@ import { logger } from './logger';
  *  - a payment whose outcome is unknown keeps its money reserved and is looked up by payment hash (never repeated).
  */
 
-/** How long a payout of unknown outcome is left alone before we conclude it was never sent. */
+/** How long a payout of unknown outcome is left alone before we conclude it was never sent (at the very least). */
 const UNCONFIRMED_GRACE_MS = 5 * 60_000;
+/** ... and at the very most, whatever the invoice's own lifetime. */
+const MAX_UNCONFIRMED_WAIT_MS = 6 * 3_600_000;
+
+/**
+ * How long a payment the wallet knows nothing about must wait before we say "it was never sent". A wallet that was
+ * offline can still process, later, a request it received earlier: until the invoice itself can no longer be paid,
+ * "unknown to the wallet" does not mean "not sent", and giving the escrow back then would let the funder pay twice.
+ */
+export function unconfirmedWaitMs(bolt11: string): number {
+  try {
+    return Math.max(UNCONFIRMED_GRACE_MS, Math.min(decodeBolt11(bolt11).expirySeconds * 1000, MAX_UNCONFIRMED_WAIT_MS));
+  } catch {
+    return UNCONFIRMED_GRACE_MS; // an invoice we cannot read: the usual wait
+  }
+}
 /** The quote of a Lightning payout is short: the dollar amount is converted at this very moment. */
 const QUOTE_SECONDS = 120;
 /** Routing fees we keep in the wallet beyond the amount sent (the wallet may refuse a payment it cannot cover). */
@@ -39,6 +55,7 @@ export function lightningHttpError(err: unknown): HttpError {
     return new HttpError(status, err.message, 'lightning_address');
   }
   if (err instanceof WalletError) {
+    if (err.detail) logger.warn('wallet_error', { code: err.code, ambiguous: err.ambiguous, detail: err.detail });
     const status = err.code === 'insufficient_balance' || err.code === 'quota_exceeded' ? 409 : 502;
     return new HttpError(status, err.message, err.code === 'insufficient_balance' ? 'insufficient_balance' : 'wallet_error');
   }
@@ -84,7 +101,7 @@ export async function createLightningFunding(owner: User, projectId: string, amo
     throw new HttpError(503, 'Les versements sont suspendus : les soldes du portefeuille ne couvrent pas les séquestres. Contactez le support.', 'payments_paused');
   }
 
-  const { usd: btcUsd } = await getBtcUsd();
+  const { usd: btcUsd } = await getBtcUsdForMoney();
   const amountSats = usdToSats(amountCents, btcUsd);
   let invoice;
   try {
@@ -197,7 +214,7 @@ export async function quoteLightningPayout(step: Step, supplier: Supplier): Prom
   await assertPayoutsOpen(step.amountCents);
   const wallet = getPayoutWallet()!;
   const address = assertLightningSupplier(supplier);
-  const { usd: btcUsd } = await getBtcUsd();
+  const { usd: btcUsd } = await getBtcUsdForMoney();
   const amountSats = usdToSats(step.amountCents, btcUsd);
   try {
     const balance = await wallet.balanceSats();
@@ -249,17 +266,39 @@ export function lightningPayoutLedger(payout: Payout): Record<string, unknown> {
 
 export type LightningSent = { kind: 'paid'; preimage: string; feesSats: number } | { kind: 'unconfirmed' };
 
-/** Pays the invoice. A refusal throws (the money never left); an answer we cannot read says `unconfirmed` (look it up). */
+/**
+ * Pays an invoice and says what is known about it. A refusal before any attempt (no funds, quota, no right) throws: the
+ * money never left. An answer we cannot read says `unconfirmed` (look it up later). And "the payment failed" is only
+ * believed once the wallet, asked by payment hash, does not show that payment as pending or settled: a wallet can
+ * report a failure while the payment is still on its way, and the escrow must not be handed back for money that leaves.
+ */
+async function payInvoice(wallet: LightningWallet, bolt11: string, paymentHash: string): Promise<LightningSent> {
+  try {
+    const paid = await wallet.pay(bolt11);
+    return { kind: 'paid', ...paid };
+  } catch (err) {
+    if (!(err instanceof WalletError)) throw err;
+    if (err.ambiguous) return { kind: 'unconfirmed' };
+    if (err.code !== 'payment_failed') throw err;
+    let tx: Awaited<ReturnType<LightningWallet['lookup']>>;
+    try {
+      tx = await wallet.lookup(paymentHash);
+    } catch {
+      return { kind: 'unconfirmed' }; // cannot check: keep the money reserved, the reconciliation will
+    }
+    if (!tx || tx.state === 'failed' || tx.state === 'expired') throw err;
+    if (tx.state === 'settled' && tx.direction === 'outgoing' && tx.preimage && sha256Hex(tx.preimage) === paymentHash) {
+      return { kind: 'paid', preimage: tx.preimage, feesSats: tx.feesSats };
+    }
+    return { kind: 'unconfirmed' }; // still pending (or settled without a valid proof): never "failed" while it may complete
+  }
+}
+
+/** Pays the invoice of a quote. See payInvoice for what a refusal and an unreadable answer mean. */
 export async function sendLightningPayment(quote: PayoutQuote): Promise<LightningSent> {
   const wallet = getPayoutWallet();
   if (!wallet || !quote.lightning) throw new WalletError('Les paiements Lightning ne sont pas activés.', 'unsupported');
-  try {
-    const paid = await wallet.pay(quote.lightning.bolt11);
-    return { kind: 'paid', ...paid };
-  } catch (err) {
-    if (err instanceof WalletError && err.ambiguous) return { kind: 'unconfirmed' };
-    throw err;
-  }
+  return payInvoice(wallet, quote.lightning.bolt11, quote.lightning.paymentHash);
 }
 
 /**
@@ -271,7 +310,7 @@ export async function reconcileLightningPayout(projectId: string, stepId: string
   const wallet = getPayoutWallet();
   if (!wallet || !payout.lightning) return;
   const tx = await wallet.lookup(payout.lightning.paymentHash);
-  const never = tx === null && ageMs > UNCONFIRMED_GRACE_MS;
+  const never = tx === null && ageMs > unconfirmedWaitMs(payout.lightning.bolt11);
   const proofOk = tx?.state === 'settled' && tx.direction === 'outgoing' && !!tx.preimage && sha256Hex(tx.preimage) === payout.lightning.paymentHash;
   await withDb((d) => {
     const p = findProject(d, projectId);
@@ -330,29 +369,32 @@ export async function requestRefund(owner: User, projectId: string, input: Refun
 
   // Phase 2: the invoice of the funder's domain for exactly this amount, then the payment
   const wallet = getPayoutWallet()!;
-  let btcUsd = 0;
+  let sent: LightningSent;
   try {
-    ({ usd: btcUsd } = await getBtcUsd());
+    const { usd: btcUsd } = await getBtcUsdForMoney();
     const amountSats = usdToSats(amountCents, btcUsd);
     const invoice = await requestInvoice(address, amountSats, { network: await walletNetwork(wallet) });
     await withDb((d) => {
       const r = d.refunds?.find((x) => x.id === id);
       if (r) r.lightning = { amountSats, btcUsd, bolt11: invoice.bolt11, paymentHash: invoice.paymentHash }; // written BEFORE paying: a lookup needs it
     });
-    const paid = await wallet.pay(invoice.bolt11);
-    return finishRefund(projectId, id, { ok: true, preimage: paid.preimage, feesSats: paid.feesSats });
+    sent = await payInvoice(wallet, invoice.bolt11, invoice.paymentHash);
   } catch (err) {
-    if (err instanceof WalletError && err.ambiguous) {
-      await withDb((d) => {
-        const r = d.refunds?.find((x) => x.id === id);
-        if (r) r.uncertain = true; // stays pending and reserved: reconcileRefunds looks the payment up
-      });
-      return (await readDb()).refunds!.find((x) => x.id === id)!;
-    }
+    // only a refusal that is certain gets here: nothing left the wallet, the amount goes back to the escrow
     const e = lightningHttpError(err);
     await finishRefund(projectId, id, { ok: false, error: e.message });
     throw e;
   }
+  // Outside the try on purpose: once the wallet has paid (or may have), a failed write must never read as "failed".
+  // The refund then stays pending with its payment hash, and reconcileRefunds finishes it from the wallet's answer.
+  if (sent.kind === 'unconfirmed') {
+    await withDb((d) => {
+      const r = d.refunds?.find((x) => x.id === id);
+      if (r) r.uncertain = true; // stays pending and reserved: reconcileRefunds looks the payment up
+    });
+    return (await readDb()).refunds!.find((x) => x.id === id)!;
+  }
+  return finishRefund(projectId, id, { ok: true, preimage: sent.preimage, feesSats: sent.feesSats });
 }
 
 async function finishRefund(
@@ -406,7 +448,7 @@ export async function reconcileRefunds(): Promise<void> {
       const tx = await wallet.lookup(r.lightning.paymentHash);
       if (tx?.state === 'settled' && tx.preimage && sha256Hex(tx.preimage) === r.lightning.paymentHash) {
         await finishRefund(r.projectId, r.id, { ok: true, preimage: tx.preimage, feesSats: tx.feesSats });
-      } else if (tx?.state === 'failed' || (tx === null && age > UNCONFIRMED_GRACE_MS)) {
+      } else if (tx?.state === 'failed' || (tx === null && age > unconfirmedWaitMs(r.lightning.bolt11))) {
         await finishRefund(r.projectId, r.id, { ok: false, error: 'Le remboursement Lightning n’a pas abouti. Votre séquestre est intact : vous pouvez réessayer.' });
       }
     } catch {
@@ -441,7 +483,7 @@ export async function checkWalletSolvency(): Promise<WalletSolvency | null> {
     const [a, b] = await Promise.all([receive.info(), payout.info()]);
     if (!(a.pubkey && a.pubkey === b.pubkey)) sats += await payout.balanceSats();
   }
-  const [{ usd: btcUsd }, db] = await Promise.all([getBtcUsd(), readDb()]);
+  const [{ usd: btcUsd }, db] = await Promise.all([getBtcUsdForMoney(), readDb()]);
   const assetsCents = Math.round((sats / 1e8) * btcUsd * 100);
   const liabilityCents = realLiabilityCents(db);
   const violated = liabilityCents > assetsCents * 1.03 + 500;

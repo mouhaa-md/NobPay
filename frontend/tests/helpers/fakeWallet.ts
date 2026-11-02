@@ -5,7 +5,11 @@ import { encodeBolt11 } from './bolt11';
 
 export const sha256Hex = (hex: string) => createHash('sha256').update(Buffer.from(hex, 'hex')).digest('hex');
 
-export type PayMode = 'ok' | 'fail' | 'insufficient' | 'timeout-not-sent' | 'timeout-sent' | 'bad-proof';
+/**
+ * 'fail-in-flight' and 'fail-but-paid': the wallet says "the payment failed" while the payment is in fact still on its way,
+ * or already settled (some wallets do): NobPay must not believe the failure before looking the payment up.
+ */
+export type PayMode = 'ok' | 'fail' | 'insufficient' | 'timeout-not-sent' | 'timeout-sent' | 'bad-proof' | 'fail-in-flight' | 'fail-but-paid';
 
 interface Incoming {
   amountSats: number;
@@ -71,6 +75,14 @@ export class FakeWallet implements LightningWallet {
     this.known.set(paymentHash, preimage);
   }
 
+  /** The preimage a test registered for an invoice of another party (to make its payment settle later). */
+  preimageFor(paymentHash: string): string | undefined {
+    return this.known.get(paymentHash);
+  }
+
+  /** After `pay` has run, the wallet stops answering lookups (a wallet that went away right after a doubtful answer). */
+  failLookupsAfterPay = false;
+
   private complete(paymentHash: string, amountSats: number) {
     const preimage = this.known.get(paymentHash);
     if (!preimage) throw new Error('test did not register this invoice');
@@ -108,6 +120,13 @@ export class FakeWallet implements LightningWallet {
         throw new WalletError('Le paiement Lightning a échoué (aucune route).', 'payment_failed');
       case 'insufficient':
         throw new WalletError('Le portefeuille Lightning n’a pas assez de fonds.', 'insufficient_balance');
+      case 'fail-in-flight':
+        this.outgoing.set(d.paymentHash, { state: 'pending', preimage: '', feesSats: 0, amountSats: sats });
+        if (this.failLookupsAfterPay) this.failLookups = true;
+        throw new WalletError('Le paiement Lightning a échoué (aucune route).', 'payment_failed');
+      case 'fail-but-paid':
+        this.complete(d.paymentHash, sats);
+        throw new WalletError('Le paiement Lightning a échoué (aucune route).', 'payment_failed');
       case 'timeout-not-sent':
         throw new WalletError('Le portefeuille Lightning ne répond pas.', 'timeout', true);
       case 'timeout-sent':

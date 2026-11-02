@@ -15,6 +15,10 @@ const MAX_DEPTH = 5;
 
 export function scrub(text: string): string {
   const cleaned = text
+    // a wallet connection string IS the right to spend (its secret sits in the query): some libraries put it in their errors
+    .replace(/nostr\+wallet(?:connect|auth)(?::|%3A)(?:\/\/|%2F%2F)[^\s"'<>)\]]*/gi, 'nostr+walletconnect://***')
+    .replace(/([?&]secret=)[0-9a-fA-F]{16,}/gi, '$1***')
+    .replace(/\bnsec1[02-9ac-hj-np-z]{20,}/gi, 'nsec1***')
     .replace(/prd:(sandbox|live)_[A-Za-z0-9]+/g, 'prd:$1_***')
     .replace(/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer ***')
     .replace(/(Basic)\s+[A-Za-z0-9+/=]{8,}/gi, '$1 ***');

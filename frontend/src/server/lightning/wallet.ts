@@ -24,6 +24,8 @@ export class WalletError extends Error {
     public readonly code: WalletErrorCode,
     /** the request may or may not have been processed: do not conclude it failed, look the payment up */
     public readonly ambiguous = false,
+    /** what the library said, scrubbed: for the logs only, never shown to a user */
+    public readonly detail?: string,
   ) {
     super(message);
     this.name = 'WalletError';

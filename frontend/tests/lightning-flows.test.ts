@@ -6,6 +6,7 @@ import { QUICK_TRIAL, QUICK_TRIAL_BUDGET_CENTS } from '@/lib/templates';
 import { escrowCents, type Project, type User } from '@/lib/types';
 import { setWalletsForTests } from '@/server/lightning';
 import { setPriceSourcesForTests } from '@/server/lightning/price';
+import { encodeBolt11 } from './helpers/bolt11';
 import { defaultLnurl, fakeLnurlServer, type LnurlBehaviour } from './helpers/fakeLnurl';
 import { FakeWallet, sha256Hex } from './helpers/fakeWallet';
 
@@ -332,23 +333,90 @@ describe('paying a supplier at a Lightning address', () => {
     expect(await ledger(project.id, 'payout_completed')).toHaveLength(1);
   });
 
-  it('a lost answer for a payment the wallet never saw: still reserved while recent, released after five minutes', async () => {
+  it('a lost answer for a payment the wallet never saw: still reserved until the invoice can no longer be paid', async () => {
     const project = await newProject();
     await fund(project.id);
     const before = await escrowOf(project.id);
     wallet.payMode = 'timeout-not-sent';
     await approved(project);
 
-    await ageThePayout(project.id, 0, 1);
-    await services.reconcile();
-    expect((await stepOf(project.id)).status).toBe('releasing'); // too early to say it was never sent
-    expect(await escrowOf(project.id)).toBe(before - 6_000);
+    // The supplier's invoice lives ten minutes. A wallet that was offline may still process the request it was sent:
+    // until the invoice has expired, "the wallet knows nothing of it" must not hand the escrow back (it would be paid twice).
+    for (const minutes of [1, 6, 9]) {
+      await ageThePayout(project.id, 0, minutes);
+      await services.reconcile();
+      expect((await stepOf(project.id)).status, `${minutes} min`).toBe('releasing');
+      expect(await escrowOf(project.id)).toBe(before - 6_000);
+    }
 
-    await ageThePayout(project.id, 0, 6);
+    await ageThePayout(project.id, 0, 11);
     await services.reconcile();
     expect((await stepOf(project.id)).status).toBe('proof_submitted');
     expect(await escrowOf(project.id)).toBe(before);
     expect(await ledger(project.id, 'payout_failed')).toHaveLength(1);
+  });
+
+  it('an invoice that lives a long time is waited for, but never more than six hours', () => {
+    const invoice = (expiry: number) => encodeBolt11({ amountMsat: 1_000_000n, paymentHash: 'ab'.repeat(32), expiry, timestamp: Math.floor(Date.now() / 1000), network: 'mainnet' });
+    expect(flows.unconfirmedWaitMs(invoice(60))).toBe(5 * 60_000); // never shorter than the usual five minutes
+    expect(flows.unconfirmedWaitMs(invoice(3_600))).toBe(3_600_000);
+    expect(flows.unconfirmedWaitMs(invoice(7 * 86_400))).toBe(6 * 3_600_000);
+    expect(flows.unconfirmedWaitMs('not an invoice')).toBe(5 * 60_000);
+  });
+
+  describe('a wallet that says "failed" while the payment is still on its way', () => {
+    it('keeps the escrow reserved while the wallet shows it pending, and completes when it settles (never paid twice)', async () => {
+      const project = await newProject();
+      await fund(project.id);
+      const before = await escrowOf(project.id);
+      wallet.payMode = 'fail-in-flight';
+      const step = await approved(project); // no "payment not executed" error: we do not know that
+      expect(step).toMatchObject({ status: 'releasing' });
+      expect(step.payout).toMatchObject({ status: 'pending', uncertain: true });
+      expect(await escrowOf(project.id)).toBe(before - 6_000);
+      expect(await ledger(project.id, 'payout_failed')).toHaveLength(0);
+
+      await ageThePayout(project.id, 0, 600);
+      await services.reconcile();
+      expect((await stepOf(project.id)).status).toBe('releasing'); // pending is not failed, however old
+
+      const hash = step.payout!.lightning!.paymentHash;
+      wallet.outgoing.set(hash, { state: 'settled', preimage: wallet.preimageFor(hash)!, feesSats: 1, amountSats: 60_000 });
+      await services.reconcile();
+      expect((await stepOf(project.id)).status).toBe('paid');
+      expect(wallet.paid).toHaveLength(1);
+    });
+
+    it('takes the payment as made when the wallet shows it settled with a valid proof', async () => {
+      const project = await newProject();
+      await fund(project.id);
+      wallet.payMode = 'fail-but-paid';
+      const step = await approved(project);
+      expect(step.status).toBe('paid');
+      expect(sha256Hex(step.payout!.lightning!.preimage!)).toBe(step.payout!.lightning!.paymentHash);
+      expect(await ledger(project.id, 'payout_failed')).toHaveLength(0);
+      expect(wallet.paid).toHaveLength(1);
+    });
+
+    it('keeps it reserved when the wallet cannot be asked', async () => {
+      const project = await newProject();
+      await fund(project.id);
+      const before = await escrowOf(project.id);
+      wallet.payMode = 'fail-in-flight';
+      wallet.failLookupsAfterPay = true;
+      const step = await approved(project);
+      expect(step.status).toBe('releasing');
+      expect(await escrowOf(project.id)).toBe(before - 6_000);
+    });
+
+    it('a failure the wallet does not contradict still gives the escrow back', async () => {
+      const project = await newProject();
+      await fund(project.id);
+      const before = await escrowOf(project.id);
+      wallet.payMode = 'fail';
+      await expect(approved(project)).rejects.toMatchObject({ status: 502 });
+      expect(await escrowOf(project.id)).toBe(before);
+    });
   });
 
   it('keeps waiting while the wallet shows the payment as pending, however old', async () => {
@@ -509,17 +577,50 @@ describe('taking unused escrow back', () => {
     expect(await ledger(project.id, 'refund_completed')).toHaveLength(1);
   });
 
-  it('a lost answer for a payment the wallet never saw is given back after five minutes only', async () => {
+  it('a lost answer for a payment the wallet never saw is given back only once the invoice can no longer be paid', async () => {
     const project = await newProject();
     await fund(project.id);
     wallet.payMode = 'timeout-not-sent';
     await refund(project.id, 2_500);
     await flows.reconcileRefunds();
     expect((await db.readDb()).refunds![0].status).toBe('pending');
+    // ten-minute invoice: after six minutes a late wallet could still pay it, so the money stays reserved
     await db.withDb((d) => void (d.refunds![0].createdAt = new Date(Date.now() - 6 * 60_000).toISOString()));
+    await flows.reconcileRefunds();
+    expect((await db.readDb()).refunds![0].status).toBe('pending');
+    expect(await escrowOf(project.id)).toBe(3_500);
+    await db.withDb((d) => void (d.refunds![0].createdAt = new Date(Date.now() - 11 * 60_000).toISOString()));
     await flows.reconcileRefunds();
     expect((await db.readDb()).refunds![0].status).toBe('failed');
     expect(await escrowOf(project.id)).toBe(6_000);
+  });
+
+  it('a wallet that says "failed" while the payment is on its way keeps the refund reserved (never sent twice)', async () => {
+    const project = await newProject();
+    await fund(project.id);
+    wallet.payMode = 'fail-in-flight';
+    const r = await refund(project.id, 2_500); // no error: the outcome is not known
+    expect(r).toMatchObject({ status: 'pending', uncertain: true });
+    expect(await escrowOf(project.id)).toBe(3_500);
+    await db.withDb((d) => void (d.refunds![0].createdAt = new Date(Date.now() - 600 * 60_000).toISOString()));
+    await flows.reconcileRefunds();
+    expect((await db.readDb()).refunds![0].status).toBe('pending'); // pending at the wallet: not failed, however old
+
+    const hash = r.lightning!.paymentHash;
+    wallet.outgoing.set(hash, { state: 'settled', preimage: wallet.preimageFor(hash)!, feesSats: 1, amountSats: 25_000 });
+    await flows.reconcileRefunds();
+    expect((await db.readDb()).refunds![0].status).toBe('completed');
+    expect(wallet.paid).toHaveLength(1);
+  });
+
+  it('a "failed" answer for a refund the wallet shows as settled is a completed refund', async () => {
+    const project = await newProject();
+    await fund(project.id);
+    wallet.payMode = 'fail-but-paid';
+    const r = await refund(project.id, 2_500);
+    expect(r.status).toBe('completed');
+    expect(await ledger(project.id, 'refund_failed')).toHaveLength(0);
+    expect(wallet.paid).toHaveLength(1);
   });
 
   it('money handed back cannot unlock the next step', async () => {
