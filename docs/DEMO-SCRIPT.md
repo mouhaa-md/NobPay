@@ -23,6 +23,22 @@
 | 3:30 | Certificat | Montrer le registre, « Ancrer l'état actuel sur Bitcoin » | « Chaque événement s'ajoute à un registre enchaîné par hachage. Seule l'empreinte quitte l'application, via OpenTimestamps. » |
 | 4:00 | Page publique | « Page publique » | « N'importe qui vérifie sans compte : le navigateur refait les calculs. L'ancrage est en attente d'un bloc Bitcoin, quelques heures. » |
 
+## Parcours « jury », avec de vrais sats (3 minutes, instance `LIGHTNING_RAIL=nwc`)
+
+À faire avec **un portefeuille Lightning personnel** (pour payer la facture et fournir une adresse `nom@domaine`). L'application s'ouvre en anglais pour un navigateur anglophone (interrupteur de langue en haut de la page d'accueil).
+
+| Étape | Ce qu'on fait | Ce qu'on dit |
+|---|---|---|
+| 1 | `/en` → « Open the app » → **« Try without an account »** (compte invité privé) | « Pas de numéro de téléphone : un compte privé reste dans ce navigateur. » |
+| 2 | **New project** → **« Quick trial »** → « Create the project » | « Trois étapes de 5 $ : le parcours entier en quelques minutes. » |
+| 3 | **« Fund now »** → régler la facture Lightning depuis votre portefeuille | « Le séquestre n'est crédité que lorsque le portefeuille confirme le paiement, au montant exact de la facture. » |
+| 4 | Étape 1 → **« Or send the proof myself »** : une photo, une facture (n'importe quelle image), le fournisseur = **votre adresse Lightning** | « La personne sur place n'a pas de compte ; ici vous jouez les deux rôles. » |
+| 5 | Retour côté financeur : lire **« To look at before paying »** ; si l'IA est activée, **« Ask for the AI's opinion »** | « Des contrôles sans IA d'abord ; l'IA lit, le code compare, c'est vous qui décidez. » |
+| 6 | **« Approve and pay »** → devis en sats → confirmer ; ouvrir le **reçu** | « Les sats arrivent chez le fournisseur ; le reçu porte la preuve de paiement, la préimage. » |
+| 7 | Projet → certificat → **ancrer** → **page publique** de vérification | « Le navigateur recalcule tout, interroge les relais Nostr et Bitcoin, sans nous. » |
+
+À dire sans détour : c'est une **phase pilote** (montants plafonnés, séquestre tenu par l'opérateur de l'instance, pas un service financier agréé) ; les chemins Lightning, Nostr et IA ont été **testés avec des simulations** avant ce jour, et c'est la première fois avec de vrais sats si vous êtes le premier à le faire.
+
 ## Ce qu'il faut dire pour rester honnête
 - C'est un **prototype** ; le mode simulé n'utilise aucun argent réel. En sandbox Bitnob, le paiement mobile money a été exécuté de bout en bout, mais l'entrée Lightning n'a pas pu être payée (aucun moyen en sandbox) : elle est simulée et marquée comme telle dans le registre.
 - L'ancrage prouve qu'un dossier **n'a pas changé** depuis une date ; il ne prouve pas qu'une photo montre le bon chantier : c'est le financeur qui en juge.

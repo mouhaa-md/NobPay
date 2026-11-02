@@ -174,7 +174,7 @@ export async function createFunding(
     throw new HttpError(400, `Le projet est déjà financé à presque 100 % (reste ${formatUsdShort(Math.max(remainingBudget, 0))}).`);
   }
   if (input.method !== 'lightning') {
-    throw new HttpError(400, 'Le dépôt en USDT/USDC arrive bientôt. Utilisez Bitcoin Lightning.', 'method_unavailable');
+    throw new HttpError(400, 'Seuls les versements en Bitcoin Lightning existent. Utilisez Bitcoin Lightning.', 'method_unavailable');
   }
 
   if (getConfig().lightning.rail === 'nwc') return createLightningFunding(owner, projectId, amountCents); // real bitcoin

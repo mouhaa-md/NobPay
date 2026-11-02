@@ -1,5 +1,6 @@
 import { requestProofReview } from '@/server/aiReview';
 import { requireUser } from '@/server/auth';
+import { getLang } from '@/lib/i18n/server';
 import { respond } from '@/server/http';
 import { enforce, LIMITS } from '@/server/rateLimit';
 
@@ -14,7 +15,7 @@ export async function POST(_request: Request, props: { params: Promise<{ id: str
   return respond(async () => {
     const user = await requireUser();
     enforce(`ai-review:${user.id}`, LIMITS.aiReview.max, LIMITS.aiReview.windowMs, 'Trop d’avis demandés. Réessayez dans un moment.');
-    const review = await requestProofReview(user, params.id, params.stepId);
+    const review = await requestProofReview(user, params.id, params.stepId, { lang: await getLang() });
     return { review };
   });
 }

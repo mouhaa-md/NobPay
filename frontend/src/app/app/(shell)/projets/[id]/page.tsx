@@ -19,6 +19,8 @@ import { findProject } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
 import { nostrStatusIn } from '@/server/nostr/publisher';
 import { summarize } from '@/server/views';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Projet' };
@@ -29,6 +31,7 @@ const ROW = ['lg:row-start-1', 'lg:row-start-2', 'lg:row-start-3', 'lg:row-start
 export default async function ProjectPage(
   props: { params: Promise<{ id: string }>; searchParams: Promise<{ cree?: string }> }
 ) {
+  const t = await getT();
   const searchParams = await props.searchParams;
   const params = await props.params;
   const user = await getSessionUser();
@@ -65,10 +68,10 @@ export default async function ProjectPage(
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-space-md text-white">
           <div className="min-w-0">
             <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 font-label-sm text-label-sm backdrop-blur">
-              <Icon name={sector.icon} size={14} /> {sector.label}
+              <Icon name={sector.icon} size={14} /> <Tc>{sector.label}</Tc>
             </span>
             <p className="flex items-center gap-1.5 truncate font-body-md text-body-md">
-              <Flag code="SN" className="h-3 w-[18px]" /> {project.city}, Sénégal
+              <Flag code="SN" className="h-3 w-[18px]" /> {project.city}<Tc>, Sénégal</Tc>
             </p>
           </div>
           <Chip tone={status.tone}>{status.label}</Chip>
@@ -79,11 +82,11 @@ export default async function ProjectPage(
         {searchParams.cree && (
           <section className="nob-pop flex flex-col gap-3 rounded-2xl bg-[#DCFCE7] p-4 text-[#14532D] lg:col-span-2 lg:row-start-1">
             <p className="flex items-center gap-2 font-title-md text-title-md">
-              <Icon name="check_circle" filled /> Projet créé
+              <Icon name="check_circle" filled /> <Tc>Projet créé</Tc>
             </p>
-            <p className="font-body-sm text-body-sm">Deux gestes pour démarrer : alimenter le séquestre, et donner à {project.managerName} son lien pour envoyer les preuves.</p>
+            <p className="font-body-sm text-body-sm"><Tc>Deux gestes pour démarrer : alimenter le séquestre, et donner à</Tc> {project.managerName} <Tc>son lien pour envoyer les preuves.</Tc></p>
             <Link href={`/app/projets/${project.id}/financer`} className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-md">
-              <Icon name="bolt" size={20} filled /> Financer maintenant
+              <Icon name="bolt" size={20} filled /> <Tc>Financer maintenant</Tc>
             </Link>
           </section>
         )}
@@ -92,30 +95,30 @@ export default async function ProjectPage(
         <section className={`rounded-3xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30 lg:col-start-2 lg:p-6 ${ROW[base]}`}>
           <div className="mb-3 flex items-end justify-between gap-2">
             <div>
-              <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">En séquestre</p>
+              <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>En séquestre</Tc></p>
               <p className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">{formatUsd(s.escrow)}</p>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa((s.escrow / 100) * usdXof)} (taux indicatif)</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa((s.escrow / 100) * usdXof)} <Tc>(taux indicatif)</Tc></p>
             </div>
             <div className="text-right">
-              <p className="font-label-sm text-label-sm text-on-surface-variant">Avancement</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant"><Tc>Avancement</Tc></p>
               <p className="font-headline-md text-headline-md font-bold">{s.progress}%</p>
             </div>
           </div>
           <ProgressBar value={s.progress} className="mb-3" />
           <div className="grid grid-cols-3 gap-2 text-center">
-            <Figure label="Budget" value={formatUsdShort(project.budgetCents)} />
-            <Figure label="Déposé" value={formatUsdShort(s.funded)} />
-            <Figure label="Libéré" value={formatUsdShort(s.released)} tone="text-[#15803D]" />
+            <Figure label={t('Budget')} value={formatUsdShort(project.budgetCents)} />
+            <Figure label={t('Déposé')} value={formatUsdShort(s.funded)} />
+            <Figure label={t('Libéré')} value={formatUsdShort(s.released)} tone="text-[#15803D]" />
           </div>
           {!done && (
             <div className="mt-4 flex flex-col gap-2">
               {missingForNext > 0 && nextLocked && (
                 <p className="rounded-xl bg-[#FEF3C7] px-3 py-2 font-label-md text-label-md text-[#B45309]">
-                  Il manque {formatUsdShort(missingForNext)} pour débloquer l&apos;étape {nextLocked.index}.
+                  <Tc>Il manque</Tc> {formatUsdShort(missingForNext)} <Tc>pour débloquer l&apos;étape</Tc> {nextLocked.index}.
                 </p>
               )}
               <Link href={`/app/projets/${project.id}/financer`} className="flex h-12 items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98]">
-                <Icon name="bolt" size={20} filled /> {toFund > 0 ? 'Financer ce projet' : 'Ajouter des fonds'}
+                <Icon name="bolt" size={20} filled /> {toFund > 0 ? t('Financer ce projet') : t('Ajouter des fonds')}
               </Link>
             </div>
           )}
@@ -133,7 +136,7 @@ export default async function ProjectPage(
 
         {/* Steps */}
         <section className={`lg:col-start-1 lg:row-span-4 ${ROW[base]}`}>
-          <SectionTitle action={<span className="font-label-sm text-label-sm text-on-surface-variant">{project.steps.filter((x) => x.status === 'paid').length} / {project.steps.length} payées</span>}>Étapes</SectionTitle>
+          <SectionTitle action={<span className="font-label-sm text-label-sm text-on-surface-variant">{project.steps.filter((x) => x.status === 'paid').length} / {project.steps.length} <Tc>payées</Tc></span>}><Tc>Étapes</Tc></SectionTitle>
           <StepTimeline projectId={project.id} steps={project.steps} />
         </section>
 
@@ -143,16 +146,16 @@ export default async function ProjectPage(
             <Avatar first={project.managerName.split(' ')[0]} last={project.managerName.split(' ').slice(1).join(' ')} />
             <div className="min-w-0">
               <p className="truncate font-title-md text-title-md">{project.managerName}</p>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Personne de confiance sur place</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant"><Tc>Personne de confiance sur place</Tc></p>
             </div>
           </div>
           <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">
-            Elle ouvre ce lien privé, prend les photos, ajoute la facture et indique qui payer. Elle ne voit pas votre solde et ne peut rien débloquer.
+            <Tc>Elle ouvre ce lien privé, prend les photos, ajoute la facture et indique qui payer. Elle ne voit pas votre solde et ne peut rien débloquer.</Tc>
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <ShareManagerLink token={managerLinkToken(project)} managerName={project.managerName} projectName={project.name} projectId={project.id} />
             <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
-              Ouvrir la vue terrain
+              <Tc>Ouvrir la vue terrain</Tc>
             </Link>
           </div>
         </section>
@@ -163,12 +166,12 @@ export default async function ProjectPage(
             <Icon name="workspace_premium" size={24} filled />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-title-md text-title-md">Certificat de preuve</span>
+            <span className="block font-title-md text-title-md"><Tc>Certificat de preuve</Tc></span>
             <span className="block font-body-sm text-body-sm text-on-surface-variant">
-              {events} événement{events > 1 ? 's' : ''} enchaîné{events > 1 ? 's' : ''} ·{' '}
-              {anchors.length === 0 ? 'pas encore ancré sur Bitcoin' : `${confirmed}/${anchors.length} ancrage${anchors.length > 1 ? 's' : ''} confirmé${confirmed > 1 ? 's' : ''}`}
-              {nostr.enabled && ` · publié sur Nostr ${nostr.confirmed}/${nostr.total}`}
-              {nostr.enabled && nostr.attested > 0 && ` · ${nostr.attested} horodaté${nostr.attested > 1 ? 's' : ''} sur Bitcoin (NIP-03)`}
+              {t(events > 1 ? '{n} événements enchaînés' : '{n} événement enchaîné', { n: events })} ·{' '}
+              {anchors.length === 0 ? t('pas encore ancré sur Bitcoin') : t('{confirmed}/{length} ancrage{s} confirmé{s2}', { confirmed, length: anchors.length, s: anchors.length > 1 ? 's' : '', s2: confirmed > 1 ? 's' : '' })}
+              {nostr.enabled && t(' · publié sur Nostr {confirmed}/{total}', { confirmed: nostr.confirmed, total: nostr.total })}
+              {nostr.enabled && nostr.attested > 0 && t(' · {attested} horodaté{s} sur Bitcoin (NIP-03)', { attested: nostr.attested, s: nostr.attested > 1 ? 's' : '' })}
             </span>
           </span>
           <Icon name="chevron_right" className="text-on-surface-variant" />

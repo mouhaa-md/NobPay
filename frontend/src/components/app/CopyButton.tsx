@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useT } from '@/lib/i18n/client';
 
 /** Copies `value` (a path is turned into an absolute URL) and confirms for two seconds. */
 export function CopyButton({ value, label = 'Copier', doneLabel = 'Copié', className = '' }: { value: string; label?: string; doneLabel?: string; className?: string }) {
+  const t = useT();
   const [done, setDone] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -41,7 +43,7 @@ export function CopyButton({ value, label = 'Copier', doneLabel = 'Copié', clas
       className={`inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container px-3.5 font-label-md text-label-md font-semibold text-primary transition hover:bg-surface-container-high active:scale-95 ${className}`}
     >
       <Icon name={done ? 'check' : 'content_copy'} size={16} />
-      {failed ? 'Copie impossible' : done ? doneLabel : label}
+      {failed ? t('Copie impossible') : t(done ? doneLabel : label)}
     </button>
   );
 }

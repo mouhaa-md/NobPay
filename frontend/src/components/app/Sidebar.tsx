@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Avatar } from '@/components/ui/primitives';
 import { RESIDENCE_COUNTRIES } from '@/lib/templates';
 import type { FrameUser } from './AppFrame';
+import { Tc, useT } from '@/lib/i18n/client';
 
 const ITEMS = [
   { href: '/app/accueil', label: 'Accueil', icon: 'home', match: (p: string) => p === '/app/accueil' },
@@ -19,13 +20,14 @@ const ITEMS = [
 
 /** Left navigation of the computer layout. Hidden on phones, where the bottom bar does the job. */
 export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode }) {
+  const t = useT();
   const pathname = usePathname();
   const country = RESIDENCE_COUNTRIES.find((c) => c.code === user.country)?.name;
 
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-[260px] flex-col justify-between bg-surface-container-lowest p-space-md shadow-[0_1px_8px_rgba(0,0,0,0.06)] lg:flex" aria-label="Menu principal">
+    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-[260px] flex-col justify-between bg-surface-container-lowest p-space-md shadow-[0_1px_8px_rgba(0,0,0,0.06)] lg:flex" aria-label={t('Menu principal')}>
       <div className="flex flex-col gap-space-lg">
-        <Link href="/app/accueil" className="px-space-xs pt-space-xs" aria-label="NobPay, accueil">
+        <Link href="/app/accueil" className="px-space-xs pt-space-xs" aria-label={t('NobPay, accueil')}>
           <Logo className="text-[22px]" />
         </Link>
 
@@ -33,7 +35,7 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode })
           href="/app/projets/nouveau"
           className="inline-flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg text-on-primary shadow-[0_4px_16px_rgba(29,78,216,0.25)] transition hover:bg-primary active:scale-95"
         >
-          <Icon name="add" size={20} /> Nouveau projet
+          <Icon name="add" size={20} /> <Tc>Nouveau projet</Tc>
         </Link>
 
         <nav className="flex flex-col gap-space-2xs">
@@ -46,13 +48,13 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode })
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-space-sm rounded-full px-space-md py-space-sm font-label-lg text-label-lg transition-all ${active ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
               >
-                <Icon name={item.icon} size={20} filled={active} /> {item.label}
+                <Icon name={item.icon} size={20} filled={active} /> <Tc>{item.label}</Tc>
               </Link>
             );
           })}
           <div className="my-space-xs h-px bg-outline-variant/40" />
           <Link href="/verifier" className="flex items-center gap-space-sm rounded-full px-space-md py-space-sm font-label-lg text-label-lg text-on-surface-variant transition-all hover:bg-surface-container hover:text-on-surface">
-            <Icon name="fact_check" size={20} /> Vérifier un dossier
+            <Icon name="fact_check" size={20} /> <Tc>Vérifier un dossier</Tc>
             <Icon name="north_east" size={14} className="ml-auto opacity-60" />
           </Link>
           {user.admin && (
@@ -61,7 +63,7 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode })
               aria-current={pathname === '/app/admin' ? 'page' : undefined}
               className={`flex items-center gap-space-sm rounded-full px-space-md py-space-sm font-label-lg text-label-lg transition-all ${pathname === '/app/admin' ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
             >
-              <Icon name="admin_panel_settings" size={20} filled={pathname === '/app/admin'} /> Administration
+              <Icon name="admin_panel_settings" size={20} filled={pathname === '/app/admin'} /> <Tc>Administration</Tc>
             </Link>
           )}
         </nav>
@@ -70,7 +72,7 @@ export function Sidebar({ user, mode }: { user: FrameUser; mode: InstanceMode })
       <div className="flex flex-col gap-space-xs">
         <p className={`flex items-center gap-1.5 rounded-xl px-space-sm py-space-xs font-label-sm text-label-sm ${INSTANCE[mode].tone === 'warning' ? 'bg-[#FEF3C7] text-[#B45309]' : 'bg-[#DCFCE7] text-[#15803D]'}`}>
           <Icon name={INSTANCE[mode].icon} size={16} />
-          {INSTANCE[mode].long}
+          <Tc>{INSTANCE[mode].long}</Tc>
         </p>
         <Link href="/app/profil" className="flex items-center gap-space-xs rounded-lg bg-surface-container-low p-space-sm transition hover:bg-surface-container">
           <Avatar first={user.firstName} last={user.lastName} size="sm" />

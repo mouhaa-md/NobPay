@@ -14,11 +14,14 @@ import { getConfig, instanceMode } from '@/server/config';
 import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { userProjects } from '@/server/views';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Profil' };
 
 export default async function Profile() {
+  const t = await getT();
   const user = (await getSessionUser())!;
   const db = await readDb();
   const summaries = userProjects(db, user.id);
@@ -27,7 +30,7 @@ export default async function Profile() {
 
   return (
     <>
-      <AppHeader title="Profil" user={user} />
+      <AppHeader title={t('Profil')} user={user} />
       <main id="contenu" className="flex flex-col gap-space-lg px-space-md pb-28 pt-20 lg:mx-auto lg:grid lg:w-full lg:max-w-[1100px] lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-8">
         <section className="flex items-center gap-4 rounded-3xl bg-surface-container-lowest p-4 shadow-sm">
           <Avatar first={user.firstName} last={user.lastName} size="lg" />
@@ -39,28 +42,28 @@ export default async function Profile() {
             <p className="mt-1 flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
               {country && <Flag code={country.code} className="h-3.5 w-5 rounded-sm" />}
               {country?.name ?? 'Diaspora'}
-              {user.demo && <Chip tone="warning" className="ml-1">Compte démo</Chip>}
+              {user.demo && <Chip tone="warning" className="ml-1"><Tc>Compte démo</Tc></Chip>}
             </p>
           </div>
         </section>
 
         <section>
-          <SectionTitle>Mode de fonctionnement</SectionTitle>
+          <SectionTitle><Tc>Mode de fonctionnement</Tc></SectionTitle>
           <div className="rounded-2xl bg-surface-container-low p-4">
             <p className="mb-1 flex items-center gap-2 font-title-md text-title-md">
               <Icon name={INSTANCE[instanceMode()].icon} size={20} className="text-primary" />
-              {mode === 'mock' ? 'Démonstration (Bitnob simulé)' : INSTANCE[instanceMode()].short}
+              {mode === 'mock' ? t('Démonstration (Bitnob simulé)') : t(INSTANCE[instanceMode()].short)}
             </p>
             <p className="font-body-sm text-body-sm leading-relaxed text-on-surface-variant">
-              {INSTANCE[instanceMode()].about}
+              <Tc>{INSTANCE[instanceMode()].about}</Tc>
             </p>
           </div>
         </section>
 
         {summaries.length > 0 && (
           <section>
-            <SectionTitle>Vos équipes sur place</SectionTitle>
-            <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">Chaque projet a un lien privé à envoyer à la personne de confiance. Elle y dépose ses photos et factures, sans compte.</p>
+            <SectionTitle><Tc>Vos équipes sur place</Tc></SectionTitle>
+            <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant"><Tc>Chaque projet a un lien privé à envoyer à la personne de confiance. Elle y dépose ses photos et factures, sans compte.</Tc></p>
             <ul className="flex flex-col gap-2">
               {summaries.map(({ project }) => (
                 <li key={project.id} className="flex items-center justify-between gap-3 rounded-2xl bg-surface-container-lowest p-3.5 shadow-sm">
@@ -70,9 +73,9 @@ export default async function Profile() {
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
                     <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
-                      Ouvrir
+                      <Tc>Ouvrir</Tc>
                     </Link>
-                    <CopyButton value={`/terrain/${managerLinkToken(project)}`} label="Copier le lien" />
+                    <CopyButton value={`/terrain/${managerLinkToken(project)}`} label={t('Copier le lien')} />
                   </span>
                 </li>
               ))}
@@ -81,14 +84,14 @@ export default async function Profile() {
         )}
 
         <section>
-          <SectionTitle>Vérifier sans compte</SectionTitle>
+          <SectionTitle><Tc>Vérifier sans compte</Tc></SectionTitle>
           <Link href="/verifier" className="flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-3.5 shadow-sm transition hover:shadow-md">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFEDD5] text-[#C26700]">
               <Icon name="fact_check" size={22} />
             </span>
             <span className="flex-1">
-              <span className="block font-title-md text-title-md">Page de vérification publique</span>
-              <span className="block font-body-sm text-body-sm text-on-surface-variant">Contrôlez un dossier sans faire confiance à NobPay.</span>
+              <span className="block font-title-md text-title-md"><Tc>Page de vérification publique</Tc></span>
+              <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Contrôlez un dossier sans faire confiance à NobPay.</Tc></span>
             </span>
             <Icon name="chevron_right" className="text-on-surface-variant" />
           </Link>
@@ -96,14 +99,14 @@ export default async function Profile() {
 
         {isAdmin(user) && (
           <section>
-            <SectionTitle>Administration</SectionTitle>
+            <SectionTitle><Tc>Administration</Tc></SectionTitle>
             <Link href="/app/admin" className="flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-3.5 shadow-sm transition hover:shadow-md">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container text-primary">
                 <Icon name="admin_panel_settings" size={22} />
               </span>
               <span className="flex-1">
-                <span className="block font-title-md text-title-md">Tableau de bord administrateur</span>
-                <span className="block font-body-sm text-body-sm text-on-surface-variant">Paiements, versements, ancrages et alertes. Lecture seule.</span>
+                <span className="block font-title-md text-title-md"><Tc>Tableau de bord administrateur</Tc></span>
+                <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Paiements, versements, ancrages et alertes. Lecture seule.</Tc></span>
               </span>
               <Icon name="chevron_right" className="text-on-surface-variant" />
             </Link>
@@ -115,7 +118,7 @@ export default async function Profile() {
         <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} />
 
         <p className="text-center font-label-sm text-label-sm text-on-surface-variant/80 lg:col-span-2">
-          NobPay · prototype Code &amp; Chain Dakar · code ouvert (licence MIT)
+          <Tc>NobPay · prototype Code &amp; Chain Dakar · code ouvert (licence MIT)</Tc>
         </p>
       </main>
     </>

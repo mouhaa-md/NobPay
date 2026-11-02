@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Chip, ErrorNote, Spinner } from '@/components/ui/primitives';
 import { formatFcfa, formatInt, formatSats, formatUsd, formatUsdShort, usdToSats } from '@/lib/money';
 import type { Funding } from '@/lib/types';
+import { Tc, useT } from '@/lib/i18n/client';
 
 interface Props {
   projectId: string;
@@ -49,6 +50,7 @@ function useCountdown(iso?: string): string {
 }
 
 export function FundingFlow({ projectId, projectName, mode, allowDemo = false, real = false, btcUsd, usdXof, suggestions, steps }: Props) {
+  const t = useT();
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('amount');
   const [digits, setDigits] = useState('');
@@ -126,7 +128,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
         body: JSON.stringify({ amountCents: cents, method: 'lightning' }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Impossible de créer la facture');
+      if (!res.ok) throw new Error(json.error ?? t('Impossible de créer la facture'));
       settled.current = false;
       setFunding(json.funding);
       setStage('invoice');
@@ -144,7 +146,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
     try {
       const res = await fetch(`/api/fundings/${funding.id}/simulate`, { method: 'POST' });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Simulation impossible');
+      if (!res.ok) throw new Error(json.error ?? t('Simulation impossible'));
       if ((json.funding as Funding).status === 'paid') onPaid();
     } catch (e) {
       setError((e as Error).message);
@@ -170,11 +172,11 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
           {stage === 'paid' ? (
             <span className="h-11 w-11" />
           ) : (
-            <button type="button" onClick={back} aria-label="Retour" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-surface-container">
+            <button type="button" onClick={back} aria-label={t('Retour')} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-surface-container">
               <Icon name="arrow_back" />
             </button>
           )}
-          <h1 className="min-w-0 truncate px-2 font-title-md text-title-md">{stage === 'paid' ? 'Versement reçu' : `Financer · ${projectName}`}</h1>
+          <h1 className="min-w-0 truncate px-2 font-title-md text-title-md">{stage === 'paid' ? t('Versement reçu') : t('Financer · {projectName}', { projectName })}</h1>
           <span className="h-11 w-11" />
         </div>
       </header>
@@ -184,15 +186,15 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
           {stage === 'amount' && (
             <>
               <div className="flex flex-col items-center py-space-md text-center">
-                <p className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Montant à mettre en séquestre</p>
+                <p className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant"><Tc>Montant à mettre en séquestre</Tc></p>
                 <p className={`mt-2 font-headline-xl-mobile text-[44px] font-bold leading-none tracking-tight ${dollars ? 'text-on-surface' : 'text-outline'}`}>
                   {nf.format(dollars)} <span className="text-on-surface-variant">$</span>
                 </p>
                 <p className="mt-2 min-h-5 font-label-md text-label-md text-on-surface-variant" aria-live="polite">
                   {dollars > 0 && !tooHigh ? `≈ ${formatSats(sats)} · ${formatFcfa(dollars * usdXof)}` : ''}
                 </p>
-                {tooLow && <p className="mt-1 font-label-md text-label-md text-error">Minimum : 5 $</p>}
-                {tooHigh && <p className="mt-1 font-label-md text-label-md text-error">Une facture Lightning est limitée à environ {nf.format(maxUsd)} $. Faites plusieurs versements.</p>}
+                {tooLow && <p className="mt-1 font-label-md text-label-md text-error"><Tc>Minimum : 5 $</Tc></p>}
+                {tooHigh && <p className="mt-1 font-label-md text-label-md text-error"><Tc>Une facture Lightning est limitée à environ</Tc> {nf.format(maxUsd)} <Tc>$. Faites plusieurs versements.</Tc></p>}
               </div>
 
               {suggestions.length > 0 && (
@@ -213,7 +215,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                   onClick={() => setStage('method')}
                   className="flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continuer <Icon name="arrow_forward" size={20} />
+                  <Tc>Continuer</Tc> <Icon name="arrow_forward" size={20} />
                 </button>
               </div>
             </>
@@ -222,7 +224,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
           {stage === 'method' && (
             <>
               <div className="py-space-md">
-                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">Comment payer ?</h2>
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight"><Tc>Comment payer ?</Tc></h2>
                 <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
                   {formatUsd(cents)} · ≈ {formatSats(sats)}
                 </p>
@@ -233,8 +235,8 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                     <Icon name="bolt" size={26} filled />
                   </span>
                   <span className="flex-1">
-                    <span className="block font-title-md text-title-md">Bitcoin Lightning</span>
-                    <span className="block font-body-sm text-body-sm text-on-surface-variant">Scannez ou collez une facture depuis n&apos;importe quel portefeuille Lightning.</span>
+                    <span className="block font-title-md text-title-md"><Tc>Bitcoin Lightning</Tc></span>
+                    <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Scannez ou collez une facture depuis n&apos;importe quel portefeuille Lightning.</Tc></span>
                   </span>
                   <Icon name="check_circle" filled className="text-primary" />
                 </button>
@@ -243,8 +245,8 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                 <Icon name="shield_lock" size={22} className="mt-0.5 text-primary" />
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
                   {real
-                    ? 'Les sats arrivent dans le portefeuille Lightning de NobPay et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation, et vous pouvez reprendre ce qui n’est pas utilisé.'
-                    : 'Les fonds arrivent dans un portefeuille Bitnob et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation.'}
+                    ? t('Les sats arrivent dans le portefeuille Lightning de NobPay et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation, et vous pouvez reprendre ce qui n’est pas utilisé.')
+                    : t('Les fonds arrivent dans un portefeuille Bitnob et sont comptés pour ce projet. Ils ne sont libérés qu’à votre validation.')}
                 </p>
               </div>
               <div className="mt-auto flex flex-col gap-3 pt-space-md">
@@ -255,7 +257,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                   onClick={createInvoice}
                   className="flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:opacity-60"
                 >
-                  {busy ? <Spinner /> : <Icon name="qr_code_2" size={22} />} Générer la facture
+                  {busy ? <Spinner /> : <Icon name="qr_code_2" size={22} />} <Tc>Générer la facture</Tc>
                 </button>
               </div>
             </>
@@ -264,41 +266,41 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
           {stage === 'invoice' && funding && (
             <>
               <div className="flex flex-col items-center gap-3 py-space-sm text-center">
-                {mode === 'mock' && funding.mode === 'mock' && <Chip tone="warning" icon="science">Facture de démonstration · non payable</Chip>}
-                {funding.mode === 'nwc' && <Chip tone="success" icon="bolt">Bitcoin réel · phase pilote, montants plafonnés</Chip>}
+                {mode === 'mock' && funding.mode === 'mock' && <Chip tone="warning" icon="science"><Tc>Facture de démonstration · non payable</Tc></Chip>}
+                {funding.mode === 'nwc' && <Chip tone="success" icon="bolt"><Tc>Bitcoin réel · phase pilote, montants plafonnés</Tc></Chip>}
                 <p className="font-headline-md text-headline-md font-bold">{formatUsd(funding.amountCents)}</p>
                 <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(funding.amountSats ?? 0)}</p>
               </div>
 
               <div className="mx-auto rounded-3xl bg-white p-4 shadow-md ring-1 ring-outline-variant/40">
-                {bolt11 ? <QRCodeSVG value={`lightning:${bolt11}`} size={224} level="L" marginSize={0} title="Facture Lightning" /> : <div className="h-56 w-56" />}
+                {bolt11 ? <QRCodeSVG value={`lightning:${bolt11}`} size={224} level="L" marginSize={0} title={t('Facture Lightning')} /> : <div className="h-56 w-56" />}
               </div>
 
               <div className="mt-space-md flex flex-col items-center gap-2">
                 {funding.status === 'pending' ? (
                   <p className="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant" role="status">
-                    <Spinner className="h-4 w-4 text-primary" /> En attente du paiement · expire dans {countdown}
+                    <Spinner className="h-4 w-4 text-primary" /> <Tc>En attente du paiement · expire dans</Tc> {countdown}
                   </p>
                 ) : (
                   <p className="font-label-md text-label-md font-semibold text-error" role="status">
-                    Cette facture a expiré.
+                    <Tc>Cette facture a expiré.</Tc>
                   </p>
                 )}
                 <div className="flex flex-wrap justify-center gap-2">
-                  <CopyButton value={bolt11} label="Copier la facture" doneLabel="Facture copiée" />
+                  <CopyButton value={bolt11} label={t('Copier la facture')} doneLabel="Facture copiée" />
                   <a href={`lightning:${bolt11}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container px-3.5 font-label-md text-label-md font-semibold text-primary transition hover:bg-surface-container-high active:scale-95">
-                    <Icon name="open_in_new" size={16} /> Ouvrir mon portefeuille
+                    <Icon name="open_in_new" size={16} /> <Tc>Ouvrir mon portefeuille</Tc>
                   </a>
                 </div>
                 <p className="max-w-xs break-all text-center font-mono text-[11px] leading-snug text-outline">{bolt11.slice(0, 28)}…{bolt11.slice(-10)}</p>
                 <details className="mt-1 w-full max-w-sm rounded-2xl bg-surface-container-low p-3 text-left">
-                  <summary className="cursor-pointer font-label-md text-label-md font-semibold text-primary">Comment payer avec Lightning ?</summary>
+                  <summary className="cursor-pointer font-label-md text-label-md font-semibold text-primary"><Tc>Comment payer avec Lightning ?</Tc></summary>
                   <ol className="mt-2 list-decimal space-y-1 pl-5 font-body-sm text-body-sm text-on-surface-variant">
-                    <li>Ouvrez un portefeuille Lightning (n’importe lequel : le paiement ne passe pas par une application imposée).</li>
-                    <li>Scannez ce code, ou collez la facture copiée.</li>
-                    <li>Confirmez le montant. Cette page se met à jour toute seule dès que le portefeuille de NobPay a reçu les sats.</li>
+                    <li><Tc>Ouvrez un portefeuille Lightning (n’importe lequel : le paiement ne passe pas par une application imposée).</Tc></li>
+                    <li><Tc>Scannez ce code, ou collez la facture copiée.</Tc></li>
+                    <li><Tc>Confirmez le montant. Cette page se met à jour toute seule dès que le portefeuille de NobPay a reçu les sats.</Tc></li>
                   </ol>
-                  <p className="mt-2 font-label-sm text-label-sm text-outline">Lightning est le réseau de paiement de Bitcoin : rapide et sans intermédiaire bancaire.</p>
+                  <p className="mt-2 font-label-sm text-label-sm text-outline"><Tc>Lightning est le réseau de paiement de Bitcoin : rapide et sans intermédiaire bancaire.</Tc></p>
                 </details>
               </div>
 
@@ -306,7 +308,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                 <ErrorNote>{error}</ErrorNote>
                 {funding.status !== 'pending' && (
                   <button type="button" onClick={createInvoice} disabled={busy} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg disabled:opacity-60">
-                    {busy ? <Spinner /> : <Icon name="refresh" size={20} />} Nouvelle facture
+                    {busy ? <Spinner /> : <Icon name="refresh" size={20} />} <Tc>Nouvelle facture</Tc>
                   </button>
                 )}
                 {(funding.mode === 'mock' || (funding.mode === 'sandbox' && allowDemo)) && funding.status === 'pending' && (
@@ -316,17 +318,17 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                       <span>
                         {funding.mode === 'mock' ? (
                           <>
-                            <strong>Mode démonstration.</strong> Cette facture n&apos;existe pas sur le réseau Lightning. Le bouton ci-dessous envoie à NobPay un événement signé, comme le ferait Bitnob après un vrai paiement.
+                            <strong><Tc>Mode démonstration.</Tc></strong> <Tc>Cette facture n&apos;existe pas sur le réseau Lightning. Le bouton ci-dessous envoie à NobPay un événement signé, comme le ferait Bitnob après un vrai paiement.</Tc>
                           </>
                         ) : (
                           <>
-                            <strong>Démonstration.</strong> Cette facture existe chez Bitnob (réseau de test) mais n&apos;a pas été payée. Le bouton ci-dessous crédite le séquestre par un événement signé par NobPay : ce versement sera marqué « simulé » dans le registre.
+                            <strong><Tc>Démonstration.</Tc></strong> <Tc>Cette facture existe chez Bitnob (réseau de test) mais n&apos;a pas été payée. Le bouton ci-dessous crédite le séquestre par un événement signé par NobPay : ce versement sera marqué « simulé » dans le registre.</Tc>
                           </>
                         )}
                       </span>
                     </p>
                     <button type="button" onClick={simulate} disabled={simulating} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-on-tertiary-fixed font-label-lg text-label-lg font-bold text-tertiary-fixed transition active:scale-[0.98] disabled:opacity-60">
-                      {simulating ? <Spinner /> : <Icon name="bolt" size={20} filled />} Simuler le paiement
+                      {simulating ? <Spinner /> : <Icon name="bolt" size={20} filled />} <Tc>Simuler le paiement</Tc>
                     </button>
                   </div>
                 )}
@@ -340,28 +342,28 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                 <Icon name="check" size={56} />
               </span>
               <div>
-                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">{funding ? formatUsd(funding.amountCents) : ''} reçus</h2>
-                <p className="mt-1 font-body-md text-body-md text-on-surface-variant">Votre argent est en séquestre. Il ne bougera qu&apos;avec votre accord.</p>
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">{funding ? formatUsd(funding.amountCents) : ''} <Tc>reçus</Tc></h2>
+                <p className="mt-1 font-body-md text-body-md text-on-surface-variant"><Tc>Votre argent est en séquestre. Il ne bougera qu&apos;avec votre accord.</Tc></p>
               </div>
               {unlocked && (
                 <div className="w-full rounded-2xl bg-surface-container-low p-4 text-left">
                   <p className="flex items-center justify-between font-body-md text-body-md">
-                    <span className="text-on-surface-variant">Séquestre du projet</span>
+                    <span className="text-on-surface-variant"><Tc>Séquestre du projet</Tc></span>
                     <strong>{formatUsd(unlocked.escrowCents)}</strong>
                   </p>
                   {unlocked.activeIndex && (
                     <p className="mt-2 flex items-center gap-2 font-label-md text-label-md text-[#15803D]">
-                      <Icon name="lock_open" size={18} /> L&apos;étape {unlocked.activeIndex} est débloquée : l&apos;équipe sur place peut envoyer sa preuve.
+                      <Icon name="lock_open" size={18} /> <Tc>L&apos;étape</Tc> {unlocked.activeIndex} <Tc>est débloquée : l&apos;équipe sur place peut envoyer sa preuve.</Tc>
                     </p>
                   )}
                 </div>
               )}
               <div className="mt-4 flex w-full flex-col gap-3">
                 <Link href={`/app/projets/${projectId}`} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25">
-                  Voir le projet
+                  <Tc>Voir le projet</Tc>
                 </Link>
                 <Link href="/app/portefeuille" className="flex h-12 w-full items-center justify-center rounded-full bg-surface-container-low font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container">
-                  Voir le portefeuille
+                  <Tc>Voir le portefeuille</Tc>
                 </Link>
               </div>
             </div>

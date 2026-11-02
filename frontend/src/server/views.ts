@@ -9,6 +9,7 @@ import {
   type Project,
   type Step,
 } from '@/lib/types';
+import { translate } from '@/lib/i18n/messages';
 import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { ledgerFor } from './ledger';
 
@@ -89,7 +90,11 @@ export interface ActivityItem {
 
 const METHOD_LABEL: Record<string, string> = { lightning: 'Lightning', usdt: 'USDT', usdc: 'USDC' };
 
-export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[] {
+/** Turns a French sentence into the visitor's language (the pages pass their `t`; French is the default). */
+export type Translate = (fr: string, vars?: Record<string, string | number>) => string;
+const inFrench: Translate = (fr, vars) => translate('fr', fr, vars);
+
+export function buildActivity(db: Db, userId: string, limit = 12, t: Translate = inFrench): ActivityItem[] {
   const items: ActivityItem[] = [];
   for (const p of db.projects.filter((x) => x.ownerId === userId)) {
     const stepById = new Map(p.steps.map((s) => [s.id, s]));
@@ -101,7 +106,7 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
           items.push({
             ...base,
             kind: 'funding',
-            title: `Financement reçu · ${METHOD_LABEL[String(e.data.method)] ?? 'Lightning'}`,
+            title: t('Financement reçu · {method}', { method: METHOD_LABEL[String(e.data.method)] ?? 'Lightning' }),
             subtitle: p.name,
             icon: 'bolt',
             amountCents: Number(e.data.amountCents),
@@ -110,7 +115,7 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
           break;
         case 'step_approved':
           if (step) {
-            items.push({ ...base, kind: 'step_validated', title: `Étape validée · ${step.title}`, subtitle: p.name, icon: 'verified', amountCents: step.amountCents, tone: 'neutral', badge: 'libérés' });
+            items.push({ ...base, kind: 'step_validated', title: t('Étape validée · {title}', { title: t(step.title) }), subtitle: p.name, icon: 'verified', amountCents: step.amountCents, tone: 'neutral', badge: t('libérés') });
           }
           break;
         case 'payout_completed':
@@ -118,7 +123,7 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
             items.push({
               ...base,
               kind: 'payout',
-              title: `Paiement fournisseur · ${SUPPLIER_NETWORKS[step.payout.supplier.network]}`,
+              title: t('Paiement fournisseur · {network}', { network: SUPPLIER_NETWORKS[step.payout.supplier.network] }),
               subtitle: step.payout.supplier.name,
               icon: 'payments',
               amountCents: step.payout.amountUsdCents,
@@ -128,10 +133,10 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
           }
           break;
         case 'payout_failed':
-          if (step) items.push({ ...base, kind: 'payout_failed', title: `Paiement non abouti · ${step.title}`, subtitle: p.name, icon: 'error', tone: 'neutral', badge: 'à relancer' });
+          if (step) items.push({ ...base, kind: 'payout_failed', title: t('Paiement non abouti · {title}', { title: t(step.title) }), subtitle: p.name, icon: 'error', tone: 'neutral', badge: t('à relancer') });
           break;
         case 'step_rejected':
-          if (step) items.push({ ...base, kind: 'proof_rejected', title: `Preuve refusée · ${step.title}`, subtitle: p.name, icon: 'undo', tone: 'neutral', badge: 'à refaire' });
+          if (step) items.push({ ...base, kind: 'proof_rejected', title: t('Preuve refusée · {title}', { title: t(step.title) }), subtitle: p.name, icon: 'undo', tone: 'neutral', badge: t('à refaire') });
           break;
         default:
           break;
@@ -144,11 +149,11 @@ export function buildActivity(db: Db, userId: string, limit = 12): ActivityItem[
           projectId: p.id,
           at: s.proof.submittedAt,
           kind: 'proof_pending',
-          title: 'Preuve en attente de revue',
-          subtitle: `${p.name} · ${s.title}`,
+          title: t('Preuve en attente de revue'),
+          subtitle: `${p.name} · ${t(s.title)}`,
           icon: 'pending',
           tone: 'neutral',
-          badge: 'À valider',
+          badge: t('À valider'),
         });
       }
     }

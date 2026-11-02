@@ -3,7 +3,7 @@
 **Investissez au pays. Avec preuve.**
 L'argent de la diaspora reste en séquestre et n'est libéré qu'étape par étape, sur preuve, directement au fournisseur. Chaque décision est inscrite dans un registre dont l'empreinte est ancrée sur Bitcoin : n'importe qui peut la vérifier, sans faire confiance à NobPay.
 
-> *In English:* NobPay lets diaspora members fund real projects back home (real estate, farming, small business). Money sits in escrow in Bitnob wallets and is released step by step against proof (geotagged photos, invoices, land title), paid straight to the supplier by mobile money, and every state change is anchored on Bitcoin with OpenTimestamps. "Verify, don't trust."
+> *English version: [README.en.md](README.en.md). In short:* NobPay lets the diaspora fund projects, school fees and merchants' restocks back home. The money stays in escrow and is released step by step, only against proof, in bitcoin over Lightning; every event goes into a hash-chained record anchored on Bitcoin (OpenTimestamps), copied to Nostr relays, and verifiable from anyone's browser. "Verify, don't trust."
 
 Prototype réalisé pendant le hackathon **Code & Chain Dakar** (Bitnob × Btrust). Licence MIT.
 
@@ -66,7 +66,7 @@ Limites à connaître :
 - La limitation de débit est en mémoire (un seul processus). Le prototype n'a pas été audité : lisez [`SECURITY.md`](SECURITY.md) avant toute exposition publique.
 - Le code de connexion SMS est par utilisateur avec un fournisseur SMS configuré (`SMS_PROVIDER`) ; sans fournisseur, seul existe un code de démonstration partagé (`DEMO_OTP`), fermé hors mode simulé sauf `ALLOW_DEMO=1`.
 - La position GPS et l'heure d'une photo sont déclarées par le téléphone (falsifiables).
-- Les dépôts USDT/USDC et l'approbation « 2 personnes sur 3 » sont affichés « Bientôt ».
+- Seuls les versements en Bitcoin Lightning existent ; l'approbation « 2 personnes sur 3 » est affichée « Bientôt ».
 - Un ancrage n'est confirmé sur Bitcoin qu'au bout de quelques heures : il apparaît d'abord « en attente ».
 - L'ancrage prouve qu'un dossier n'a pas changé ; il ne prouve pas qu'une photo montre le bon chantier. C'est le financeur qui en juge avant de payer.
 
@@ -134,7 +134,7 @@ Règles qui comptent :
 ```bash
 cd frontend
 npm run typecheck
-npm test            # ~360 tests, une vingtaine de secondes, sans réseau ni clé
+npm test            # plus de 700 tests, sans réseau ni clé
 ```
 
 Ils couvrent : signatures Bitnob, récepteur de webhooks (forgé, rejeu, montant, nom d'évènement), client Bitnob (réponses réelles rejouées, reprises), paiements et reprises après réponse perdue, conversion, solvabilité, sessions, codes SMS, limitation de débit, validation des entrées, fichiers, jeton de la personne de confiance, en-têtes, journaux, registre, OpenTimestamps, vérification navigateur, et des **séquences aléatoires d'évènements** qui vérifient que l'argent ne peut être ni compté ni payé deux fois. La CI GitHub (`.github/workflows/ci.yml`) les lance avec le build et un contrôle de secrets.

@@ -1,3 +1,4 @@
+import { translate } from './i18n/messages';
 // French number/date formatting. Amounts are always integer cents (USD).
 
 const NBSP = ' ';
@@ -76,15 +77,15 @@ export function formatDate(iso: string): string {
   return dateFmt.format(new Date(iso));
 }
 
-/** « il y a 3 jours », « hier, 18:30 », « aujourd'hui, 11:05 » */
-export function relativeDay(iso: string, now: Date = new Date()): string {
+/** « il y a 3 jours », « hier, 18:30 », « aujourd'hui, 11:05 » (`t` puts the words in the visitor's language) */
+export function relativeDay(iso: string, t: (fr: string, vars?: Record<string, string | number>) => string = (fr, vars) => translate('fr', fr, vars), now: Date = new Date()): string {
   const d = new Date(iso);
   const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const days = Math.round((startOf(now) - startOf(d)) / 86_400_000);
-  if (days <= 0) return `Aujourd'hui, ${time}`;
-  if (days === 1) return `Hier, ${time}`;
-  if (days < 7) return `Il y a ${days} jours`;
+  if (days <= 0) return t("Aujourd'hui, {time}", { time });
+  if (days === 1) return t('Hier, {time}', { time });
+  if (days < 7) return t('Il y a {days} jours', { days });
   return formatDate(iso);
 }
 

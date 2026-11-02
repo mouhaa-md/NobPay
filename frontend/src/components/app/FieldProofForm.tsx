@@ -9,6 +9,7 @@ import { isUploadableImage, isUploadableProof, shrinkImage } from '@/lib/image';
 import { formatInt } from '@/lib/money';
 import { MOBILE_NETWORKS } from '@/lib/templates';
 import type { MobileNetwork, ProofKind, Supplier } from '@/lib/types';
+import { Tc, useT } from '@/lib/i18n/client';
 
 interface Props {
   token: string;
@@ -39,6 +40,7 @@ const nf = { format: formatInt };
 const digits = (v: string) => v.replace(/\D/g, '');
 
 export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobile' }: Props) {
+  const t = useT();
   const router = useRouter();
   const wantsTitle = step.proofKinds.includes('titre');
   const wantsPhotos = step.proofKinds.includes('photos') || wantsTitle;
@@ -83,7 +85,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
     setError('');
     const room = MAX_PHOTOS - photos.length;
     const files = [...list].filter((f) => f.type.startsWith('image/')).slice(0, room);
-    if (files.length === 0) return setError('Choisissez des photos (JPEG, PNG ou WebP).');
+    if (files.length === 0) return setError(t('Choisissez des photos (JPEG, PNG ou WebP).'));
     const next: Photo[] = [];
     let refused = 0;
     for (const original of files) {
@@ -94,7 +96,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
       }
       next.push({ id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}`, file, preview: URL.createObjectURL(file), takenAt: new Date(original.lastModified || Date.now()).toISOString() });
     }
-    if (refused > 0) setError(`${refused === 1 ? 'Cette photo n’est pas dans un format accepté' : 'Ces photos ne sont pas dans un format accepté'} (JPEG, PNG ou WebP). Reprenez-la avec l’appareil photo.`);
+    if (refused > 0) setError(t(refused === 1 ? 'Cette photo n’est pas dans un format accepté (JPEG, PNG ou WebP). Reprenez-la avec l’appareil photo.' : 'Ces photos ne sont pas dans un format accepté (JPEG, PNG ou WebP). Reprenez-les avec l’appareil photo.'));
     if (next.length === 0) return;
     setPhotos((p) => [...p, ...next]);
     locate();
@@ -106,7 +108,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
     if (!picked) return;
     setError('');
     const file = await shrinkImage(picked);
-    if (!isUploadableProof(file)) return setError('La facture doit être une photo (JPEG, PNG ou WebP) ou un PDF.');
+    if (!isUploadableProof(file)) return setError(t('La facture doit être une photo (JPEG, PNG ou WebP) ou un PDF.'));
     setInvoice(file);
   };
 
@@ -119,16 +121,16 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
 
   const submit = async () => {
     setError('');
-    if (wantsPhotos && photos.length === 0) return setError(wantsTitle ? 'Ajoutez la photo du titre foncier.' : 'Ajoutez au moins une photo.');
-    if (wantsInvoice && !invoice) return setError('Ajoutez la facture du fournisseur.');
-    if (!name.trim()) return setError('Indiquez le nom de la personne ou de l’entreprise à payer.');
+    if (wantsPhotos && photos.length === 0) return setError(wantsTitle ? t('Ajoutez la photo du titre foncier.') : t('Ajoutez au moins une photo.'));
+    if (wantsInvoice && !invoice) return setError(t('Ajoutez la facture du fournisseur.'));
+    if (!name.trim()) return setError(t('Indiquez le nom de la personne ou de l’entreprise à payer.'));
     if (lightning) {
       if (!/^[a-z0-9._-]{1,64}@([a-z0-9-]{1,63}\.)+[a-z]{2,24}$/i.test(lightningAddress.trim())) {
-        return setError('Indiquez une adresse Lightning valable (elle ressemble à une adresse e-mail : nom@domaine.com).');
+        return setError(t('Indiquez une adresse Lightning valable (elle ressemble à une adresse e-mail : nom@domaine.com).'));
       }
     } else {
-      if (digits(phone).length < 8) return setError('Indiquez son numéro de téléphone mobile money.');
-      if (!network) return setError('Choisissez son opérateur mobile money.');
+      if (digits(phone).length < 8) return setError(t('Indiquez son numéro de téléphone mobile money.'));
+      if (!network) return setError(t('Choisissez son opérateur mobile money.'));
     }
 
     setBusy(true);
@@ -149,7 +151,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
 
       const res = await fetch(`/api/projects/${projectId}/steps/${step.id}/proof`, { method: 'POST', headers: { 'x-manager-token': token }, body: form });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'L’envoi a échoué. Vérifiez votre connexion et réessayez.');
+      if (!res.ok) throw new Error(json.error ?? t('L’envoi a échoué. Vérifiez votre connexion et réessayez.'));
       setSent(true);
       // let the confirmation be read, then switch the page to the "waiting for the funder" state
       setTimeout(() => router.refresh(), 2800);
@@ -169,8 +171,8 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#16A34A] text-white">
           <Icon name="check" size={36} />
         </span>
-        <p className="font-title-lg text-title-lg">Preuve envoyée</p>
-        <p className="font-body-md text-body-md">Merci. Le financeur va la regarder, puis valider le paiement.</p>
+        <p className="font-title-lg text-title-lg"><Tc>Preuve envoyée</Tc></p>
+        <p className="font-body-md text-body-md"><Tc>Merci. Le financeur va la regarder, puis valider le paiement.</Tc></p>
       </div>
     );
   }
@@ -188,17 +190,17 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
         <section className="flex flex-col gap-3">
           <h3 className="flex items-center gap-2 font-title-md text-title-md">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container font-label-md text-label-md font-bold text-on-primary">1</span>
-            {wantsTitle ? 'Photo du titre foncier' : 'Photos de l’avancement'}
+            {wantsTitle ? t('Photo du titre foncier') : t('Photos de l’avancement')}
           </h3>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
-            {wantsTitle ? 'Prenez le document en entier, bien lisible.' : 'Prenez le chantier sous plusieurs angles. Elles seront datées et localisées.'}
+            {wantsTitle ? t('Prenez le document en entier, bien lisible.') : t('Prenez le chantier sous plusieurs angles. Elles seront datées et localisées.')}
           </p>
           <div className="grid grid-cols-3 gap-2">
             {photos.map((p) => (
               <div key={p.id} className="relative aspect-square overflow-hidden rounded-2xl bg-surface-container">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.preview} alt="Photo ajoutée" className="h-full w-full object-cover" />
-                <button type="button" aria-label="Retirer la photo" onClick={() => removePhoto(p.id)} className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white">
+                <img src={p.preview} alt={t('Photo ajoutée')} className="h-full w-full object-cover" />
+                <button type="button" aria-label={t('Retirer la photo')} onClick={() => removePhoto(p.id)} className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white">
                   <Icon name="close" size={16} />
                 </button>
               </div>
@@ -206,23 +208,23 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
             {photos.length < MAX_PHOTOS && (
               <button type="button" onClick={() => camera.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-primary-container/50 bg-primary/5 text-primary transition active:scale-95">
                 <Icon name="photo_camera" size={28} />
-                <span className="font-label-sm text-label-sm font-semibold">Photographier</span>
+                <span className="font-label-sm text-label-sm font-semibold"><Tc>Photographier</Tc></span>
               </button>
             )}
           </div>
           {photos.length < MAX_PHOTOS && (
             <button type="button" onClick={() => gallery.current?.click()} className="self-start font-label-md text-label-md font-semibold text-primary hover:underline">
-              Choisir dans la galerie
+              <Tc>Choisir dans la galerie</Tc>
             </button>
           )}
-          <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Prendre une photo" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
-          <input ref={gallery} type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Choisir des photos dans la galerie" className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-label={t('Prendre une photo')} className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
+          <input ref={gallery} type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label={t('Choisir des photos dans la galerie')} className="sr-only" onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} />
           <p className={`flex items-center gap-1.5 font-label-sm text-label-sm ${gpsState === 'ok' ? 'text-[#15803D]' : gpsState === 'denied' ? 'text-[#B45309]' : 'text-on-surface-variant'}`} role="status">
             <Icon name={gpsState === 'ok' ? 'location_on' : gpsState === 'denied' ? 'location_off' : 'my_location'} size={16} filled={gpsState === 'ok'} />
-            {gpsState === 'ok' && gps ? `Position ajoutée (±${Math.round(gps.accuracy ?? 0)} m)` : gpsState === 'asking' ? 'Recherche de la position…' : gpsState === 'denied' ? 'Position non partagée : le financeur aura moins de certitude.' : 'La position de votre téléphone sera jointe aux photos.'}
+            {gpsState === 'ok' && gps ? t('Position ajoutée (±{round} m)', { round: Math.round(gps.accuracy ?? 0) }) : gpsState === 'asking' ? t('Recherche de la position…') : gpsState === 'denied' ? t('Position non partagée : le financeur aura moins de certitude.') : t('La position de votre téléphone sera jointe aux photos.')}
             {gpsState === 'denied' && (
               <button type="button" onClick={() => { setGpsState('idle'); locate(); }} className="font-semibold underline">
-                Réessayer
+                <Tc>Réessayer</Tc>
               </button>
             )}
           </p>
@@ -234,23 +236,23 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
         <section className="flex flex-col gap-3">
           <h3 className="flex items-center gap-2 font-title-md text-title-md">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container font-label-md text-label-md font-bold text-on-primary">{wantsPhotos ? 2 : 1}</span>
-            Facture du fournisseur
+            <Tc>Facture du fournisseur</Tc>
           </h3>
           <button type="button" onClick={() => invoiceInput.current?.click()} className={`flex items-center gap-3 rounded-2xl p-3.5 text-left transition active:scale-[0.99] ${invoice ? 'bg-[#F0FDF4] ring-1 ring-[#16A34A]/30' : 'border-2 border-dashed border-primary-container/50 bg-primary/5'}`}>
             <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${invoice ? 'bg-[#16A34A] text-white' : 'bg-primary/10 text-primary'}`}>
               <Icon name={invoice ? 'check' : 'receipt_long'} size={24} />
             </span>
             <span className="min-w-0">
-              <span className="block truncate font-label-lg text-label-lg">{invoice ? invoice.name : 'Photographier ou choisir la facture'}</span>
-              <span className="block font-label-sm text-label-sm text-on-surface-variant">{invoice ? 'Touchez pour changer' : 'Photo ou PDF'}</span>
+              <span className="block truncate font-label-lg text-label-lg">{invoice ? invoice.name : t('Photographier ou choisir la facture')}</span>
+              <span className="block font-label-sm text-label-sm text-on-surface-variant">{invoice ? t('Touchez pour changer') : t('Photo ou PDF')}</span>
             </span>
           </button>
-          <input ref={invoiceInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" aria-label="Ajouter la facture du fournisseur" className="sr-only" onChange={onInvoice} />
+          <input ref={invoiceInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" aria-label={t('Ajouter la facture du fournisseur')} className="sr-only" onChange={onInvoice} />
           <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-            Montant de la facture
+            <Tc>Montant de la facture</Tc>
             <span className="flex items-center rounded-2xl bg-surface-container-low px-space-md focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">
               <input className="h-12 w-full bg-transparent font-body-lg text-on-surface outline-none placeholder:text-outline" inputMode="numeric" placeholder="1 500 000" value={invoiceAmount ? nf.format(Number(digits(invoiceAmount))) : ''} onChange={(e) => setInvoiceAmount(digits(e.target.value).slice(0, 9))} />
-              <span className="font-label-lg text-label-lg text-on-surface-variant">FCFA</span>
+              <span className="font-label-lg text-label-lg text-on-surface-variant"><Tc>FCFA</Tc></span>
             </span>
           </label>
         </section>
@@ -260,18 +262,18 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
       <section className="flex flex-col gap-3">
         <h3 className="flex items-center gap-2 font-title-md text-title-md">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container font-label-md text-label-md font-bold text-on-primary">{(wantsPhotos ? 1 : 0) + (wantsInvoice ? 1 : 0) + 1}</span>
-          Qui doit être payé ?
+          <Tc>Qui doit être payé ?</Tc>
         </h3>
         <p className="font-body-sm text-body-sm text-on-surface-variant">
-          {lightning ? 'Les bitcoins (en sats) sont envoyés directement sur son portefeuille Lightning. Ils ne passent pas par vous.' : 'L’argent est envoyé directement sur son mobile money. Il ne passe pas par vous.'}
+          {lightning ? t('Les bitcoins (en sats) sont envoyés directement sur son portefeuille Lightning. Ils ne passent pas par vous.') : t('L’argent est envoyé directement sur son mobile money. Il ne passe pas par vous.')}
         </p>
         <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-          Nom du fournisseur
-          <input className={field} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex. Quincaillerie Ndiaye" autoComplete="off" />
+          <Tc>Nom du fournisseur</Tc>
+          <input className={field} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t('Ex. Quincaillerie Ndiaye')} autoComplete="off" />
         </label>
         {lightning && (
           <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-            Son adresse Lightning
+            <Tc>Son adresse Lightning</Tc>
             <input
               className={field}
               value={lightningAddress}
@@ -286,12 +288,12 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
               autoComplete="off"
             />
             <span className="font-body-sm text-body-sm font-normal text-outline">
-              Une adresse Lightning ressemble à une adresse e-mail. Elle se trouve dans l’application de portefeuille Lightning de la personne à payer.
+              <Tc>Une adresse Lightning ressemble à une adresse e-mail. Elle se trouve dans l’application de portefeuille Lightning de la personne à payer.</Tc>
             </span>
           </label>
         )}
         {!lightning && <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-          Son téléphone mobile money
+          <Tc>Son téléphone mobile money</Tc>
           <span className="flex items-center gap-2 rounded-2xl bg-surface-container-low p-1.5 focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">
             <span className="flex h-9 items-center gap-1.5 rounded-xl bg-surface-container px-3 font-title-md text-title-md font-bold text-on-surface">
               <Flag code="SN" className="h-3.5 w-5" /> +221
@@ -300,7 +302,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
           </span>
         </label>}
         {!lightning && <fieldset className="flex flex-col gap-1.5">
-          <legend className="mb-1.5 font-label-md text-label-md text-on-surface-variant">Opérateur</legend>
+          <legend className="mb-1.5 font-label-md text-label-md text-on-surface-variant"><Tc>Opérateur</Tc></legend>
           <div className="grid grid-cols-3 gap-2">
             {NETWORKS.map((n) => (
               <button key={n} type="button" aria-pressed={network === n} onClick={() => setNetwork(n)} className={`flex h-14 flex-col items-center justify-center gap-1 rounded-2xl font-label-md text-label-md transition active:scale-95 ${network === n ? 'bg-primary/5 font-bold text-primary ring-2 ring-primary-container' : 'bg-surface-container-low text-on-surface'}`}>
@@ -311,14 +313,14 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
           </div>
         </fieldset>}
         <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-          Un mot pour le financeur <span className="font-normal text-outline">(facultatif)</span>
-          <textarea className="min-h-20 w-full resize-none rounded-2xl bg-surface-container-low p-3 font-body-md text-on-surface outline-none placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex. Les fondations sont coulées, le béton a séché trois jours." />
+          <Tc>Un mot pour le financeur</Tc> <span className="font-normal text-outline"><Tc>(facultatif)</Tc></span>
+          <textarea className="min-h-20 w-full resize-none rounded-2xl bg-surface-container-low p-3 font-body-md text-on-surface outline-none placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('Ex. Les fondations sont coulées, le béton a séché trois jours.')} />
         </label>
       </section>
 
       <ErrorNote>{error}</ErrorNote>
       <button type="submit" disabled={busy} className="flex h-14 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:opacity-60">
-        {busy ? <Spinner /> : <Icon name="send" size={22} />} {busy ? 'Envoi en cours…' : 'Envoyer la preuve'}
+        {busy ? <Spinner /> : <Icon name="send" size={22} />} {busy ? t('Envoi en cours…') : t('Envoyer la preuve')}
       </button>
     </form>
   );

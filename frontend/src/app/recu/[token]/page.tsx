@@ -11,6 +11,8 @@ import { maskAddress } from '@/lib/supplierLabel';
 import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { readDb } from '@/server/db';
 import { findReceipt, maskPhone } from '@/server/receipt';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Reçu de paiement', robots: { index: false, follow: false } };
@@ -22,6 +24,7 @@ const LOOK = {
 } as const;
 
 export default async function Receipt(props: { params: Promise<{ token: string }> }) {
+  const t = await getT();
   const params = await props.params;
   const db = await readDb();
   const found = findReceipt(db, params.token);
@@ -49,10 +52,10 @@ export default async function Receipt(props: { params: Promise<{ token: string }
       <AutoRefresh active={state === 'pending'} everyMs={4000} />
 
       <header className="flex items-center justify-between bg-surface-container-low px-6 py-4">
-        <Link href="/" aria-label="NobPay, accueil du site">
+        <Link href="/" aria-label={t('NobPay, accueil du site')}>
           <Logo className="text-[18px]" />
         </Link>
-        <span className="rounded-full bg-surface-container px-3 py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">Reçu de paiement</span>
+        <span className="rounded-full bg-surface-container px-3 py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant"><Tc>Reçu de paiement</Tc></span>
       </header>
 
       <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
@@ -61,45 +64,45 @@ export default async function Receipt(props: { params: Promise<{ token: string }
         </span>
         <p className={`mt-4 font-title-lg text-title-lg ${look.tone}`}>{look.title}</p>
         <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)}</p>
-        {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa)} (taux indicatif)</p>}
+        {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa)} <Tc>(taux indicatif)</Tc></p>}
         <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-          pour <strong className="text-on-surface">{payout.supplier.name}</strong>
+          <Tc>pour</Tc> <strong className="text-on-surface">{payout.supplier.name}</strong>
         </p>
         {simulated && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#FEF3C7] px-3 py-1 font-label-sm text-label-sm font-semibold text-[#B45309]">
-            <Icon name="science" size={14} /> Démonstration : aucun argent réel
+            <Icon name="science" size={14} /> <Tc>Démonstration : aucun argent réel</Tc>
           </p>
         )}
       </div>
 
       <dl className="mx-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 rounded-2xl bg-surface-container-low p-4 font-body-sm text-body-sm">
-        <dt className="text-on-surface-variant">De la part de</dt>
-        <dd className="text-right font-medium text-on-surface">{owner ? `${owner.firstName}` : 'Un financeur NobPay'}</dd>
-        <dt className="text-on-surface-variant">Pour</dt>
+        <dt className="text-on-surface-variant"><Tc>De la part de</Tc></dt>
+        <dd className="text-right font-medium text-on-surface">{owner ? `${owner.firstName}` : t('Un financeur NobPay')}</dd>
+        <dt className="text-on-surface-variant"><Tc>Pour</Tc></dt>
         <dd className="text-right font-medium text-on-surface">
-          {step.title}
+          <Tc>{step.title}</Tc>
           <span className="block font-normal text-on-surface-variant">
             {project.name}, <Flag code="SN" className="inline-block h-2.5 w-4 align-middle" /> {project.city}
           </span>
         </dd>
-        <dt className="text-on-surface-variant">{payout.lightning ? 'Destination' : 'Mobile money'}</dt>
+        <dt className="text-on-surface-variant">{payout.lightning ? 'Destination' : t('Mobile money')}</dt>
         <dd className="text-right font-medium text-on-surface">
           {SUPPLIER_NETWORKS[payout.supplier.network]}
           <span className="block font-normal text-on-surface-variant">{payout.lightning ? maskAddress(payout.lightning.address) : maskPhone(payout.supplier.phone)}</span>
         </dd>
         {payout.lightning && (
           <>
-            <dt className="text-on-surface-variant">Empreinte du paiement</dt>
+            <dt className="text-on-surface-variant"><Tc>Empreinte du paiement</Tc></dt>
             <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.lightning.paymentHash}</dd>
           </>
         )}
-        <dt className="text-on-surface-variant">Date</dt>
+        <dt className="text-on-surface-variant"><Tc>Date</Tc></dt>
         <dd className="text-right font-medium text-on-surface">{formatDateTime(payout.completedAt ?? payout.startedAt)}</dd>
-        <dt className="text-on-surface-variant">Référence</dt>
+        <dt className="text-on-surface-variant"><Tc>Référence</Tc></dt>
         <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.reference}</dd>
       </dl>
 
-      <ol className="mx-6 mt-5 flex flex-col" aria-label="Suivi du paiement">
+      <ol className="mx-6 mt-5 flex flex-col" aria-label={t('Suivi du paiement')}>
         {phases.map((p, i) => (
           <li key={p.label} className="relative flex gap-3 pb-4 last:pb-0">
             {i < phases.length - 1 && <span aria-hidden="true" className={`absolute left-[13px] top-7 h-[calc(100%-1.25rem)] w-0.5 ${p.state === 'done' ? 'bg-[#16A34A]/50' : 'bg-outline-variant/60'}`} />}
@@ -121,14 +124,14 @@ export default async function Receipt(props: { params: Promise<{ token: string }
       <p className="mx-6 mb-6 mt-6 flex items-start gap-2 rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
         <Icon name="info" size={16} className="mt-px shrink-0" />
         {state === 'failed'
-          ? 'Le paiement n’a pas abouti et aucun argent n’a été retiré de votre côté. Contactez la personne qui vous paie : elle peut le relancer. Gardez la référence ci-dessus.'
-          : 'Ce reçu vient de NobPay. Si l’argent n’apparaît pas sur votre téléphone au bout de quelques minutes, contactez la personne qui vous paie en lui donnant la référence ci-dessus.'}
+          ? t('Le paiement n’a pas abouti et aucun argent n’a été retiré de votre côté. Contactez la personne qui vous paie : elle peut le relancer. Gardez la référence ci-dessus.')
+          : t('Ce reçu vient de NobPay. Si l’argent n’apparaît pas sur votre téléphone au bout de quelques minutes, contactez la personne qui vous paie en lui donnant la référence ci-dessus.')}
       </p>
 
       <footer className="border-t border-outline-variant/40 bg-surface-container-low px-6 py-4 text-center font-label-sm text-label-sm text-on-surface-variant">
-        Argent en séquestre, libéré étape par étape sur preuve.{' '}
+        <Tc>Argent en séquestre, libéré étape par étape sur preuve.</Tc>{' '}
         <Link href="/" className="font-semibold text-primary underline">
-          Découvrir NobPay
+          <Tc>Découvrir NobPay</Tc>
         </Link>
       </footer>
     </article>

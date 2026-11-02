@@ -8,11 +8,14 @@ import { buttonPrimary, buttonSecondary } from '@/components/ui/primitives';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { getSmsProvider } from '@/server/sms';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Bienvenue' };
 
 export default async function Welcome() {
+  const t = await getT();
   if (await getSessionUser()) redirect('/app/accueil');
   const cfg = getConfig();
   const mode = cfg.mode;
@@ -30,7 +33,7 @@ export default async function Welcome() {
           <Logo tone="light" className="text-[20px]" />
           <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-label-sm text-label-sm text-primary-fixed backdrop-blur-md">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            {real ? 'Bitcoin réel · phase pilote' : mode === 'mock' ? 'Mode démo' : 'Sandbox Bitnob'}
+            {real ? t('Bitcoin réel · phase pilote') : mode === 'mock' ? t('Mode démo') : t('Sandbox Bitnob')}
           </span>
         </div>
 
@@ -38,21 +41,21 @@ export default async function Welcome() {
         <div className="relative z-10 mx-auto my-6 h-[290px] w-full max-w-[320px]">
           <div data-nm-float="a" className="absolute left-0 top-6 h-[190px] w-[170px] -rotate-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/immobilier.jpg" alt="Projet immobilier" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/immobilier.jpg" alt={t('Projet immobilier')} className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <div data-nm-float="b" className="absolute right-0 top-0 h-[140px] w-[150px] rotate-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/agricole.jpg" alt="Pépinière, projet agricole" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/agricole.jpg" alt={t('Pépinière, projet agricole')} className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <div data-nm-float="a" className="absolute bottom-0 right-3 h-[120px] w-[190px] -rotate-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/covers/commerce.jpg" alt="Port et conteneurs, projet de commerce" className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
+            <img src="/covers/commerce.jpg" alt={t('Port et conteneurs, projet de commerce')} className="h-full w-full rounded-3xl border-4 border-white/20 object-cover shadow-2xl" />
           </div>
           <span className="absolute -left-1 bottom-6 flex -rotate-3 items-center gap-1.5 rounded-full bg-surface-container-lowest/95 px-3 py-1.5 font-label-md text-label-md text-on-surface shadow-lg backdrop-blur-md">
-            <Icon name="verified" filled size={18} className="text-[#F7931A]" /> Preuve ancrée sur Bitcoin
+            <Icon name="verified" filled size={18} className="text-[#F7931A]" /> <Tc>Preuve ancrée sur Bitcoin</Tc>
           </span>
           <span className="absolute right-0 top-[150px] flex rotate-3 items-center gap-1.5 rounded-full bg-surface-container-lowest/95 px-3 py-1.5 font-label-md text-label-md text-on-surface shadow-lg backdrop-blur-md">
-            Immobilier · Agricole · Commerce
+            <Tc>Immobilier · Agricole · Commerce</Tc>
           </span>
         </div>
       </section>
@@ -65,31 +68,31 @@ export default async function Welcome() {
         </div>
         <div className="mb-7 flex flex-col gap-2.5 text-center lg:hidden">
           <h2 className="font-headline-xl-mobile text-headline-xl-mobile tracking-tight text-on-surface">
-            Investissez au pays.
+            <Tc>Investissez au pays.</Tc>
             <br />
-            <span className="font-accent text-[1.14em] font-normal italic tracking-normal text-primary-container">Avec preuve.</span>
+            <span className="font-accent text-[1.14em] font-normal italic tracking-normal text-primary-container"><Tc>Avec preuve.</Tc></span>
           </h2>
           <p className="mx-auto max-w-sm font-body-md text-body-md leading-relaxed text-on-surface-variant">
-            Financez un projet, une scolarité ou le stock d’un commerçant au pays. Vos fonds restent en séquestre et ne sont libérés que sur preuve.
+            <Tc>Financez un projet, une scolarité ou le stock d’un commerçant au pays. Vos fonds restent en séquestre et ne sont libérés que sur preuve.</Tc>
           </p>
         </div>
 
         <div className="mb-8 hidden lg:block">
           <h2 className="font-headline-xl text-headline-xl tracking-tight">
-            Commencer avec <span className="font-accent text-[1.12em] font-normal italic tracking-normal text-primary-container">NobPay</span>
+            <Tc>Commencer avec</Tc> <span className="font-accent text-[1.12em] font-normal italic tracking-normal text-primary-container"><Tc>NobPay</Tc></span>
           </h2>
-          <p className="mt-1 font-body-lg text-body-lg text-on-surface-variant">Créez un compte, ou essayez le prototype avec le compte de démonstration.</p>
+          <p className="mt-1 font-body-lg text-body-lg text-on-surface-variant"><Tc>Créez un compte, ou essayez le prototype avec le compte de démonstration.</Tc></p>
         </div>
 
         <div className="flex flex-col gap-3">
           {phoneSignIn && (
             <>
               <Link href="/app/inscription" className={buttonPrimary}>
-                <span>Créer un compte</span>
+                <span><Tc>Créer un compte</Tc></span>
                 <Icon name="arrow_forward" size={18} />
               </Link>
               <Link href="/app/connexion" className={buttonSecondary}>
-                Connexion
+                <Tc>Connexion</Tc>
               </Link>
             </>
           )}
@@ -99,10 +102,10 @@ export default async function Welcome() {
 
         <div className="mt-6 flex flex-col items-center gap-3 lg:mt-8 lg:items-start">
           <Link href="/verifier" className="inline-flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant underline decoration-outline-variant underline-offset-4 hover:text-primary">
-            <Icon name="search_check" size={16} /> Vérifier un dossier sans compte
+            <Icon name="search_check" size={16} /> <Tc>Vérifier un dossier sans compte</Tc>
           </Link>
           <p className="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
-            <Icon name="lock" size={15} className="text-tertiary-container" /> Fonds en séquestre, libérés étape par étape sur preuve
+            <Icon name="lock" size={15} className="text-tertiary-container" /> <Tc>Fonds en séquestre, libérés étape par étape sur preuve</Tc>
           </p>
         </div>
       </section>

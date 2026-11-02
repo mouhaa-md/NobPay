@@ -9,13 +9,15 @@ import { INSTANCE } from '@/lib/instance';
 import { getConfig, instanceMode } from '@/server/config';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Portefeuille' };
 
 const METHOD: Record<Funding['method'], string> = { lightning: 'Bitcoin Lightning', usdt: 'USDT', usdc: 'USDC' };
 const STATUS: Record<Funding['status'], { label: string; tone: 'success' | 'warning' | 'neutral' | 'danger' }> = {
-  paid: { label: 'Reçu', tone: 'success' },
+  paid: { label: 'Crédité', tone: 'success' },
   pending: { label: 'En attente', tone: 'warning' },
   expired: { label: 'Expiré', tone: 'neutral' },
   failed: { label: 'Échoué', tone: 'danger' },
@@ -33,6 +35,7 @@ const OUTCOME: Record<string, string> = {
 };
 
 export default async function Wallet() {
+  const t = await getT();
   const user = (await getSessionUser())!;
   const db = await readDb();
   const summaries = userProjects(db, user.id);
@@ -46,26 +49,26 @@ export default async function Wallet() {
 
   return (
     <>
-      <AppHeader title="Portefeuille" user={user} />
+      <AppHeader title={t('Portefeuille')} user={user} />
       <main id="contenu" className="flex flex-col gap-space-lg px-space-md pb-28 pt-20 lg:mx-auto lg:grid lg:w-full lg:max-w-[1100px] lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-8">
         {/* Total */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] p-5 text-white shadow-xl lg:col-span-2 lg:p-8">
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-container/25 blur-3xl" />
-          <p className="relative font-label-sm text-label-sm font-semibold uppercase tracking-wider text-surface-variant">En séquestre</p>
+          <p className="relative font-label-sm text-label-sm font-semibold uppercase tracking-wider text-surface-variant"><Tc>En séquestre</Tc></p>
           <p className="relative mt-1 font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight">{formatUsd(totals.escrow)}</p>
-          <p className="relative mt-1 font-body-sm text-body-sm text-surface-variant">≈ {formatFcfa((totals.escrow / 100) * usdXof)} <span className="opacity-70">(taux indicatif)</span></p>
+          <p className="relative mt-1 font-body-sm text-body-sm text-surface-variant">≈ {formatFcfa((totals.escrow / 100) * usdXof)} <span className="opacity-70"><Tc>(taux indicatif)</Tc></span></p>
           <div className="relative mt-5 grid grid-cols-3 gap-2 text-center">
-            <Mini label="Déposé" value={formatUsdShort(deposited)} />
-            <Mini label="Libéré" value={formatUsdShort(totals.released)} />
-            <Mini label="Budget" value={formatUsdShort(totals.budget)} />
+            <Mini label={t('Déposé')} value={formatUsdShort(deposited)} />
+            <Mini label={t('Libéré')} value={formatUsdShort(totals.released)} />
+            <Mini label={t('Budget')} value={formatUsdShort(totals.budget)} />
           </div>
         </section>
 
         {/* Per project */}
         <section>
-          <SectionTitle>Par projet</SectionTitle>
+          <SectionTitle><Tc>Par projet</Tc></SectionTitle>
           {summaries.length === 0 ? (
-            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant">Aucun projet.</p>
+            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant"><Tc>Aucun projet.</Tc></p>
           ) : (
             <ul className="flex flex-col gap-2">
               {summaries.map((s) => {
@@ -77,17 +80,17 @@ export default async function Wallet() {
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <span className="truncate font-title-md text-title-md">{s.project.name}</span>
                         <span className="flex shrink-0 items-center gap-1 font-label-md text-label-md font-semibold text-primary">
-                          Financer <Icon name="chevron_right" size={16} />
+                          <Tc>Financer</Tc> <Icon name="chevron_right" size={16} />
                         </span>
                       </div>
-                      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-surface-container-high" aria-label="Répartition du budget">
-                        <span className="bg-[#16A34A]" style={{ width: `${pct(s.released)}%` }} title="Libéré" />
-                        <span className="bg-primary-container" style={{ width: `${pct(s.escrow)}%` }} title="En séquestre" />
+                      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-surface-container-high" aria-label={t('Répartition du budget')}>
+                        <span className="bg-[#16A34A]" style={{ width: `${pct(s.released)}%` }} title={t('Libéré')} />
+                        <span className="bg-primary-container" style={{ width: `${pct(s.escrow)}%` }} title={t('En séquestre')} />
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-label-sm text-label-sm text-on-surface-variant">
-                        <Legend color="bg-[#16A34A]" label="Libéré" value={formatUsdShort(s.released)} />
-                        <Legend color="bg-primary-container" label="Séquestre" value={formatUsdShort(s.escrow)} />
-                        <Legend color="bg-surface-container-high ring-1 ring-outline-variant" label="À financer" value={formatUsdShort(toFund)} />
+                        <Legend color="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(s.released)} />
+                        <Legend color="bg-primary-container" label={t('Séquestre')} value={formatUsdShort(s.escrow)} />
+                        <Legend color="bg-surface-container-high ring-1 ring-outline-variant" label={t('À financer')} value={formatUsdShort(toFund)} />
                       </div>
                     </Link>
                   </li>
@@ -99,9 +102,9 @@ export default async function Wallet() {
 
         {/* Fundings */}
         <section>
-          <SectionTitle>Versements</SectionTitle>
+          <SectionTitle><Tc>Versements</Tc></SectionTitle>
           {fundings.length === 0 ? (
-            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant">Aucun versement pour le moment.</p>
+            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant"><Tc>Aucun versement pour le moment.</Tc></p>
           ) : (
             <ul className="flex flex-col gap-2">
               {fundings.map((f) => (
@@ -112,7 +115,7 @@ export default async function Wallet() {
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="flex items-center justify-between gap-2">
                       <span className="truncate font-title-md text-title-md">{formatUsd(f.amountCents)}</span>
-                      <Chip tone={STATUS[f.status].tone}>{STATUS[f.status].label}</Chip>
+                      <Chip tone={STATUS[f.status].tone}><Tc>{STATUS[f.status].label}</Tc></Chip>
                     </span>
                     <span className="truncate font-body-sm text-body-sm text-on-surface-variant">
                       {nameOf.get(f.projectId)} · {METHOD[f.method]}
@@ -125,18 +128,18 @@ export default async function Wallet() {
             </ul>
           )}
           <p className="mt-3 font-label-sm text-label-sm text-on-surface-variant">
-            Dépôt en USDT ou USDC : bientôt. Aujourd&apos;hui, le versement se fait en Bitcoin Lightning.
+            <Tc>Bitcoin Lightning uniquement : le versement se fait en bitcoin sur le réseau Lightning.</Tc>
           </p>
         </section>
 
         {/* Bitnob journal */}
         <section className="lg:col-span-2">
-          <SectionTitle action={<Chip tone={INSTANCE[instanceMode()].tone}>{INSTANCE[instanceMode()].short}</Chip>}>Journal des événements</SectionTitle>
+          <SectionTitle action={<Chip tone={INSTANCE[instanceMode()].tone}><Tc>{INSTANCE[instanceMode()].short}</Tc></Chip>}><Tc>Journal des événements</Tc></SectionTitle>
           <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">
-            Chaque événement reçu de Bitnob est vérifié (signature HMAC) puis appliqué une seule fois. Les doublons sont ignorés.
+            <Tc>Chaque événement reçu de Bitnob est vérifié (signature HMAC) puis appliqué une seule fois. Les doublons sont ignorés.</Tc>
           </p>
           {webhooks.length === 0 ? (
-            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant">Aucun événement reçu.</p>
+            <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant"><Tc>Aucun événement reçu.</Tc></p>
           ) : (
             <ul className="divide-y divide-outline-variant/40 overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm">
               {webhooks.map((w) => (

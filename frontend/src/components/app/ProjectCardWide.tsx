@@ -6,9 +6,12 @@ import { formatFcfa, formatUsd, formatUsdShort, relativeDay } from '@/lib/money'
 import { SECTORS, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { ProjectSummary } from '@/server/views';
 import { lastPaidAt } from './ProjectCard';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 /** Computer version of a project card: photo and people on the left, money and next action on the right. */
-export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; usdXof: number }) {
+export async function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; usdXof: number }) {
+  const t = await getT();
   const { project, current } = summary;
   const sector = SECTORS[project.sector];
   const href = `/app/projets/${project.id}`;
@@ -23,20 +26,20 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
 
   let strip: { tone: string; icon: string; text: string; cta?: { href: string; label: string } };
   if (waiting) {
-    strip = { tone: 'bg-tertiary-fixed text-on-tertiary-fixed', icon: 'pending_actions', text: `Preuve en attente de votre décision : ${waiting.title}`, cta: { href: `${href}/etapes/${waiting.id}`, label: 'Examiner la preuve' } };
+    strip = { tone: 'bg-tertiary-fixed text-on-tertiary-fixed', icon: 'pending_actions', text: t('Preuve en attente de votre décision : {title}', { title: t(waiting.title) }), cta: { href: `${href}/etapes/${waiting.id}`, label: t('Examiner la preuve') } };
   } else if (done) {
-    strip = { tone: 'bg-[#DCFCE7] text-[#14532D]', icon: 'check_circle', text: 'Projet terminé : toutes les étapes sont payées', cta: { href: `/app/certificat/${project.id}`, label: 'Voir le certificat' } };
+    strip = { tone: 'bg-[#DCFCE7] text-[#14532D]', icon: 'check_circle', text: t('Projet terminé : toutes les étapes sont payées'), cta: { href: `/app/certificat/${project.id}`, label: t('Voir le certificat') } };
   } else if (releasing) {
-    strip = { tone: 'bg-surface-container text-on-surface', icon: 'sync', text: `Paiement en cours vers ${releasing.payout?.supplier.name ?? 'le fournisseur'} (${releasing.payout ? SUPPLIER_NETWORKS[releasing.payout.supplier.network] : 'mobile money'})` };
+    strip = { tone: 'bg-surface-container text-on-surface', icon: 'sync', text: t('Paiement en cours vers {name} ({network})', { name: releasing.payout?.supplier.name ?? t('le fournisseur'), network: releasing.payout ? SUPPLIER_NETWORKS[releasing.payout.supplier.network] : 'mobile money' }) };
   } else if (current?.status === 'rejected') {
-    strip = { tone: 'bg-error-container text-on-error-container', icon: 'undo', text: `Preuve refusée : ${project.managerName} doit en renvoyer une pour « ${current.title} »` };
+    strip = { tone: 'bg-error-container text-on-error-container', icon: 'undo', text: t('Preuve refusée : {name} doit en renvoyer une pour « {title} »', { name: project.managerName, title: t(current.title) }) };
   } else if (current?.status === 'active') {
-    strip = { tone: 'bg-surface-container text-on-surface', icon: 'hourglass_top', text: `En attente de la preuve de ${project.managerName} : ${current.title}` };
+    strip = { tone: 'bg-surface-container text-on-surface', icon: 'hourglass_top', text: t('En attente de la preuve de {name} : {title}', { name: project.managerName, title: t(current.title) }) };
   } else if (current) {
     const missing = Math.max(0, current.amountCents - summary.escrow);
-    strip = { tone: 'bg-[#FEF3C7] text-[#92400E]', icon: 'account_balance_wallet', text: missing > 0 ? `Il manque ${formatUsdShort(missing)} pour débloquer l'étape ${current.index}` : `L'étape ${current.index} va s'ouvrir`, cta: missing > 0 ? { href: `${href}/financer`, label: 'Financer' } : undefined };
+    strip = { tone: 'bg-[#FEF3C7] text-[#92400E]', icon: 'account_balance_wallet', text: missing > 0 ? t("Il manque {amount} pour débloquer l'étape {index}", { amount: formatUsdShort(missing), index: current.index }) : t("L'étape {index} va s'ouvrir", { index: current.index }), cta: missing > 0 ? { href: `${href}/financer`, label: t('Financer') } : undefined };
   } else {
-    strip = { tone: 'bg-surface-container text-on-surface', icon: 'info', text: 'Aucune étape à traiter' };
+    strip = { tone: 'bg-surface-container text-on-surface', icon: 'info', text: t('Aucune étape à traiter') };
   }
 
   return (
@@ -49,7 +52,7 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
           <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-transparent to-inverse-surface/10" />
           <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-3 py-1 shadow-sm backdrop-blur-md">
             <Icon name={sector.icon} size={16} className={sector.iconColor} />
-            <span className="font-label-sm text-label-sm font-bold uppercase tracking-wider text-on-surface">{sector.label}</span>
+            <span className="font-label-sm text-label-sm font-bold uppercase tracking-wider text-on-surface"><Tc>{sector.label}</Tc></span>
           </span>
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-2.5 py-1 shadow-sm backdrop-blur-md">
             <Flag code="SN" className="h-3 w-[18px]" />
@@ -60,7 +63,7 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
           <Avatar first={first} last={rest.join(' ')} size="sm" />
           <span className="flex min-w-0 flex-col">
             <span className="truncate font-label-md text-label-md text-on-surface">{project.managerName}</span>
-            <span className="truncate font-body-sm text-body-sm text-on-surface-variant">Personne de confiance sur place</span>
+            <span className="truncate font-body-sm text-body-sm text-on-surface-variant"><Tc>Personne de confiance sur place</Tc></span>
           </span>
           <Icon name="groups" size={20} className="ml-auto text-outline" />
         </div>
@@ -77,7 +80,7 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
             </p>
           </div>
           <Link href={href} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-primary-container px-6 font-label-lg text-label-lg text-on-primary shadow-sm transition hover:bg-primary active:scale-95">
-            Gérer le projet <Icon name="arrow_forward" size={18} />
+            <Tc>Gérer le projet</Tc> <Icon name="arrow_forward" size={18} />
           </Link>
         </div>
 
@@ -85,18 +88,18 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
           <div className="flex items-center justify-between gap-3">
             <span className="flex min-w-0 items-center gap-1.5 truncate font-label-lg text-label-lg font-bold text-on-surface">
               <Icon name={current ? 'flag' : 'task_alt'} size={20} className="text-primary" />
-              {current ? `Étape ${current.index} sur ${project.steps.length} · ${current.title}` : 'Toutes les étapes sont payées'}
+              {current ? t('Étape {index} sur {length} · {title}', { index: current.index, length: project.steps.length, title: current.title }) : t('Toutes les étapes sont payées')}
             </span>
-            <span className="shrink-0 font-title-md text-title-md font-bold text-primary">{summary.progress} % libérés</span>
+            <span className="shrink-0 font-title-md text-title-md font-bold text-primary">{summary.progress} <Tc>% libérés</Tc></span>
           </div>
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-surface-container-highest" role="img" aria-label="Répartition du budget : libéré, en séquestre, à financer">
+          <div className="flex h-3 w-full overflow-hidden rounded-full bg-surface-container-highest" role="img" aria-label={t('Répartition du budget : libéré, en séquestre, à financer')}>
             <span className="h-full bg-[#16A34A]" style={{ width: `${pct(summary.released)}%` }} />
             <span className="h-full bg-primary-container" style={{ width: `${pct(summary.escrow)}%` }} />
           </div>
           <div className="grid grid-cols-3 gap-2 pt-1">
-            <Metric dot="bg-primary-container" label="En séquestre" value={formatUsdShort(summary.escrow)} note="Libéré sur preuve" />
-            <Metric dot="bg-[#16A34A]" label="Libéré" value={formatUsdShort(summary.released)} note={`${paidCount} étape${paidCount > 1 ? 's' : ''} payée${paidCount > 1 ? 's' : ''}`} tone="text-[#15803D]" />
-            <Metric dot="bg-outline-variant" label="Reste à financer" value={formatUsdShort(toFund)} note={toFund === 0 ? 'Budget entièrement financé' : 'Pour couvrir le budget'} />
+            <Metric dot="bg-primary-container" label={t('En séquestre')} value={formatUsdShort(summary.escrow)} note="Libéré sur preuve" />
+            <Metric dot="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(summary.released)} note={`${paidCount} étape${paidCount > 1 ? 's' : ''} payée${paidCount > 1 ? 's' : ''}`} tone="text-[#15803D]" />
+            <Metric dot="bg-outline-variant" label={t('Reste à financer')} value={formatUsdShort(toFund)} note={toFund === 0 ? 'Budget entièrement financé' : 'Pour couvrir le budget'} />
           </div>
         </div>
 
@@ -110,7 +113,7 @@ export function ProjectCardWide({ summary, usdXof }: { summary: ProjectSummary; 
               {strip.cta.label} <Icon name="chevron_right" size={14} />
             </Link>
           ) : (
-            paidAt && !done && <span className="shrink-0 font-label-sm text-label-sm opacity-70">Dernier paiement : {relativeDay(paidAt)}</span>
+            paidAt && !done && <span className="shrink-0 font-label-sm text-label-sm opacity-70"><Tc>Dernier paiement :</Tc> {relativeDay(paidAt, t)}</span>
           )}
         </div>
       </div>

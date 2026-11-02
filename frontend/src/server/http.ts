@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { GatewayError } from './bitnob/types';
 import { logger } from './logger';
+import { getLang } from '@/lib/i18n/server';
+import { translate, type Lang } from '@/lib/i18n/messages';
 
 export class HttpError extends Error {
   constructor(
@@ -17,13 +19,23 @@ export class HttpError extends Error {
 }
 
 /** Wraps a route handler so thrown HttpErrors become clean JSON answers. */
+/** The language of the request, French outside a request (tests, background work). */
+async function langOf(): Promise<Lang> {
+  try {
+    return await getLang();
+  } catch {
+    return 'fr';
+  }
+}
+
 export async function respond<T>(fn: () => Promise<T>): Promise<NextResponse> {
   try {
     return NextResponse.json(await fn());
   } catch (err) {
     if (err instanceof HttpError) {
       const headers = err.retryAfter ? { 'Retry-After': String(err.retryAfter) } : undefined;
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status, headers });
+      // messages are written in French; the ones with a fixed text have an English wording in the dictionary
+      return NextResponse.json({ error: translate(await langOf(), err.message), code: err.code }, { status: err.status, headers });
     }
     const requestId = randomUUID().slice(0, 8);
     if (err instanceof GatewayError) {
@@ -34,7 +46,7 @@ export async function respond<T>(fn: () => Promise<T>): Promise<NextResponse> {
     // Anything else is OUR bug: the details (stack included) go to the logs, never to the browser.
     logger.error('unhandled_error', { requestId, error: err });
     return NextResponse.json(
-      { error: `Une erreur est survenue de notre côté. Réessayez dans un instant. (référence ${requestId})`, code: 'internal', requestId },
+      { error: translate(await langOf(), 'Une erreur est survenue de notre côté. Réessayez dans un instant. (référence {requestId})', { requestId }), code: 'internal', requestId },
       { status: 500 },
     );
   }

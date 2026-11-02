@@ -4,11 +4,14 @@ import { formatDateTime, formatFcfa, formatRate, formatSats, formatUsd } from '@
 import { supplierRoute } from '@/lib/supplierLabel';
 import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 type Phase = { label: string; detail?: string; state: 'done' | 'doing' | 'todo' | 'failed' };
 
 /** Three-line tracker of a supplier payout, followed by the receipt once it is done. */
-export function PayoutTracker({ step }: { step: Step }) {
+export async function PayoutTracker({ step }: { step: Step }) {
+  const t = await getT();
   const payout = step.payout;
   if (!payout) return null;
   const done = payout.status === 'completed';
@@ -26,7 +29,7 @@ export function PayoutTracker({ step }: { step: Step }) {
 
   return (
     <div className="flex flex-col gap-space-md">
-      <ol className="flex flex-col rounded-2xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30" aria-label="Suivi du paiement">
+      <ol className="flex flex-col rounded-2xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30" aria-label={t('Suivi du paiement')}>
         {phases.map((p, i) => (
           <li key={p.label} className="relative flex gap-3 pb-4 last:pb-0">
             {i < phases.length - 1 && <span aria-hidden="true" className={`absolute left-[13px] top-7 h-[calc(100%-1.25rem)] w-0.5 ${p.state === 'done' ? 'bg-[#16A34A]/50' : 'bg-outline-variant/60'}`} />}
@@ -48,7 +51,7 @@ export function PayoutTracker({ step }: { step: Step }) {
       {done && (
         <section className="rounded-2xl bg-[#F0FDF4] p-4 ring-1 ring-[#16A34A]/20">
           <p className="mb-3 flex items-center gap-2 font-title-md text-title-md text-[#15803D]">
-            <Icon name="check_circle" filled /> Fournisseur payé
+            <Icon name="check_circle" filled /> <Tc>Fournisseur payé</Tc>
           </p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 font-body-sm text-body-sm">
             <Item k="Bénéficiaire" v={payout.supplier.name} />

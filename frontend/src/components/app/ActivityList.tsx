@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 import { formatFcfa, formatUsd, relativeDay } from '@/lib/money';
 import type { ActivityItem } from '@/server/views';
 
@@ -14,9 +16,10 @@ const ICON_BOX: Record<ActivityItem['kind'], string> = {
 
 const AMOUNT_TONE = { positive: 'text-[#15803D]', negative: 'text-on-surface', neutral: 'text-primary' } as const;
 
-export function ActivityList({ items, empty = 'Aucune activité pour le moment.' }: { items: ActivityItem[]; empty?: string }) {
+export async function ActivityList({ items, empty = 'Aucune activité pour le moment.' }: { items: ActivityItem[]; empty?: string }) {
+  const t = await getT();
   if (items.length === 0) {
-    return <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant">{empty}</p>;
+    return <p className="rounded-2xl bg-surface-container-low p-space-md text-center font-body-md text-on-surface-variant"><Tc>{empty}</Tc></p>;
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -45,7 +48,7 @@ export function ActivityList({ items, empty = 'Aucune activité pour le moment.'
               </span>
               <span className="mt-0.5 flex items-center justify-between gap-2">
                 <span className="truncate font-body-sm text-body-sm text-on-surface-variant">{a.subtitle}</span>
-                <span className="shrink-0 font-body-sm text-body-sm text-on-surface-variant">{relativeDay(a.at)}</span>
+                <span className="shrink-0 font-body-sm text-body-sm text-on-surface-variant">{relativeDay(a.at, t)}</span>
               </span>
               {a.amountFcfa !== undefined && <span className="mt-1 font-label-sm text-label-sm text-on-surface-variant/80">−{formatFcfa(a.amountFcfa)}</span>}
             </span>

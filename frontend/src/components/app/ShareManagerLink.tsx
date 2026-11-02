@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { CopyButton } from './CopyButton';
+import { Tc, useT } from '@/lib/i18n/client';
 
 /** Gives the private "field" link to the person on site: system share sheet when available, WhatsApp otherwise. */
 export function ShareManagerLink({ token, managerName, projectName, projectId }: { token: string; managerName: string; projectName: string; projectId?: string }) {
+  const t = useT();
   const router = useRouter();
   const path = `/terrain/${token}`;
   const [asking, setAsking] = useState(false);
@@ -20,7 +22,7 @@ export function ShareManagerLink({ token, managerName, projectName, projectId }:
     setError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/manager-token`, { method: 'POST' });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Renouvellement impossible');
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? t('Renouvellement impossible'));
       setAsking(false);
       router.refresh();
     } catch (e) {
@@ -52,22 +54,22 @@ export function ShareManagerLink({ token, managerName, projectName, projectId }:
         onClick={share}
         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary-container px-4 font-label-md text-label-md font-semibold text-on-primary shadow-sm transition hover:bg-primary active:scale-95"
       >
-        <Icon name="share" size={16} /> Envoyer le lien
+        <Icon name="share" size={16} /> <Tc>Envoyer le lien</Tc>
       </button>
-      <CopyButton value={path} label="Copier" />
+      <CopyButton value={path} label={t('Copier')} />
       {projectId && !asking && (
         <button type="button" onClick={() => setAsking(true)} className="font-label-md text-label-md font-semibold text-on-surface-variant underline underline-offset-4 hover:text-primary">
-          Renouveler le lien
+          <Tc>Renouveler le lien</Tc>
         </button>
       )}
       {asking && (
         <span className="flex w-full flex-wrap items-center gap-2 rounded-2xl bg-tertiary-fixed/50 p-2.5 font-body-sm text-body-sm text-on-tertiary-fixed">
-          L&apos;ancien lien cessera de fonctionner. Renouveler ?
+          <Tc>L&apos;ancien lien cessera de fonctionner. Renouveler ?</Tc>
           <button type="button" disabled={busy} onClick={renew} className="font-semibold underline disabled:opacity-60">
-            {busy ? 'Un instant…' : 'Oui, renouveler'}
+            {busy ? t('Un instant…') : t('Oui, renouveler')}
           </button>
           <button type="button" disabled={busy} onClick={() => setAsking(false)} className="font-semibold underline">
-            Annuler
+            <Tc>Annuler</Tc>
           </button>
         </span>
       )}

@@ -1,5 +1,7 @@
 'use client';
 
+import { Tc } from '@/lib/i18n/client';
+
 /**
  * "Aller au contenu": first stop of the keyboard, hidden until it gets the focus (WCAG 2.4.1).
  * Some pages draw one <main> for the phone and one for the computer (only one is visible), so the target is the first
@@ -18,7 +20,7 @@ export function SkipLink() {
         main.focus({ preventScroll: false });
       }}
     >
-      Aller au contenu
+      <Tc>Aller au contenu</Tc>
     </a>
   );
 }
