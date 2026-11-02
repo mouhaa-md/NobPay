@@ -118,7 +118,7 @@ describe('project creation', () => {
 
   it('keeps the funder-friendly messages for the common mistakes', async () => {
     await signIn();
-    expect(await expect400(await routes.projects(json({ ...ok, budgetCents: 99 })))).toBe('Le budget doit être compris entre 100 $ et 500 000 $');
+    expect(await expect400(await routes.projects(json({ ...ok, budgetCents: 99 })))).toBe('Le budget doit être compris entre 10 $ et 500 000 $');
     expect(await expect400(await routes.projects(json({ ...ok, sector: 'x' })))).toBe('Secteur invalide');
   });
 });

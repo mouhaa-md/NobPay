@@ -52,6 +52,10 @@
 ### Écrans
 - La page dit **toujours dans quel mode elle tourne** (simulation, test Bitnob, bitcoin réel) ; les jetons USDT/USDC qui n'existaient pas sont retirés ; le versement explique « Comment payer avec Lightning ? » ; le fournisseur se saisit par adresse Lightning ; le devis, le suivi, le reçu et la page terrain montrent les sats, le cours et la preuve de paiement ; panneau de remboursement.
 
+### Essai rapide
+- **Un bouton « Essai rapide »** dans l'assistant de création : un projet de 15 $ en 3 étapes de 5 $ (preuve par photo seule), prêt à créer en un clic, pour que le jury voie tout le parcours en quelques minutes (versement → preuve → paiement → reçu). Sur l'instance de vrais sats, 15 $ de sats entrent en séquestre ; en indiquant sa propre adresse Lightning comme fournisseur, on les retrouve à chaque étape payée, et le séquestre non utilisé peut être remboursé.
+- **Budget minimum par instance** (`MIN_BUDGET_USD`) : 10 $ par défaut, 100 $ sur le bac à sable Bitnob (où un paiement a de vraies limites). Le plancher absolu de 10 $ est dans la validation, le minimum de l'instance dans la création du projet.
+
 ### Corrigé en chemin
 - `resetDb` ne vidait pas les collections optionnelles que le jeu de démonstration ne contient pas (les remboursements d'un test ou d'une réinitialisation survivaient).
 

@@ -84,7 +84,8 @@ export const projectSchema = z
     name: text(2, 80, 'Donnez un nom au projet (2 à 80 caractères)'),
     sector: z.enum(['immobilier', 'agricole', 'commerce'], { error: 'Secteur invalide' }),
     city: text(1, 80, 'Indiquez la ville'),
-    budgetCents: money(10_000, 50_000_000, 'Le budget doit être compris entre 100 $ et 500 000 $'),
+    // the absolute floor; the instance may ask for more (config minBudgetUsd, checked in createProject)
+    budgetCents: money(1_000, 50_000_000, 'Le budget doit être compris entre 10 $ et 500 000 $'),
     managerName: text(1, 80, 'Indiquez la personne de confiance sur place'),
     managerPhone: text(0, 24).optional(),
     steps: z

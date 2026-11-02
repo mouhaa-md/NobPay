@@ -7,7 +7,7 @@ import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { formatFcfa, formatInt, formatUsdShort } from '@/lib/money';
-import { PROOF_LABEL, PROOF_SHORT, SECTORS, STEP_TEMPLATES, allocateBudget } from '@/lib/templates';
+import { PROOF_LABEL, PROOF_SHORT, QUICK_TRIAL, QUICK_TRIAL_BUDGET_CENTS, SECTORS, STEP_TEMPLATES, allocateBudget } from '@/lib/templates';
 import type { ProofKind, Sector } from '@/lib/types';
 
 interface DraftStep {
@@ -30,7 +30,6 @@ const PLACEHOLDER: Record<Sector, { name: string; city: string }> = {
   commerce: { name: 'Boutique de quartier', city: 'Dakar' },
 };
 const STEP_LABELS = ['Secteur', 'Projet', 'Étapes', 'Équipe', 'Récapitulatif'];
-const MIN_BUDGET = 100;
 const MAX_STEPS = 12;
 /** budgets offered in sandbox, where one payout is capped (only those whose automatic split fits are shown) */
 const SANDBOX_PRESETS = [100, 150, 200, 300, 500, 800];
@@ -55,7 +54,21 @@ function buildSteps(sector: Sector, budgetUsd: number): DraftStep[] {
 /** Largest step (dollars) the automatic split gives for this sector and budget. */
 const largestStep = (sector: Sector, budgetUsd: number) => Math.max(0, ...buildSteps(sector, budgetUsd).map((s) => dollars(s.amount)));
 
-export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /** sandbox: Bitnob refuses a payout above this (0 = no limit) */ maxStepUsd?: number }) {
+export function NewProjectWizard({
+  usdXof,
+  maxStepUsd = 0,
+  minBudgetUsd = 100,
+  real = false,
+}: {
+  usdXof: number;
+  /** sandbox: Bitnob refuses a payout above this (0 = no limit) */
+  maxStepUsd?: number;
+  /** smallest budget this instance accepts */
+  minBudgetUsd?: number;
+  /** the instance moves real bitcoin */
+  real?: boolean;
+}) {
+  const MIN_BUDGET = minBudgetUsd;
   const router = useRouter();
   const [stage, setStage] = useState(0);
   const [sector, setSector] = useState<Sector | null>(null);
@@ -70,6 +83,20 @@ export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /
   const [busy, setBusy] = useState(false);
 
   const budgetUsd = dollars(budget);
+  const quickTrialAllowed = minBudgetUsd * 100 <= QUICK_TRIAL_BUDGET_CENTS && (maxStepUsd === 0 || Math.max(...QUICK_TRIAL.steps.map((s) => s.amountCents)) <= maxStepUsd * 100);
+  /** Fills the whole project with the smallest complete trial and goes straight to the summary. */
+  const startQuickTrial = () => {
+    const trialBudget = QUICK_TRIAL_BUDGET_CENTS / 100;
+    setSector(QUICK_TRIAL.sector);
+    setName(QUICK_TRIAL.name);
+    setCity(QUICK_TRIAL.city);
+    setBudget(String(trialBudget));
+    setSteps(QUICK_TRIAL.steps.map((s) => ({ key: nextKey(), title: s.title, amount: String(s.amountCents / 100), proofKinds: [...s.proofKinds] })));
+    setGeneratedFor(`${QUICK_TRIAL.sector}:${trialBudget}`);
+    setManagerName(QUICK_TRIAL.managerName);
+    setError('');
+    setStage(4);
+  };
   const sum = steps.reduce((n, s) => n + dollars(s.amount), 0);
   const remaining = budgetUsd - sum;
   const meta = sector ? SECTORS[sector] : null;
@@ -188,6 +215,25 @@ export function NewProjectWizard({ usdXof, maxStepUsd = 0 }: { usdXof: number; /
                 <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">Que voulez-vous financer ?</h2>
                 <p className="mt-1 font-body-md text-body-md text-on-surface-variant">Nous préparons des étapes adaptées. Vous pourrez tout modifier.</p>
               </div>
+              {quickTrialAllowed && (
+                <button
+                  type="button"
+                  onClick={startQuickTrial}
+                  className="flex items-center gap-4 rounded-3xl bg-primary-container/15 p-4 text-left ring-1 ring-primary-container/50 transition hover:bg-primary-container/25 active:scale-[0.99]"
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-on-primary">
+                    <Icon name="bolt" size={24} />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block font-title-lg text-title-lg">Essai rapide</span>
+                    <span className="mt-0.5 block font-body-sm text-body-sm text-on-surface-variant">
+                      {real
+                        ? `Un petit projet de ${formatUsdShort(QUICK_TRIAL_BUDGET_CENTS)} en ${QUICK_TRIAL.steps.length} étapes, avec de vrais sats : tout le parcours en quelques minutes.`
+                        : `Un petit projet de ${formatUsdShort(QUICK_TRIAL_BUDGET_CENTS)} en ${QUICK_TRIAL.steps.length} étapes pour voir tout le parcours en quelques minutes.`}
+                    </span>
+                  </span>
+                </button>
+              )}
               <div className="flex flex-col gap-3">
                 {SECTOR_ORDER.map((id) => {
                   const s = SECTORS[id];
