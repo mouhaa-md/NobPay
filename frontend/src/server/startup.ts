@@ -63,7 +63,10 @@ export function checkStartupConfig(): StartupCheck {
   if (process.env.NOSTR_PUBLISH === '1') {
     const key = masterKeyProblem();
     if (key) fatal.push(`NOSTR_MASTER_KEY ${key}.`);
-    else if (!process.env.NOSTR_MASTER_KEY && (isRealBitcoin() || process.env.NODE_ENV === 'production')) {
+    else if (!process.env.NOSTR_MASTER_KEY && problem) {
+      // the project keys would come from a public or weak secret: anyone could sign commitments in the project's name
+      fatal.push(`NOSTR_PUBLISH=1 sans NOSTR_MASTER_KEY, et ${problem.charAt(0).toLowerCase()}${problem.slice(1)} Les clés Nostr des projets seraient devinables : définissez NOSTR_MASTER_KEY (openssl rand -hex 32).`);
+    } else if (!process.env.NOSTR_MASTER_KEY && (isRealBitcoin() || process.env.NODE_ENV === 'production')) {
       warnings.push(
         'NOSTR_PUBLISH=1 sans NOSTR_MASTER_KEY : les clés Nostr des projets sont dérivées de SESSION_SECRET, et changer ce secret en changerait toutes les clés. ' +
           'Définissez NOSTR_MASTER_KEY (openssl rand -hex 32) et sauvegardez-la : elle seule permet de continuer à signer les engagements des projets existants.',

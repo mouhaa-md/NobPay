@@ -116,10 +116,14 @@ export async function createLightningFunding(owner: User, projectId: string, amo
   return funding;
 }
 
-/** Asks the wallet whether a pending invoice was paid, and credits the escrow if so (once, at the amount of the invoice). */
+/**
+ * Asks the wallet whether a pending invoice was paid, and credits the escrow if so (once, at the amount of the invoice).
+ * An invoice we already closed as `expired` is asked about too: a payment that landed in the last seconds of its life
+ * can reach us after the clock closed it, and the funder's sats must not stay uncredited for that.
+ */
 export async function settleLightningFunding(fundingId: string): Promise<void> {
   const funding = (await readDb()).fundings.find((x) => x.id === fundingId);
-  if (!funding || funding.status !== 'pending' || funding.mode !== 'nwc' || !funding.paymentHash) return;
+  if (!funding || (funding.status !== 'pending' && funding.status !== 'expired') || funding.mode !== 'nwc' || !funding.paymentHash) return;
   const wallet = getReceiveWallet();
   if (!wallet) return;
   const tx = await wallet.lookup(funding.paymentHash);
@@ -128,7 +132,7 @@ export async function settleLightningFunding(fundingId: string): Promise<void> {
     logger.warn('funding_amount_mismatch', { fundingId, expectedSats: funding.amountSats, reportedSats: tx.amountSats });
     await withDb((d) => {
       const x = d.fundings.find((y) => y.id === fundingId);
-      if (x && x.status === 'pending') x.note = `Montant reçu différent : attendu ${funding.amountSats} sats, reçu ${tx.amountSats}.`;
+      if (x && (x.status === 'pending' || x.status === 'expired')) x.note = `Montant reçu différent : attendu ${funding.amountSats} sats, reçu ${tx.amountSats}.`;
     });
     return;
   }
@@ -151,8 +155,11 @@ export async function pollPendingLightningFundings(): Promise<void> {
   const now = Date.now();
   let firstError: unknown;
   for (const f of (await readDb()).fundings) {
-    if (f.status !== 'pending' || f.mode !== 'nwc') continue;
-    if (now - (lastPolled.get(f.id) ?? 0) < POLL_LIGHTNING_EVERY_MS) continue;
+    if (f.mode !== 'nwc') continue;
+    // pending: every few seconds; expired within the last day: once a minute, in case a late payment slipped through
+    const recentlyExpired = f.status === 'expired' && Date.parse(f.expiresAt ?? f.createdAt) > now - 24 * 3_600_000;
+    if (f.status !== 'pending' && !recentlyExpired) continue;
+    if (now - (lastPolled.get(f.id) ?? 0) < (recentlyExpired ? 60_000 : POLL_LIGHTNING_EVERY_MS)) continue;
     lastPolled.set(f.id, now);
     try {
       await settleLightningFunding(f.id);

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
@@ -64,6 +64,7 @@ export function NewProjectWizard({
   maxStepUsd = 0,
   minBudgetUsd = 100,
   real = false,
+  autoTrial = false,
 }: {
   usdXof: number;
   /** sandbox: Bitnob refuses a payout above this (0 = no limit) */
@@ -72,6 +73,8 @@ export function NewProjectWizard({
   minBudgetUsd?: number;
   /** the instance moves real bitcoin */
   real?: boolean;
+  /** open straight on the quick trial's summary (`/app/projets/nouveau?essai=1`) */
+  autoTrial?: boolean;
 }) {
   const t = useT();
   const MIN_BUDGET = minBudgetUsd;
@@ -103,6 +106,11 @@ export function NewProjectWizard({
     setError('');
     setStage(4);
   };
+  // opened with ?essai=1 (the link of the empty dashboard): straight to the trial's summary
+  useEffect(() => {
+    if (autoTrial && quickTrialAllowed) startQuickTrial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const sum = steps.reduce((n, s) => n + dollars(s.amount), 0);
   const remaining = budgetUsd - sum;
   const meta = sector ? SECTORS[sector] : null;

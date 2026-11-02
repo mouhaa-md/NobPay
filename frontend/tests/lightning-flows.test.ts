@@ -174,6 +174,35 @@ describe('funding with real bitcoin', () => {
     expect((await db.readDb()).fundings.find((x) => x.id === f.id)!.status).toBe('expired');
   });
 
+  it('a payment that lands just after the invoice was closed as expired is still credited (the funder\'s sats are not lost)', async () => {
+    const project = await newProject();
+    const f = await services.createFunding(owner, project.id, { amountCents: 6_000, method: 'lightning' });
+    await db.withDb((d) => void (d.fundings.find((x) => x.id === f.id)!.expiresAt = new Date(Date.now() - 1000).toISOString()));
+    await services.expireFundings(); // the clock closes it...
+    expect((await db.readDb()).fundings.find((x) => x.id === f.id)!.status).toBe('expired');
+    wallet.settle(f.paymentHash!); // ...and the wallet reports the payment afterwards
+    await flows.pollPendingLightningFundings();
+    expect((await db.readDb()).fundings.find((x) => x.id === f.id)!.status).toBe('paid');
+    expect(await escrowOf(project.id)).toBe(6_000);
+    expect((await ledger(project.id, 'funding_paid'))).toHaveLength(1);
+  });
+
+  it('an expired invoice nobody paid stays expired, and is only asked about for a day', async () => {
+    const project = await newProject();
+    const f = await services.createFunding(owner, project.id, { amountCents: 6_000, method: 'lightning' });
+    const past = (ms: number) => new Date(Date.now() - ms).toISOString();
+    await db.withDb((d) => void (d.fundings.find((x) => x.id === f.id)!.expiresAt = past(1000)));
+    await services.expireFundings();
+    await flows.pollPendingLightningFundings();
+    expect((await db.readDb()).fundings.find((x) => x.id === f.id)!.status).toBe('expired');
+    // two days later it is no longer polled: a settled payment is then a case for a person
+    await db.withDb((d) => void (d.fundings.find((x) => x.id === f.id)!.expiresAt = past(48 * 3_600_000)));
+    flows.resetLightningStateForTests();
+    wallet.settle(f.paymentHash!);
+    await flows.pollPendingLightningFundings();
+    expect((await db.readDb()).fundings.find((x) => x.id === f.id)!.status).toBe('expired');
+  });
+
   it('refuses the demo account (shared by everybody) and an amount above the pilot ceiling', async () => {
     const project = await newProject();
     const demo = { ...owner, demo: true };

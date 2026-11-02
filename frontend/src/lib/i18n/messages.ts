@@ -21,7 +21,9 @@ export type Vars = Record<string, string | number>;
 export function translate(lang: Lang, fr: string, vars?: Vars): string {
   let text = fr;
   if (lang === 'en') {
-    const found = EN[normalizeKey(fr)];
+    const key = normalizeKey(fr);
+    // own entries only: a step the user called « constructor » must not find Object.prototype.constructor
+    const found = Object.prototype.hasOwnProperty.call(EN, key) ? EN[key] : undefined;
     // the English sentence takes the French one's leading and trailing spaces, so text built around it still reads right
     if (found !== undefined) text = (fr.match(/^\s*/)?.[0] ?? '') + found + (fr.match(/\s*$/)?.[0] ?? '');
   }

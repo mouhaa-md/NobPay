@@ -669,7 +669,10 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
       const e = lightningHttpError(err);
       await withDb((db) => {
         const project = findProject(db, projectId)!;
-        applyPayoutFailed(db, project, stepOf(project, stepId), e.message);
+        const step = stepOf(project, stepId);
+        // reconcile() may have settled this very payout while the wallet was still answering: only a payout still in
+        // flight is failed, once (otherwise the ledger would say "failed" twice, or fail a newer attempt)
+        if (step.status === 'releasing' && step.payout?.reference === quote.reference) applyPayoutFailed(db, project, step, e.message);
       });
       throw new HttpError(502, `Paiement non exécuté : ${e.message}`, 'gateway_error');
     }
