@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { FundingFlow } from '@/components/app/FundingFlow';
@@ -10,7 +11,10 @@ import { summarize } from '@/server/views';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Financer' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Financer') };
+}
 
 export default async function Fund(props: { params: Promise<{ id: string }> }) {
   const t = await getT();
@@ -33,9 +37,9 @@ export default async function Fund(props: { params: Promise<{ id: string }> }) {
   // Quick amounts: what the next locked/active step still lacks, and what is left to fund.
   const suggestions: { label: string; cents: number }[] = [];
   const nextStep = project.steps.find((st) => st.status !== 'paid');
-  if (nextStep && nextStep.amountCents > s.escrow) suggestions.push({ label: `Étape ${nextStep.index}`, cents: nextStep.amountCents - s.escrow });
+  if (nextStep && nextStep.amountCents > s.escrow) suggestions.push({ label: t('Étape {n}', { n: nextStep.index }), cents: nextStep.amountCents - s.escrow });
   const remaining = project.budgetCents - s.funded;
-  if (remaining > 0 && !suggestions.some((x) => x.cents === remaining)) suggestions.push({ label: 'Reste du budget', cents: remaining });
+  if (remaining > 0 && !suggestions.some((x) => x.cents === remaining)) suggestions.push({ label: t('Reste du budget'), cents: remaining });
 
   return (
     <>

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Lists the sentences the app shows (text in <T>…</T> / <Tc>…</Tc>, and literals passed to t('…')) that have no English
+ * Lists the sentences the app shows (text in <T>…</T> / <Tc>…</Tc>, and literals passed to t('…') or fr('…')) that have no English
  * translation in src/lib/i18n/en.ts, and the dictionary entries nothing uses any more.
  *
  * Usage:  node scripts/i18n-missing.mjs [--unused] [--check]   (--check exits with 1 when a sentence is missing)
@@ -44,7 +44,8 @@ for (const file of walk('src')) {
         add(inner, file);
       }
     }
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 't') {
+    // t('…'), or fr('…') for a sentence kept in a table and translated where it is shown
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && (node.expression.text === 't' || node.expression.text === 'fr')) {
       const arg = node.arguments[0];
       if (arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))) add(arg.text, file);
       // t(cond ? 'a' : 'b')

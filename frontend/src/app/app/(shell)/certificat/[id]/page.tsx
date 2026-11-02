@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { AnchorCard } from '@/components/app/AnchorCard';
 import { AnchorNowButton } from '@/components/app/AnchorNowButton';
@@ -14,7 +15,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Certificat de preuve' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Certificat de preuve') };
+}
 
 export default async function Certificate(props: { params: Promise<{ id: string }> }) {
   const t = await getT();

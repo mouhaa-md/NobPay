@@ -26,15 +26,16 @@ export async function ActivityList({ items, empty = 'Aucune activité pour le mo
       {items.map((a) => (
         <li key={a.id}>
           <Link
-            href={a.kind === 'proof_pending' ? `/app/projets/${a.projectId}` : `/app/projets/${a.projectId}`}
+            href={`/app/projets/${a.projectId}`}
             className="flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-3.5 shadow-sm transition hover:shadow-md"
           >
             <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${ICON_BOX[a.kind]}`}>
               <Icon name={a.icon} size={20} filled={a.kind !== 'payout'} />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="flex items-center justify-between gap-2">
-                <span className="truncate font-title-md text-title-md text-on-surface">{a.title}</span>
+              <span className="flex items-start justify-between gap-2">
+                {/* two lines rather than an ellipsis: English titles are longer, and the end says what kind of payment it was */}
+                <span className="line-clamp-2 font-title-md text-title-md text-on-surface">{a.title}</span>
                 {a.amountCents !== undefined && (
                   <span className={`shrink-0 font-title-md text-title-md font-semibold ${AMOUNT_TONE[a.tone]}`}>
                     {a.tone === 'positive' ? '+' : a.tone === 'negative' ? '−' : ''}

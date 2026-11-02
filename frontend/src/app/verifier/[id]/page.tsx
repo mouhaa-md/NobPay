@@ -10,7 +10,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Vérification', robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Vérification'), robots: { index: false, follow: false } };
+}
 
 export default async function VerifyOne(props: { params: Promise<{ id: string }> }) {
   const t = await getT();

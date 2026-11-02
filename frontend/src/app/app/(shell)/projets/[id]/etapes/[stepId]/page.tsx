@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AutoRefresh } from '@/components/app/AutoRefresh';
@@ -26,7 +27,10 @@ import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Étape' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('Étape') };
+}
 
 const STATUS = {
   upcoming: { tone: 'neutral', label: 'À venir' },
@@ -93,7 +97,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
             </p>
             <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">
               {blockedBy
-                ? t('L\'étape {index} (« {title} ») doit d\'abord être payée.', { index: blockedBy.index, title: blockedBy.title })
+                ? t('L\'étape {index} (« {title} ») doit d\'abord être payée.', { index: blockedBy.index, title: t(blockedBy.title) })
                 : escrow < step.amountCents
                   ? t('Le séquestre ({formatUsdShort}) doit couvrir cette étape ({formatUsdShort2}).', { formatUsdShort: formatUsdShort(escrow), formatUsdShort2: formatUsdShort(step.amountCents) })
                   : t('Elle se débloque automatiquement.')}

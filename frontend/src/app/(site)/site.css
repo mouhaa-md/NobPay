@@ -971,12 +971,21 @@ html:has(.site) {
   .site-nav .hide-sm {
     display: none;
   }
+  /* the root is 3.4vw here, so these sizes fit every phone width; the English labels are longer than the French
+     ones, and neither the language link nor the button may wrap */
   .site-logo {
-    font-size: 3.3rem;
+    font-size: 2.8rem;
+    flex-shrink: 0;
+  }
+  .site-nav {
+    gap: 1rem;
+  }
+  .site-nav a {
+    white-space: nowrap;
   }
   .site-nav .pill {
-    padding: 1rem 2rem;
-    font-size: 1.7rem;
+    padding: 0.8rem 1.3rem;
+    font-size: 1.4rem;
   }
   .hero {
     padding-top: 7rem;

@@ -7,12 +7,26 @@ import './globals.css';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { I18nProvider } from '@/lib/i18n/client';
-import { getLang } from '@/lib/i18n/server';
+import { getLang, getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: { default: 'NobPay · Investissez au pays. Avec preuve.', template: '%s · NobPay' },
-  description:
-    "NobPay aide la diaspora à financer des projets, des frais de scolarité et des stocks de commerçants au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin.",
+/** In the visitor's language: pages that set no title of their own (and the link previews) use this one. */
+export async function generateMetadata(): Promise<Metadata> {
+  const [lang, t] = await Promise.all([getLang(), getT()]);
+  const title = t('NobPay · Investissez au pays. Avec preuve.');
+  return {
+    title: { default: title, template: '%s · NobPay' },
+    description: t("NobPay aide la diaspora à financer des projets, des frais de scolarité et des stocks de commerçants au pays : l'argent reste en séquestre et n'est libéré qu'étape par étape, sur preuve, avec une trace ancrée sur Bitcoin."),
+    ...SHARED,
+    openGraph: {
+      title,
+      description: t("L'argent de la diaspora, libéré étape par étape sur preuve et ancré sur Bitcoin."),
+      locale: lang === 'en' ? 'en_US' : 'fr_FR',
+      type: 'website',
+    },
+  };
+}
+
+const SHARED: Metadata = {
   applicationName: 'NobPay',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'NobPay', statusBarStyle: 'black-translucent' },
@@ -23,12 +37,6 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: '/icons/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: 'NobPay · Investissez au pays. Avec preuve.',
-    description: "L'argent de la diaspora, libéré étape par étape sur preuve et ancré sur Bitcoin.",
-    locale: 'fr_FR',
-    type: 'website',
   },
 };
 

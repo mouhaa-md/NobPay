@@ -88,7 +88,7 @@ export async function ProjectCardWide({ summary, usdXof }: { summary: ProjectSum
           <div className="flex items-center justify-between gap-3">
             <span className="flex min-w-0 items-center gap-1.5 truncate font-label-lg text-label-lg font-bold text-on-surface">
               <Icon name={current ? 'flag' : 'task_alt'} size={20} className="text-primary" />
-              {current ? t('Étape {index} sur {length} · {title}', { index: current.index, length: project.steps.length, title: current.title }) : t('Toutes les étapes sont payées')}
+              {current ? t('Étape {index} sur {length} · {title}', { index: current.index, length: project.steps.length, title: t(current.title) }) : t('Toutes les étapes sont payées')}
             </span>
             <span className="shrink-0 font-title-md text-title-md font-bold text-primary">{summary.progress} <Tc>% libérés</Tc></span>
           </div>

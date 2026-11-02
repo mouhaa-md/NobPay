@@ -7,16 +7,16 @@ import type { ProjectSummary } from '@/server/views';
 import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
 
-/** Status shown at the top-right of a project card. */
-export function projectStatus(s: ProjectSummary): { tone: 'accent' | 'success' | 'neutral' | 'warning'; label: string; ping?: boolean } {
+/** Status shown at the top-right of a project card, already in the reader's language. */
+export function projectStatus(s: ProjectSummary, t: (fr: string, vars?: Record<string, string | number>) => string): { tone: 'accent' | 'success' | 'neutral' | 'warning'; label: string; ping?: boolean } {
   const { project, current } = s;
-  if (s.waitingDecision > 0) return { tone: 'accent', label: `Preuve à valider (${s.waitingDecision})`, ping: true };
-  if (project.steps.every((st) => st.status === 'paid')) return { tone: 'success', label: 'Terminé' };
-  if (current?.status === 'releasing') return { tone: 'warning', label: 'Paiement en cours' };
-  if (current?.status === 'rejected') return { tone: 'warning', label: 'Preuve à refaire' };
-  if (current?.status === 'active') return { tone: 'neutral', label: 'En attente de la preuve' };
-  if (current?.status === 'upcoming') return { tone: 'warning', label: 'À financer' };
-  return { tone: 'neutral', label: 'En cours' };
+  if (s.waitingDecision > 0) return { tone: 'accent', label: t('Preuve à valider ({n})', { n: s.waitingDecision }), ping: true };
+  if (project.steps.every((st) => st.status === 'paid')) return { tone: 'success', label: t('Terminé') };
+  if (current?.status === 'releasing') return { tone: 'warning', label: t('Paiement en cours') };
+  if (current?.status === 'rejected') return { tone: 'warning', label: t('Preuve à refaire') };
+  if (current?.status === 'active') return { tone: 'neutral', label: t('En attente de la preuve') };
+  if (current?.status === 'upcoming') return { tone: 'warning', label: t('À financer') };
+  return { tone: 'neutral', label: t('En cours') };
 }
 
 export function lastPaidAt(s: ProjectSummary): string | undefined {
@@ -31,7 +31,7 @@ export async function ProjectCard({ summary }: { summary: ProjectSummary }) {
   const t = await getT();
   const { project, current } = summary;
   const sector = SECTORS[project.sector];
-  const status = projectStatus(summary);
+  const status = projectStatus(summary, t);
   const paidAt = lastPaidAt(summary);
   const pendingStep = project.steps.find((st) => st.status === 'proof_submitted');
   const href = `/app/projets/${project.id}`;
@@ -65,7 +65,7 @@ export async function ProjectCard({ summary }: { summary: ProjectSummary }) {
       <div className="flex flex-col gap-1.5 rounded-xl bg-surface-container-low p-2.5">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-label-sm text-label-sm font-medium text-on-surface-variant">
-            {current ? t('Étape {index} sur {length} : {title}', { index: current.index, length: project.steps.length, title: current.title }) : t('Toutes les étapes sont payées')}
+            {current ? t('Étape {index} sur {length} : {title}', { index: current.index, length: project.steps.length, title: t(current.title) }) : t('Toutes les étapes sont payées')}
           </span>
           <span className="font-label-md text-label-md font-bold text-primary">{summary.progress}%</span>
         </div>

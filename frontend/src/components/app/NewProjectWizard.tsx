@@ -97,12 +97,12 @@ export function NewProjectWizard({
   const startQuickTrial = () => {
     const trialBudget = QUICK_TRIAL_BUDGET_CENTS / 100;
     setSector(QUICK_TRIAL.sector);
-    setName(QUICK_TRIAL.name);
+    setName(t(QUICK_TRIAL.name));
     setCity(QUICK_TRIAL.city);
     setBudget(String(trialBudget));
     setSteps(QUICK_TRIAL.steps.map((s) => ({ key: nextKey(), title: s.title, amount: String(s.amountCents / 100), proofKinds: [...s.proofKinds] })));
     setGeneratedFor(`${QUICK_TRIAL.sector}:${trialBudget}`);
-    setManagerName(QUICK_TRIAL.managerName);
+    setManagerName(t(QUICK_TRIAL.managerName));
     setError('');
     setStage(4);
   };
@@ -267,7 +267,7 @@ export function NewProjectWizard({
                       <img src={s.cover} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" />
                       <span className="flex-1">
                         <span className="flex items-center gap-2 font-title-lg text-title-lg">
-                          <Icon name={s.icon} size={22} className={s.iconColor} /> {s.label}
+                          <Icon name={s.icon} size={22} className={s.iconColor} /> <Tc>{s.label}</Tc>
                         </span>
                         <span className="mt-0.5 block font-body-sm text-body-sm text-on-surface-variant"><Tc>{s.tagline}</Tc></span>
                       </span>
@@ -349,7 +349,7 @@ export function NewProjectWizard({
                       <input
                         aria-label={t('Nom de l\'étape {v}', { v: i + 1 })}
                         className="h-10 min-w-0 flex-1 rounded-xl bg-surface-container-low px-3 font-label-lg text-label-lg text-on-surface outline-none focus:ring-2 focus:ring-primary-container"
-                        value={s.title}
+                        value={t(s.title)}
                         maxLength={80}
                         onChange={(e) => updateStep(s.key, { title: e.target.value })}
                       />
@@ -491,7 +491,7 @@ export function NewProjectWizard({
                   <li key={s.key} className="flex items-center gap-3 px-3.5 py-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 font-label-md text-label-md font-bold text-primary">{i + 1}</span>
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate font-label-lg text-label-lg">{s.title}</span>
+                      <span className="truncate font-label-lg text-label-lg">{t(s.title)}</span>
                       <span className="truncate font-label-sm text-label-sm text-on-surface-variant">{s.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}</span>
                     </span>
                     <span className="shrink-0 font-label-lg text-label-lg font-bold">{formatUsdShort(dollars(s.amount) * 100)}</span>
@@ -519,7 +519,7 @@ export function NewProjectWizard({
           className="mb-3 flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:opacity-60"
         >
           {busy ? <Spinner /> : null}
-          {stage === 4 ? t('Créer le projet') : 'Continuer'}
+          {stage === 4 ? t('Créer le projet') : t('Continuer')}
           {!busy && <Icon name={stage === 4 ? 'check' : 'arrow_forward'} size={20} />}
         </button>
       </footer>
