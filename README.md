@@ -44,7 +44,7 @@ Détail de ce qui a été observé chez Bitnob : [`docs/BITNOB-SANDBOX-REPORT.md
 
 Avec `LIGHTNING_RAIL=nwc`, une instance utilise de **vrais sats** par Nostr Wallet Connect (NIP-47), sans intermédiaire : le financeur règle une vraie facture Lightning, le fournisseur est payé **à son adresse Lightning** (`nom@domaine`) et le reçu public montre la **preuve de paiement** (la préimage dont l'empreinte est celle de la facture). Le séquestre inutilisé peut être **remboursé**. Deux connexions de droits différents : l'une ne fait que créer et consulter des factures (elle ne peut pas dépenser), l'autre paie et porte un budget. Des plafonds de phase pilote bornent ce qui peut être en jeu. Mise en place : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md), réglages : [`frontend/.env.example`](frontend/.env.example).
 
-**État de la vérification :** ce chemin est testé de bout en bout contre un **portefeuille simulé** (réponses perdues, refus, paiement à moitié connu, montant faux, facture falsifiée, adresse piégée) ; il n'a pas encore été essayé avec un vrai portefeuille. Les écrans l'appellent « Bitcoin réel » seulement sur une instance configurée ainsi.
+**État de la vérification :** ce chemin est testé de bout en bout contre un **portefeuille simulé** (réponses perdues, refus, paiement à moitié connu, montant faux, facture falsifiée, adresse piégée), et l'adaptateur NWC contre un **vrai service de portefeuille NIP-47** (celui du SDK d'Alby, chiffrement réel) sur un relais simulé ; il n'a pas encore été essayé avec un vrai portefeuille ni de vrais relais. Les écrans l'appellent « Bitcoin réel » seulement sur une instance configurée ainsi.
 
 ### Le registre répliqué sur Nostr (Dakar Bitcoin Hack #4)
 

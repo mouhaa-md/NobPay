@@ -33,7 +33,7 @@
 
 ## Jalon M1 : vrais bitcoins sur Lightning (2 novembre 2026)
 
-> Branche `dbd4/m1-real-bitcoin`. Tout ce chemin est **testé contre un portefeuille simulé**, pas encore avec un vrai portefeuille (il faut une connexion NWC de l'équipe : voir §11 de l'audit).
+> Branche `dbd4/m1-real-bitcoin`. Tout ce chemin est **testé contre un portefeuille simulé**, pas encore avec un vrai portefeuille (il faut une connexion NWC de l'équipe : voir §11 de l'audit). **Ajout du 2 nov. :** l'adaptateur NWC est aussi testé contre un **vrai service de portefeuille NIP-47** (celui du SDK d'Alby, avec le chiffrement réel) sur un relais simulé : `tests/nwc-integration.test.ts` (12 tests : information, solde, facture, consultation, paiement, refus, mauvaise preuve).
 
 ### Le séquestre et les paiements passent par de vrais éclairs
 - **`LIGHTNING_RAIL=nwc`** : Nostr Wallet Connect (NIP-47, `@getalby/sdk`), sans intermédiaire de paiement. **Deux connexions de droits différents** : *réception* (créer et consulter des factures, ne peut pas dépenser) et *paiement* (seule à dépenser, avec un budget fixé dans le portefeuille).
