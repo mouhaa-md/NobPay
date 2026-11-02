@@ -35,15 +35,37 @@ const SOLVENCY_EVERY_MS = 60_000;
 
 const stateOf = (): State => (g.__nobpayJobs ??= { running: false, nostrRunning: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastLogged: new Map() });
 
-async function safely(state: State, name: string, fn: () => Promise<void>): Promise<void> {
+/**
+ * One step of a round gets this long. Without a limit, a single call that never answers (a wallet, a relay) would keep
+ * `running` true for ever: no payout would be finished and no invoice credited until the process is restarted. The steps
+ * are idempotent (they re-read the books inside a transaction), so a step that is given up on and started again is safe.
+ */
+let jobTimeoutMs = 2 * 60_000;
+/** Tests only. */
+export function setJobTimeoutForTests(ms: number | null): void {
+  jobTimeoutMs = ms ?? 2 * 60_000;
+}
+
+async function safely(state: State, name: string, fn: () => Promise<void>, { limit = true }: { limit?: boolean } = {}): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
   try {
-    await fn();
+    await (limit
+      ? Promise.race([
+          fn(),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error(`pas de réponse après ${Math.round(jobTimeoutMs / 1000)} s : étape abandonnée pour ce tour`)), jobTimeoutMs);
+            timer.unref?.();
+          }),
+        ])
+      : fn());
   } catch (err) {
     const now = Date.now();
     if (now - (state.lastLogged.get(name) ?? 0) > 60_000) {
       state.lastLogged.set(name, now);
       logger.error('job_failed', { job: name, error: err });
     }
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -76,10 +98,11 @@ export async function tick(): Promise<void> {
     if (getConfig().nostr.publish && !state.nostrRunning) {
       // relays can be slow: this runs beside the loop, never in front of the payouts
       state.nostrRunning = true;
+      // no time limit here: `nostrRunning` is what keeps two publications from overlapping
       void safely(state, 'nostr-commitments', async () => {
         await publishCommitments();
         await attestCommitments();
-      }).finally(() => {
+      }, { limit: false }).finally(() => {
         state.nostrRunning = false;
       });
     }

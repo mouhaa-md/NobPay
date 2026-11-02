@@ -621,6 +621,8 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     const project = ownedProject(db, owner, projectId);
     const step = stepOf(project, stepId);
     if (step.status !== 'proof_submitted') throw new HttpError(409, 'Cette étape a déjà été traitée');
+    // the check above was made on an earlier read: what is reserved is decided on the current books, in this transaction
+    if (escrowCents(db, project) < step.amountCents) throw new HttpError(409, 'Séquestre insuffisant', 'insufficient_escrow');
     const payout: Payout = isLightning
       ? buildLightningPayout(quote, supplier, startedAt)
       : {

@@ -56,6 +56,23 @@ describe('background loop', () => {
     expect(true).toBe(true);
   });
 
+  it('a step that never answers is given up on: the loop does not freeze, and the next round works', async () => {
+    jobs.setJobTimeoutForTests(60);
+    const hung = vi.spyOn(services, 'reconcile').mockImplementation(() => new Promise<void>(() => {}));
+    const started = Date.now();
+    await jobs.tick(); // would never return without the limit
+    expect(hung).toHaveBeenCalled(); // the loop did go through the step that hangs
+    expect(Date.now() - started).toBeLessThan(2_000);
+    hung.mockRestore();
+    jobs.setJobTimeoutForTests(null);
+
+    await db.withDb((d) => {
+      d.fundings.push({ id: 'f_hang', projectId: 'p_villa', amountCents: 1000, method: 'lightning', status: 'pending', reference: 'r_hang', mode: 'mock', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() - 1000).toISOString() });
+    });
+    await jobs.tick(); // `running` was released: this round does its work
+    expect((await db.readDb()).fundings.find((f) => f.id === 'f_hang')!.status).toBe('expired');
+  });
+
   it('does not start a timer under test (and is switched off by BACKGROUND_JOBS=0)', () => {
     const spy = vi.spyOn(globalThis, 'setInterval');
     jobs.startJobs();

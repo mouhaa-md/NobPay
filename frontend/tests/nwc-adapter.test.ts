@@ -189,6 +189,19 @@ describe('what a wallet error means for the money', () => {
     expect(msg).toMatch(/Le paiement Lightning a échoué/);
     expect(msg).not.toContain('wss://');
   });
+
+  it('a library error that repeats the connection string never reaches a user, and is scrubbed in the logs (the string holds the spending secret)', () => {
+    const SECRET = 'cd'.repeat(32);
+    const url = `nostr+walletconnect://${'ab'.repeat(32)}?relay=wss%3A%2F%2Frelay.example&secret=${SECRET}`;
+    const e = mapWalletError(new Error(`Invalid URL: ${url}`), true);
+    expect(e.code).toBe('internal');
+    expect(e.ambiguous).toBe(true); // for a payment, an unknown failure is never read as "not sent"
+    expect(e.message).not.toContain(SECRET);
+    expect(e.message).not.toContain('walletconnect');
+    expect(e.message).toMatch(/inattendue/); // a fixed French sentence
+    expect(e.detail).not.toContain(SECRET);
+    expect(JSON.stringify(e)).not.toContain(SECRET);
+  });
 });
 
 describe('closing', () => {

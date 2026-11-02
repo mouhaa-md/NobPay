@@ -8,6 +8,7 @@ import {
   Nip47WalletError,
   type Nip47Transaction,
 } from '@getalby/sdk/nwc';
+import { scrub } from '../logger';
 import { decodeBolt11 } from './bolt11';
 import { WalletError, type LightningWallet, type WalletNetwork, type WalletTx } from './wallet';
 
@@ -62,7 +63,9 @@ export function mapWalletError(err: unknown, forPayment: boolean): WalletError {
     return new WalletError('Le portefeuille Lightning ne répond pas.', 'timeout', forPayment);
   }
   if (err instanceof Nip47NetworkError) return new WalletError('Connexion au portefeuille Lightning impossible.', 'network');
-  return new WalletError(err instanceof Error ? err.message : 'Erreur du portefeuille Lightning.', 'internal', forPayment);
+  // Never the library's own text to a user: some libraries repeat the connection string, which holds the spending secret
+  // (the SDK's "Invalid URL: …" does). It goes to the logs, scrubbed, and nowhere else.
+  return new WalletError('Le portefeuille Lightning a répondu de façon inattendue.', 'internal', forPayment, err instanceof Error ? scrub(err.message) : undefined);
 }
 
 function toTx(tx: Nip47Transaction, nowMs: number): WalletTx {
