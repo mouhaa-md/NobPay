@@ -4,6 +4,8 @@ import { Chip, ProgressBar } from '@/components/ui/primitives';
 import { formatUsdShort, relativeDay } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import type { ProjectSummary } from '@/server/views';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 /** Status shown at the top-right of a project card. */
 export function projectStatus(s: ProjectSummary): { tone: 'accent' | 'success' | 'neutral' | 'warning'; label: string; ping?: boolean } {
@@ -25,7 +27,8 @@ export function lastPaidAt(s: ProjectSummary): string | undefined {
     .pop();
 }
 
-export function ProjectCard({ summary }: { summary: ProjectSummary }) {
+export async function ProjectCard({ summary }: { summary: ProjectSummary }) {
+  const t = await getT();
   const { project, current } = summary;
   const sector = SECTORS[project.sector];
   const status = projectStatus(summary);
@@ -40,7 +43,7 @@ export function ProjectCard({ summary }: { summary: ProjectSummary }) {
           <span className={`flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high ${sector.iconColor}`}>
             <Icon name={sector.icon} size={18} />
           </span>
-          <span className={`rounded-full px-2.5 py-0.5 font-label-sm text-label-sm tracking-wide ${sector.chip}`}>{sector.label}</span>
+          <span className={`rounded-full px-2.5 py-0.5 font-label-sm text-label-sm tracking-wide ${sector.chip}`}><Tc>{sector.label}</Tc></span>
         </div>
         <Chip tone={status.tone}>
           {status.ping && <span className="h-1.5 w-1.5 animate-ping rounded-full bg-tertiary-container" />}
@@ -54,7 +57,7 @@ export function ProjectCard({ summary }: { summary: ProjectSummary }) {
         <span className="flex min-w-0 flex-col">
           <h3 className="truncate font-title-lg text-title-lg text-on-surface">{project.name}</h3>
           <span className="mt-0.5 truncate font-body-sm text-body-sm text-on-surface-variant">
-            {project.city}, Sénégal · Sur place : <span className="font-label-md text-on-surface">{project.managerName}</span>
+            {project.city}<Tc>, Sénégal · Sur place :</Tc> <span className="font-label-md text-on-surface">{project.managerName}</span>
           </span>
         </span>
       </Link>
@@ -62,7 +65,7 @@ export function ProjectCard({ summary }: { summary: ProjectSummary }) {
       <div className="flex flex-col gap-1.5 rounded-xl bg-surface-container-low p-2.5">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-label-sm text-label-sm font-medium text-on-surface-variant">
-            {current ? `Étape ${current.index} sur ${project.steps.length} : ${current.title}` : 'Toutes les étapes sont payées'}
+            {current ? t('Étape {index} sur {length} : {title}', { index: current.index, length: project.steps.length, title: current.title }) : t('Toutes les étapes sont payées')}
           </span>
           <span className="font-label-md text-label-md font-bold text-primary">{summary.progress}%</span>
         </div>
@@ -70,21 +73,21 @@ export function ProjectCard({ summary }: { summary: ProjectSummary }) {
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">
-        <Metric label="En séquestre" value={formatUsdShort(summary.escrow)} tone="text-primary" />
-        <Metric label="Libérés" value={formatUsdShort(summary.released)} tone="text-tertiary-container" />
-        <Metric label="Budget total" value={formatUsdShort(project.budgetCents)} tone="text-on-surface" />
+        <Metric label={t('En séquestre')} value={formatUsdShort(summary.escrow)} tone="text-primary" />
+        <Metric label={t('Libérés')} value={formatUsdShort(summary.released)} tone="text-tertiary-container" />
+        <Metric label={t('Budget total')} value={formatUsdShort(project.budgetCents)} tone="text-on-surface" />
       </div>
 
       <div className="flex items-center justify-between pt-1">
         {pendingStep ? (
           <span className="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant">
-            <Icon name="photo_camera" size={16} className="text-primary" /> Preuve prête à valider
+            <Icon name="photo_camera" size={16} className="text-primary" /> <Tc>Preuve prête à valider</Tc>
           </span>
         ) : (
-          <span className="font-label-sm text-label-sm text-on-surface-variant">{paidAt ? `Dernier paiement : ${relativeDay(paidAt)}` : 'Aucun paiement pour le moment'}</span>
+          <span className="font-label-sm text-label-sm text-on-surface-variant">{paidAt ? t('Dernier paiement : {relativeDay}', { relativeDay: relativeDay(paidAt, t) }) : t('Aucun paiement pour le moment')}</span>
         )}
         <Link href={pendingStep ? `${href}/etapes/${pendingStep.id}` : href} className="inline-flex items-center gap-1 font-label-md text-label-md text-primary transition-colors hover:text-primary-container">
-          {pendingStep ? 'Examiner la preuve' : 'Voir détails'}
+          {pendingStep ? t('Examiner la preuve') : t('Voir détails')}
           <Icon name={pendingStep ? 'arrow_forward' : 'chevron_right'} size={16} />
         </Link>
       </div>

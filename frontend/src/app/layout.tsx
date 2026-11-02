@@ -6,6 +6,8 @@ import '../../motion/nobpay-motion.css';
 import './globals.css';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SkipLink } from '@/components/ui/SkipLink';
+import { I18nProvider } from '@/lib/i18n/client';
+import { getLang } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: { default: 'NobPay · Investissez au pays. Avec preuve.', template: '%s · NobPay' },
@@ -38,14 +40,17 @@ export const viewport: Viewport = {
   themeColor: '#0037b0',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLang();
   return (
     // the landing page adds a class to <html> before hydration (see (site)/layout.tsx)
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <body>
-        <SkipLink />
-        {children}
-        <ServiceWorker />
+        <I18nProvider lang={lang}>
+          <SkipLink />
+          {children}
+          <ServiceWorker />
+        </I18nProvider>
       </body>
     </html>
   );

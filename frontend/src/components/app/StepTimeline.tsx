@@ -4,6 +4,8 @@ import { Spinner } from '@/components/ui/primitives';
 import { formatFcfa, formatSats, formatUsdShort, relativeDay } from '@/lib/money';
 import { PROOF_LABEL, SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 interface Look {
   circle: string;
@@ -22,7 +24,8 @@ const LOOK: Record<Step['status'], Look> = {
 };
 
 /** Vertical stepper of a project: one card per step, each linking to its own screen. */
-export function StepTimeline({ projectId, steps }: { projectId: string; steps: Step[] }) {
+export async function StepTimeline({ projectId, steps }: { projectId: string; steps: Step[] }) {
+  const t = await getT();
   return (
     <ol className="relative flex flex-col">
       {steps.map((step, i) => {
@@ -41,18 +44,18 @@ export function StepTimeline({ projectId, steps }: { projectId: string; steps: S
             >
               <span className="flex items-start justify-between gap-2">
                 <span className="min-w-0">
-                  <span className="block font-label-sm text-label-sm text-on-surface-variant">Étape {step.index}</span>
-                  <span className="block truncate font-title-md text-title-md text-on-surface">{step.title}</span>
+                  <span className="block font-label-sm text-label-sm text-on-surface-variant"><Tc>Étape</Tc> {step.index}</span>
+                  <span className="block truncate font-title-md text-title-md text-on-surface"><Tc>{step.title}</Tc></span>
                 </span>
                 <span className="shrink-0 font-title-md text-title-md font-bold text-on-surface">{formatUsdShort(step.amountCents)}</span>
               </span>
               <span className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
                 <span className={`font-label-md text-label-md font-semibold ${look.labelTone}`}>{look.label}</span>
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  {step.status === 'paid' && step.payout?.completedAt && relativeDay(step.payout.completedAt)}
-                  {step.status === 'upcoming' && step.proofKinds.map((k) => PROOF_LABEL[k]).join(' · ')}
-                  {step.status === 'active' && 'Preuve attendue'}
-                  {step.status === 'proof_submitted' && step.proof && relativeDay(step.proof.submittedAt)}
+                  {step.status === 'paid' && step.payout?.completedAt && relativeDay(step.payout.completedAt, t)}
+                  {step.status === 'upcoming' && step.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}
+                  {step.status === 'active' && t('Preuve attendue')}
+                  {step.status === 'proof_submitted' && step.proof && relativeDay(step.proof.submittedAt, t)}
                 </span>
               </span>
               {step.status === 'paid' && step.payout && (

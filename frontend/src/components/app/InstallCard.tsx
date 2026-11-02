@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { Tc, useT } from '@/lib/i18n/client';
 
 interface InstallEvent extends Event {
   prompt: () => Promise<void>;
@@ -16,6 +17,7 @@ const KEY = 'nobpay-install-dismissed';
  *  - iPhone / iPad (Safari): no API exists, so we show the two taps to do.
  */
 export function InstallCard() {
+  const t = useT();
   const [event, setEvent] = useState<InstallEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [hidden, setHidden] = useState(true);
@@ -59,13 +61,13 @@ export function InstallCard() {
         <Icon name="mobile_arrow_down" size={22} />
       </div>
       <div className="min-w-0 pr-6">
-        <p className="mb-1 font-title-md text-title-md text-on-surface">Installer NobPay sur votre écran d&apos;accueil</p>
+        <p className="mb-1 font-title-md text-title-md text-on-surface"><Tc>Installer NobPay sur votre écran d&apos;accueil</Tc></p>
         <p className="font-body-sm text-body-sm leading-relaxed text-on-surface-variant">
-          Accès direct en plein écran, comme une application.
+          <Tc>Accès direct en plein écran, comme une application.</Tc>
           {showHelp && ios && (
             <>
               {' '}
-              Dans Safari, touchez <Icon name="ios_share" size={14} className="align-text-bottom" /> <strong>Partager</strong>, puis <strong>Sur l&apos;écran d&apos;accueil</strong>.
+              <Tc>Dans Safari, touchez</Tc> <Icon name="ios_share" size={14} className="align-text-bottom" /> <strong><Tc>Partager</Tc></strong><Tc>, puis</Tc> <strong><Tc>Sur l&apos;écran d&apos;accueil</Tc></strong>.
             </>
           )}
         </p>
@@ -84,14 +86,14 @@ export function InstallCard() {
               }
             }}
           >
-            Installer
+            <Tc>Installer</Tc>
           </button>
           <button type="button" className="h-8 px-3 font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" onClick={dismiss}>
-            Plus tard
+            <Tc>Plus tard</Tc>
           </button>
         </div>
       </div>
-      <button type="button" aria-label="Fermer" className="absolute right-3 top-3 rounded-full p-1 text-on-surface-variant hover:text-on-surface" onClick={dismiss}>
+      <button type="button" aria-label={t('Fermer')} className="absolute right-3 top-3 rounded-full p-1 text-on-surface-variant hover:text-on-surface" onClick={dismiss}>
         <Icon name="close" size={18} />
       </button>
     </div>

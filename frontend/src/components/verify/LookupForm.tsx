@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote } from '@/components/ui/primitives';
+import { Tc, useT } from '@/lib/i18n/client';
 
 /** Accepts a full verification link or just its identifier. */
 export function LookupForm() {
+  const t = useT();
   const router = useRouter();
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
@@ -17,13 +19,13 @@ export function LookupForm() {
       onSubmit={(e) => {
         e.preventDefault();
         const id = value.trim().split(/[/?#]/).filter(Boolean).pop() ?? '';
-        if (!/^a_[0-9a-f]{8,}$/i.test(id)) return setError('Identifiant non reconnu. Il ressemble à « a_1b2c3d4e5f6a7b8c ».');
+        if (!/^a_[0-9a-f]{8,}$/i.test(id)) return setError(t('Identifiant non reconnu. Il ressemble à « a_1b2c3d4e5f6a7b8c ».'));
         setError('');
         router.push(`/verifier/${id}`);
       }}
     >
       <label className="flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
-        Lien ou identifiant d&apos;un ancrage
+        <Tc>Lien ou identifiant d&apos;un ancrage</Tc>
         <span className="flex items-center gap-2 rounded-2xl bg-surface-container-low p-1.5 focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-primary-container">
           <input
             value={value}
@@ -33,7 +35,7 @@ export function LookupForm() {
             autoComplete="off"
             spellCheck={false}
           />
-          <button type="submit" aria-label="Vérifier" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-container text-on-primary transition active:scale-95">
+          <button type="submit" aria-label={t('Vérifier')} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-container text-on-primary transition active:scale-95">
             <Icon name="arrow_forward" size={20} />
           </button>
         </span>

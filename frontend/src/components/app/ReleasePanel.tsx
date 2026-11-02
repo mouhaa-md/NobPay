@@ -8,6 +8,7 @@ import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { formatFcfa, formatInt, formatRate, formatSats, formatUsd, formatUsdShort } from '@/lib/money';
 import { supplierRoute } from '@/lib/supplierLabel';
 import type { PayoutQuote, Supplier } from '@/lib/types';
+import { Tc, useT } from '@/lib/i18n/client';
 
 interface Props {
   projectId: string;
@@ -29,6 +30,7 @@ function secondsLeft(iso: string): number {
 
 /** Approve (quote -> confirm) or refuse the proof of a step. */
 export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrowCents, supplier, mode, allowDemo }: Props) {
+  const t = useT();
   const router = useRouter();
   const base = `/api/projects/${projectId}/steps/${stepId}`;
   const [quote, setQuote] = useState<PayoutQuote | null>(null);
@@ -52,7 +54,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
   const call = async (url: string, body?: unknown) => {
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(json.error ?? 'Une erreur est survenue'), { code: json.code as string | undefined });
+    if (!res.ok) throw Object.assign(new Error(json.error ?? t('Une erreur est survenue')), { code: json.code as string | undefined });
     return json;
   };
 
@@ -106,9 +108,9 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
         <div className="flex items-start gap-3 rounded-2xl bg-[#FEF3C7] p-3.5 text-[#92400E]">
           <Icon name="account_balance_wallet" size={22} className="mt-0.5 shrink-0" />
           <div className="font-body-sm text-body-sm">
-            Le séquestre ({formatUsdShort(escrowCents)}) ne couvre pas cette étape ({formatUsdShort(amountCents)}).
+            <Tc>Le séquestre (</Tc>{formatUsdShort(escrowCents)}<Tc>) ne couvre pas cette étape (</Tc>{formatUsdShort(amountCents)}).
             <Link href={`/app/projets/${projectId}/financer`} className="ml-1 font-semibold underline">
-              Financer le projet
+              <Tc>Financer le projet</Tc>
             </Link>
           </div>
         </div>
@@ -117,7 +119,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
       <ErrorNote>{error}</ErrorNote>
       {canSimulate && (
         <button type="button" onClick={() => getQuote(true)} className="flex h-11 items-center justify-center gap-2 rounded-full bg-tertiary-fixed font-label-lg text-label-lg font-semibold text-on-tertiary-fixed">
-          <Icon name="science" size={20} /> Continuer en simulation (démo)
+          <Icon name="science" size={20} /> <Tc>Continuer en simulation (démo)</Tc>
         </button>
       )}
 
@@ -127,7 +129,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
         onClick={() => getQuote(false)}
         className="flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy === 'quote' ? <Spinner /> : <Icon name="verified" size={22} filled />} Valider et payer {formatUsdShort(amountCents)}
+        {busy === 'quote' ? <Spinner /> : <Icon name="verified" size={22} filled />} <Tc>Valider et payer</Tc> {formatUsdShort(amountCents)}
       </button>
       <button
         type="button"
@@ -135,15 +137,15 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
         onClick={() => setRejecting(true)}
         className="flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-surface-container-lowest font-label-lg text-label-lg font-semibold text-error shadow-sm ring-1 ring-error/30 transition hover:bg-error-container/40 active:scale-[0.98] disabled:opacity-50"
       >
-        <Icon name="undo" size={20} /> Refuser cette preuve
+        <Icon name="undo" size={20} /> <Tc>Refuser cette preuve</Tc>
       </button>
 
       {/* Quote sheet */}
       {quote && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm lg:items-center" role="presentation" onClick={() => busy !== 'pay' && setQuote(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Confirmer le paiement" className="nob-rise pb-safe max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label={t('Confirmer le paiement')} className="nob-rise pb-safe max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-outline-variant" />
-            <h3 className="font-headline-md text-headline-md font-bold">Confirmer le paiement</h3>
+            <h3 className="font-headline-md text-headline-md font-bold"><Tc>Confirmer le paiement</Tc></h3>
             <p className="mb-space-md font-body-sm text-body-sm text-on-surface-variant">{stepTitle}</p>
 
             <div className="mb-space-md flex items-center gap-3 rounded-2xl bg-surface-container-low p-3.5">
@@ -159,48 +161,48 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
             </div>
 
             <dl className="mb-space-md flex flex-col gap-2.5 font-body-md text-body-md">
-              <Row label="Débité de votre séquestre" value={formatUsd(quote.amountUsdCents)} />
+              <Row label={t('Débité de votre séquestre')} value={formatUsd(quote.amountUsdCents)} />
               {quote.lightning ? (
                 <>
-                  <Row label="Prix du bitcoin" value={`1 BTC = ${formatInt(Math.round(quote.lightning.btcUsd))} $`} />
-                  <Row label="Frais NobPay" value="Aucun frais ajouté" />
+                  <Row label={t('Prix du bitcoin')} value={`1 BTC = ${formatInt(Math.round(quote.lightning.btcUsd))} $`} />
+                  <Row label={t('Frais NobPay')} value="Aucun frais ajouté" />
                   <div className="my-1 h-px bg-outline-variant/50" />
-                  <Row label="Le fournisseur reçoit" value={formatSats(quote.lightning.amountSats)} strong />
-                  <p className="-mt-1 text-right font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(quote.amountFcfa)} (taux indicatif)</p>
+                  <Row label={t('Le fournisseur reçoit')} value={formatSats(quote.lightning.amountSats)} strong />
+                  <p className="-mt-1 text-right font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(quote.amountFcfa)} <Tc>(taux indicatif)</Tc></p>
                 </>
               ) : (
                 <>
-                  <Row label="Taux appliqué" value={`1 $ = ${formatRate(quote.rate)} FCFA`} />
-                  <Row label="Frais" value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents) : 'Aucun frais ajouté'} />
+                  <Row label={t('Taux appliqué')} value={`1 $ = ${formatRate(quote.rate)} FCFA`} />
+                  <Row label={t('Frais')} value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents) : 'Aucun frais ajouté'} />
                   <div className="my-1 h-px bg-outline-variant/50" />
-                  <Row label="Le fournisseur reçoit" value={formatFcfa(quote.amountFcfa)} strong />
+                  <Row label={t('Le fournisseur reçoit')} value={formatFcfa(quote.amountFcfa)} strong />
                 </>
               )}
             </dl>
 
             <p className={`mb-space-sm flex items-center justify-center gap-1.5 font-label-md text-label-md ${expired ? 'text-error' : 'text-on-surface-variant'}`} role="status">
               <Icon name={expired ? 'timer_off' : 'timer'} size={16} />
-              {expired ? 'Devis expiré' : `Devis valable encore ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`}
-              {quote.mode === 'mock' && ' · simulation'}
+              {expired ? t('Devis expiré') : t('Devis valable encore {floor}:{padStart}', { floor: Math.floor(left / 60), padStart: String(left % 60).padStart(2, '0') })}
+              {quote.mode === 'mock' && t(' · simulation')}
             </p>
 
             <ErrorNote>{error}</ErrorNote>
             <div className="mt-space-sm flex flex-col gap-2">
               {expired ? (
                 <button type="button" onClick={() => getQuote(quote.mode === 'mock' && mode === 'sandbox')} disabled={busy !== null} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg disabled:opacity-60">
-                  {busy === 'quote' ? <Spinner /> : <Icon name="refresh" size={20} />} Actualiser le devis
+                  {busy === 'quote' ? <Spinner /> : <Icon name="refresh" size={20} />} <Tc>Actualiser le devis</Tc>
                 </button>
               ) : (
                 <button type="button" onClick={pay} disabled={busy !== null} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition active:scale-[0.98] disabled:opacity-60">
-                  {busy === 'pay' ? <Spinner /> : <Icon name="lock_open" size={20} />} Confirmer et payer
+                  {busy === 'pay' ? <Spinner /> : <Icon name="lock_open" size={20} />} <Tc>Confirmer et payer</Tc>
                 </button>
               )}
               <button type="button" onClick={() => setQuote(null)} disabled={busy === 'pay'} className="h-11 rounded-full font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container">
-                Annuler
+                <Tc>Annuler</Tc>
               </button>
             </div>
             <p className="mt-2 text-center font-label-sm text-label-sm text-on-surface-variant">
-              {quote.lightning ? 'Un paiement Lightning confirmé ne peut pas être annulé : les sats arrivent directement chez le fournisseur.' : 'Un paiement confirmé ne peut pas être annulé.'}
+              {quote.lightning ? t('Un paiement Lightning confirmé ne peut pas être annulé : les sats arrivent directement chez le fournisseur.') : t('Un paiement confirmé ne peut pas être annulé.')}
             </p>
           </div>
         </div>
@@ -209,10 +211,10 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
       {/* Reject sheet */}
       {rejecting && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-on-surface/50 backdrop-blur-sm lg:items-center" role="presentation" onClick={() => busy !== 'reject' && setRejecting(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Refuser la preuve" className="nob-rise pb-safe w-full max-w-[480px] rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label={t('Refuser la preuve')} className="nob-rise pb-safe w-full max-w-[480px] rounded-t-3xl bg-surface-container-lowest p-space-md shadow-2xl lg:rounded-3xl lg:p-space-lg" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-outline-variant" />
-            <h3 className="font-headline-md text-headline-md font-bold">Refuser cette preuve</h3>
-            <p className="mb-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucun argent ne bouge. L&apos;équipe sur place devra renvoyer une preuve.</p>
+            <h3 className="font-headline-md text-headline-md font-bold"><Tc>Refuser cette preuve</Tc></h3>
+            <p className="mb-space-sm font-body-sm text-body-sm text-on-surface-variant"><Tc>Aucun argent ne bouge. L&apos;équipe sur place devra renvoyer une preuve.</Tc></p>
             <div className="mb-3 flex flex-wrap gap-2">
               {REASONS.map((r) => (
                 <button key={r} type="button" onClick={() => setNote(r)} aria-pressed={note === r} className={`h-9 rounded-full px-3.5 font-label-md text-label-md transition ${note === r ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'}`}>
@@ -220,14 +222,14 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
                 </button>
               ))}
             </div>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} rows={3} placeholder="Précisez si besoin (facultatif)" className="mb-3 w-full resize-none rounded-2xl bg-surface-container-low p-3 font-body-md text-on-surface outline-none placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} rows={3} placeholder={t('Précisez si besoin (facultatif)')} className="mb-3 w-full resize-none rounded-2xl bg-surface-container-low p-3 font-body-md text-on-surface outline-none placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" />
             <ErrorNote>{error}</ErrorNote>
             <div className="mt-2 flex flex-col gap-2">
               <button type="button" onClick={reject} disabled={busy !== null} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-error font-label-lg text-label-lg font-bold text-on-error disabled:opacity-60">
-                {busy === 'reject' ? <Spinner /> : <Icon name="undo" size={20} />} Refuser la preuve
+                {busy === 'reject' ? <Spinner /> : <Icon name="undo" size={20} />} <Tc>Refuser la preuve</Tc>
               </button>
               <button type="button" onClick={() => setRejecting(false)} className="h-11 rounded-full font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container">
-                Annuler
+                <Tc>Annuler</Tc>
               </button>
             </div>
           </div>

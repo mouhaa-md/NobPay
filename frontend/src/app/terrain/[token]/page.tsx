@@ -15,6 +15,8 @@ import { readDb } from '@/server/db';
 import { ledgerFor } from '@/server/ledger';
 import { findProjectByManagerToken, managerTokenState } from '@/server/managerToken';
 import { receiptToken } from '@/server/receipt';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Espace terrain', robots: { index: false, follow: false } };
@@ -39,6 +41,7 @@ const NEWS: Partial<Record<LedgerType, { icon: string; tone: string }>> = {
 };
 
 export default async function FieldPage(props: { params: Promise<{ token: string }> }) {
+  const t = await getT();
   const params = await props.params;
   const db = await readDb();
   const project = findProjectByManagerToken(db, params.token);
@@ -63,15 +66,15 @@ export default async function FieldPage(props: { params: Promise<{ token: string
     .slice(0, 6)
     .map((e) => {
       const step = stepById.get(String(e.data.stepId));
-      const title = step ? `« ${step.title} »` : 'une étape';
-      const supplier = (e.data.supplier as { name?: string } | undefined)?.name ?? step?.payout?.supplier.name ?? 'Le fournisseur';
+      const title = step ? t('« {title} »', { title: t(step.title) }) : t('une étape');
+      const supplier = (e.data.supplier as { name?: string } | undefined)?.name ?? step?.payout?.supplier.name ?? t('Le fournisseur');
       const text: Record<string, string> = {
-        proof_submitted: `Preuve envoyée pour ${title}`,
-        step_approved: `${ownerName} a validé ${title}`,
-        step_rejected: `Preuve refusée pour ${title}${e.data.note ? ` : « ${String(e.data.note)} »` : ''}`,
-        payout_started: `Paiement lancé vers ${supplier}`,
-        payout_completed: `${supplier} a été payé (${title})`,
-        payout_failed: `Paiement non abouti pour ${title}`,
+        proof_submitted: t('Preuve envoyée pour {title}', { title }),
+        step_approved: t('{owner} a validé {title}', { owner: ownerName, title }),
+        step_rejected: t('Preuve refusée pour {title}', { title }) + (e.data.note ? ` : « ${String(e.data.note)} »` : ''),
+        payout_started: t('Paiement lancé vers {supplier}', { supplier }),
+        payout_completed: t('{supplier} a été payé ({title})', { supplier, title }),
+        payout_failed: t('Paiement non abouti pour {title}', { title }),
       };
       return { id: e.id, at: e.at, type: e.type, text: text[e.type] };
     });
@@ -86,14 +89,14 @@ export default async function FieldPage(props: { params: Promise<{ token: string
             <div className="mb-4 flex items-center justify-between lg:mb-8">
               <Logo tone="light" className="text-[18px] lg:text-[22px]" />
               <Chip tone="dark" icon="badge">
-                Espace terrain
+                <Tc>Espace terrain</Tc>
               </Chip>
             </div>
-            <p className="font-label-md text-label-md text-surface-variant">Bonjour {project.managerName.split(' ')[0]}</p>
+            <p className="font-label-md text-label-md text-surface-variant"><Tc>Bonjour</Tc> {project.managerName.split(' ')[0]}</p>
             <h1 className="mt-0.5 font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight lg:font-headline-xl lg:text-headline-xl">{project.name}</h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-body-sm text-body-sm text-surface-variant">
-              <Flag code="SN" className="h-3 w-[18px]" /> {project.city} · <Icon name={sector.icon} size={16} /> {sector.label}
-              {owner ? ` · vous êtes la personne de confiance de ${owner.firstName}` : ''}
+              <Flag code="SN" className="h-3 w-[18px]" /> {project.city} · <Icon name={sector.icon} size={16} /> <Tc>{sector.label}</Tc>
+              {owner ? t(' · vous êtes la personne de confiance de {firstName}', { firstName: owner.firstName }) : ''}
             </p>
           </div>
         </header>
@@ -105,15 +108,15 @@ export default async function FieldPage(props: { params: Promise<{ token: string
               <section className="flex flex-col gap-3">
                 <div className="rounded-2xl bg-primary/5 p-4 ring-1 ring-primary-container/30">
                   <p className="font-label-sm text-label-sm uppercase tracking-wider text-primary">
-                    Étape {todo.index} sur {project.steps.length} · {formatUsdShort(todo.amountCents)}
+                    <Tc>Étape</Tc> {todo.index} <Tc>sur</Tc> {project.steps.length} · {formatUsdShort(todo.amountCents)}
                   </p>
-                  <h2 className="mt-0.5 font-title-lg text-title-lg">{todo.title}</h2>
-                  <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">À envoyer : {todo.proofKinds.map((k) => PROOF_LABEL[k]).join(' + ')}</p>
+                  <h2 className="mt-0.5 font-title-lg text-title-lg"><Tc>{todo.title}</Tc></h2>
+                  <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant"><Tc>À envoyer :</Tc> {todo.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' + ')}</p>
                   {todo.status === 'rejected' && (
                     <p className="mt-2 flex items-start gap-2 rounded-xl bg-error-container px-3 py-2 font-body-sm text-body-sm text-on-error-container" role="alert">
                       <Icon name="undo" size={18} className="mt-px shrink-0" />
                       <span>
-                        <strong>Preuve refusée.</strong> {todo.decision?.note ? `« ${todo.decision.note} ». ` : ''}Merci d&apos;en renvoyer une nouvelle.
+                        <strong><Tc>Preuve refusée.</Tc></strong> {todo.decision?.note ? `« ${todo.decision.note} ». ` : ''}<Tc>Merci d&apos;en renvoyer une nouvelle.</Tc>
                       </span>
                     </p>
                   )}
@@ -127,11 +130,11 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FEF3C7] text-[#B45309]">
                   <Icon name={waiting.status === 'releasing' ? 'sync' : 'hourglass_top'} size={28} />
                 </span>
-                <p className="font-title-lg text-title-lg">{waiting.status === 'releasing' ? 'Paiement en cours' : 'Preuve reçue'}</p>
+                <p className="font-title-lg text-title-lg">{waiting.status === 'releasing' ? t('Paiement en cours') : t('Preuve reçue')}</p>
                 <p className="font-body-md text-body-md text-on-surface-variant">
                   {waiting.status === 'releasing'
-                    ? `${waiting.payout?.supplier.name ?? 'Le fournisseur'} va recevoir son paiement sur son mobile money.`
-                    : `${ownerName} regarde votre envoi${waiting.proof ? ` du ${formatDateTime(waiting.proof.submittedAt)}` : ''}. Cette page se met à jour toute seule.`}
+                    ? t('{name} va recevoir son paiement sur son mobile money.', { name: waiting.payout?.supplier.name ?? t('Le fournisseur') })
+                    : t('{ownerName} regarde votre envoi{s}. Cette page se met à jour toute seule.', { ownerName, s: waiting.proof ? ` du ${formatDateTime(waiting.proof.submittedAt)}` : '' })}
                 </p>
               </section>
             )}
@@ -141,22 +144,22 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
                   <Icon name="lock" size={28} />
                 </span>
-                <p className="font-title-lg text-title-lg">Prochaine étape pas encore ouverte</p>
-                <p className="font-body-md text-body-md text-on-surface-variant">{next ? `« ${next.title} » s’ouvrira dès que ${ownerName} aura alimenté le séquestre.` : 'Patientez.'}</p>
+                <p className="font-title-lg text-title-lg"><Tc>Prochaine étape pas encore ouverte</Tc></p>
+                <p className="font-body-md text-body-md text-on-surface-variant">{next ? t('« {title} » s’ouvrira dès que {ownerName} aura alimenté le séquestre.', { title: next.title, ownerName }) : 'Patientez.'}</p>
               </section>
             )}
 
             {allDone && (
               <section className="nob-pop flex flex-col items-center gap-3 rounded-3xl bg-[#DCFCE7] p-space-lg text-center text-[#14532D]">
                 <Icon name="celebration" size={40} filled />
-                <p className="font-title-lg text-title-lg">Projet terminé</p>
-                <p className="font-body-md text-body-md">Toutes les étapes sont payées. Merci pour votre travail.</p>
+                <p className="font-title-lg text-title-lg"><Tc>Projet terminé</Tc></p>
+                <p className="font-body-md text-body-md"><Tc>Toutes les étapes sont payées. Merci pour votre travail.</Tc></p>
               </section>
             )}
 
             {lastPaid?.payout && lastReceipt && (
               <div>
-                <p className="mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Dernier paiement : « {lastPaid.title} »</p>
+                <p className="mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Dernier paiement : «</Tc> {lastPaid.title} »</p>
                 <ReceiptCard token={lastReceipt} supplierName={lastPaid.payout.supplier.name} />
               </div>
             )}
@@ -166,9 +169,9 @@ export default async function FieldPage(props: { params: Promise<{ token: string
           <div className="flex flex-col gap-space-lg">
             <section className="rounded-2xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30">
               <div className="mb-2 flex items-end justify-between">
-                <p className="font-title-md text-title-md">Avancement</p>
+                <p className="font-title-md text-title-md"><Tc>Avancement</Tc></p>
                 <p className="font-label-md text-label-md text-on-surface-variant">
-                  {paidCount} étape{paidCount > 1 ? 's' : ''} payée{paidCount > 1 ? 's' : ''} sur {project.steps.length}
+                  {t(paidCount > 1 ? '{paidCount} étapes payées sur {total}' : '{paidCount} étape payée sur {total}', { paidCount, total: project.steps.length })}
                 </p>
               </div>
               <ProgressBar value={Math.round((paidCount / project.steps.length) * 100)} />
@@ -176,7 +179,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
 
             {news.length > 0 && (
               <section>
-                <h2 className="mb-2 font-title-md text-title-md">Dernières nouvelles</h2>
+                <h2 className="mb-2 font-title-md text-title-md"><Tc>Dernières nouvelles</Tc></h2>
                 <ul className="flex flex-col divide-y divide-outline-variant/40 overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/30">
                   {news.map((n) => (
                     <li key={n.id} className="flex items-start gap-3 px-3.5 py-3">
@@ -185,7 +188,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-label-lg text-label-lg">{n.text}</span>
-                        <span className="block font-label-sm text-label-sm text-on-surface-variant">{relativeDay(n.at)}</span>
+                        <span className="block font-label-sm text-label-sm text-on-surface-variant">{relativeDay(n.at, t)}</span>
                       </span>
                     </li>
                   ))}
@@ -194,7 +197,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
             )}
 
             <section>
-              <h2 className="mb-2 font-title-md text-title-md">Les étapes et mes envois</h2>
+              <h2 className="mb-2 font-title-md text-title-md"><Tc>Les étapes et mes envois</Tc></h2>
               <ol className="flex flex-col divide-y divide-outline-variant/40 overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/30">
                 {project.steps.map((s) => {
                   const receipt = receiptToken(s);
@@ -204,14 +207,14 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                         {s.status === 'paid' ? <Icon name="check" size={18} /> : <span className="font-label-md text-label-md font-bold">{s.index}</span>}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-label-lg text-label-lg">{s.title}</span>
-                        <span className={`block font-label-sm text-label-sm ${s.status === 'rejected' ? 'font-semibold text-error' : 'text-on-surface-variant'}`}>{STEP_STATE[s.status]}</span>
+                        <span className="block truncate font-label-lg text-label-lg"><Tc>{s.title}</Tc></span>
+                        <span className={`block font-label-sm text-label-sm ${s.status === 'rejected' ? 'font-semibold text-error' : 'text-on-surface-variant'}`}><Tc>{STEP_STATE[s.status]}</Tc></span>
 
                         {s.proof && (
                           <span className="mt-1.5 block font-label-sm text-label-sm text-on-surface-variant">
-                            Envoyée le {formatDate(s.proof.submittedAt)} · {s.proof.photos.length} photo{s.proof.photos.length > 1 ? 's' : ''}
-                            {s.proof.invoice ? ' + facture' : ''}
-                            {s.proof.supplier ? ` · à payer : ${s.proof.supplier.name}` : ''}
+                            <Tc>Envoyée le</Tc> {formatDate(s.proof.submittedAt)} · {s.proof.photos.length} <Tc>photo</Tc>{s.proof.photos.length > 1 ? 's' : ''}
+                            {s.proof.invoice ? t(' + facture') : ''}
+                            {s.proof.supplier ? t(' · à payer : {name}', { name: s.proof.supplier.name }) : ''}
                           </span>
                         )}
                         {s.proof && s.proof.photos.length > 0 && (
@@ -227,10 +230,10 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                           <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-label-sm text-label-sm text-on-surface-variant">
                             <Icon name="payments" size={14} />
                             {s.payout.supplier.name} · {SUPPLIER_NETWORKS[s.payout.supplier.network]} ·{' '}
-                            {s.payout.status === 'completed' ? 'payé' : s.payout.status === 'failed' ? 'paiement refusé' : 'en cours'}
+                            {s.payout.status === 'completed' ? t('payé') : s.payout.status === 'failed' ? t('paiement refusé') : t('en cours')}
                             {receipt && (
                               <a href={`/recu/${receipt}`} className="font-semibold text-primary hover:underline">
-                                Reçu
+                                <Tc>Reçu</Tc>
                               </a>
                             )}
                           </span>
@@ -245,8 +248,8 @@ export default async function FieldPage(props: { params: Promise<{ token: string
             <p className="flex items-start gap-2 rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
               <Icon name="lock" size={16} className="mt-px shrink-0" />
               <span>
-                Ce lien est personnel : ne le partagez pas. Vous ne voyez pas le solde du financeur et vous ne pouvez pas débloquer d&apos;argent.
-                {!tokenState.legacy && tokenState.expiresAt && !tokenState.expired && ` Il est valable jusqu’au ${formatDate(tokenState.expiresAt)} ; ${ownerName} peut le renouveler.`}
+                <Tc>Ce lien est personnel : ne le partagez pas. Vous ne voyez pas le solde du financeur et vous ne pouvez pas débloquer d&apos;argent.</Tc>
+                {!tokenState.legacy && tokenState.expiresAt && !tokenState.expired && t(' Il est valable jusqu’au {formatDate} ; {ownerName} peut le renouveler.', { formatDate: formatDate(tokenState.expiresAt), ownerName })}
               </span>
             </p>
           </div>

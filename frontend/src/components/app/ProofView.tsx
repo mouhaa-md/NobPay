@@ -3,6 +3,8 @@ import { formatDateTime, formatFcfa } from '@/lib/money';
 import { shortHash } from '@/lib/ledgerLabels';
 import { supplierRoute } from '@/lib/supplierLabel';
 import type { Proof, StoredFile } from '@/lib/types';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 interface Props {
   proof: Proof;
@@ -17,7 +19,8 @@ const fileUrl = (projectId: string, file: StoredFile, token?: string) => `/api/f
 const isImage = (f: StoredFile) => f.mime.startsWith('image/');
 
 /** What the person on site sent: photos with their metadata, invoice, who to pay, note. */
-export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
+export async function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
+  const t = await getT();
   const gap = proof.invoiceAmountFcfa && expectedFcfa ? Math.round(((proof.invoiceAmountFcfa - expectedFcfa) / expectedFcfa) * 100) : null;
 
   return (
@@ -25,17 +28,17 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
       {proof.photos.length > 0 && (
         <section>
           <h3 className="mb-2 flex items-center gap-2 font-title-md text-title-md">
-            <Icon name="photo_camera" size={20} className="text-primary" /> Photos ({proof.photos.length})
+            <Icon name="photo_camera" size={20} className="text-primary" /> <Tc>Photos (</Tc>{proof.photos.length})
           </h3>
           <ul className="grid grid-cols-2 gap-2.5">
             {proof.photos.map((p) => (
               <li key={p.id} className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/30">
                 <a href={fileUrl(projectId, p, token)} target="_blank" rel="noopener noreferrer" className="relative block aspect-[4/3] bg-surface-container">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fileUrl(projectId, p, token)} alt={`Photo prise le ${formatDateTime(p.takenAt)}`} className="h-full w-full object-cover" loading="lazy" />
+                  <img src={fileUrl(projectId, p, token)} alt={t('Photo prise le {formatDateTime}', { formatDateTime: formatDateTime(p.takenAt) })} className="h-full w-full object-cover" loading="lazy" />
                   {p.gps && (
                     <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#0A0F24]/70 px-2 py-0.5 font-label-sm text-label-sm text-white backdrop-blur">
-                      <Icon name="location_on" size={13} filled /> Géolocalisée
+                      <Icon name="location_on" size={13} filled /> <Tc>Géolocalisée</Tc>
                     </span>
                   )}
                 </a>
@@ -49,10 +52,10 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
                       className="font-medium text-primary hover:underline"
                     >
                       {p.gps.lat.toFixed(4)}, {p.gps.lng.toFixed(4)}
-                      {p.gps.accuracy ? ` · ±${p.gps.accuracy} m` : ''}
+                      {p.gps.accuracy ? t(' · ±{accuracy} m', { accuracy: p.gps.accuracy }) : ''}
                     </a>
                   ) : (
-                    <span className="text-outline">Position non communiquée</span>
+                    <span className="text-outline"><Tc>Position non communiquée</Tc></span>
                   )}
                 </div>
               </li>
@@ -64,7 +67,7 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
       {proof.invoice && (
         <section>
           <h3 className="mb-2 flex items-center gap-2 font-title-md text-title-md">
-            <Icon name="receipt_long" size={20} className="text-primary" /> Facture du fournisseur
+            <Icon name="receipt_long" size={20} className="text-primary" /> <Tc>Facture du fournisseur</Tc>
           </h3>
           <a
             href={fileUrl(projectId, proof.invoice, token)}
@@ -82,10 +85,10 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
             )}
             <span className="min-w-0 flex-1">
               <span className="block truncate font-label-lg text-label-lg">{proof.invoice.name}</span>
-              {proof.invoiceAmountFcfa ? <span className="block font-title-md text-title-md font-bold text-primary">{formatFcfa(proof.invoiceAmountFcfa)}</span> : <span className="block font-body-sm text-body-sm text-on-surface-variant">Montant non indiqué</span>}
+              {proof.invoiceAmountFcfa ? <span className="block font-title-md text-title-md font-bold text-primary">{formatFcfa(proof.invoiceAmountFcfa)}</span> : <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Montant non indiqué</Tc></span>}
               {gap !== null && (
                 <span className={`mt-0.5 block font-label-sm text-label-sm ${Math.abs(gap) <= 15 ? 'text-[#15803D]' : 'text-[#B45309]'}`}>
-                  {Math.abs(gap) <= 15 ? 'Cohérent avec le montant prévu' : `Écart de ${gap > 0 ? '+' : ''}${gap} % avec le montant prévu`} (≈ {formatFcfa(expectedFcfa!)})
+                  {Math.abs(gap) <= 15 ? t('Cohérent avec le montant prévu') : t('Écart de {gap} % avec le montant prévu', { gap: `${gap > 0 ? '+' : ''}${gap}` })} (≈ {formatFcfa(expectedFcfa!)})
                 </span>
               )}
             </span>
@@ -100,7 +103,7 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
             <Icon name={proof.supplier.network === 'lightning' ? 'bolt' : 'mobile'} size={22} />
           </span>
           <span className="min-w-0">
-            <span className="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Sera payé directement</span>
+            <span className="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Sera payé directement</Tc></span>
             <span className="block truncate font-title-md text-title-md">{proof.supplier.name}</span>
             <span className="block truncate font-body-sm text-body-sm text-on-surface-variant">
               {supplierRoute(proof.supplier)}
@@ -111,7 +114,7 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
 
       {proof.note && (
         <section className="rounded-2xl bg-surface-container-low p-3.5">
-          <span className="mb-1 block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Message de l&apos;équipe sur place</span>
+          <span className="mb-1 block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Message de l&apos;équipe sur place</Tc></span>
           <p className="font-body-md text-body-md italic text-on-surface">« {proof.note} »</p>
         </section>
       )}
@@ -119,10 +122,10 @@ export function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
       <details className="rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
         <summary className="cursor-pointer list-none font-label-md text-label-md font-semibold text-primary">
           <span className="inline-flex items-center gap-1.5">
-            <Icon name="fingerprint" size={18} /> Empreintes des fichiers (SHA-256)
+            <Icon name="fingerprint" size={18} /> <Tc>Empreintes des fichiers (SHA-256)</Tc>
           </span>
         </summary>
-        <p className="mb-2 mt-2">Ces empreintes sont inscrites dans le registre de preuves. Modifier une photo après coup changerait son empreinte.</p>
+        <p className="mb-2 mt-2"><Tc>Ces empreintes sont inscrites dans le registre de preuves. Modifier une photo après coup changerait son empreinte.</Tc></p>
         <ul className="flex flex-col gap-1 font-mono text-[11px]">
           {[...proof.photos, ...(proof.invoice ? [proof.invoice] : [])].map((f) => (
             <li key={f.id} className="break-all" title={f.sha256}>

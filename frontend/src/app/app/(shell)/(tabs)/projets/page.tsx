@@ -10,6 +10,8 @@ import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Projets' };
@@ -27,6 +29,7 @@ const FILTERS: { id: 'all' | Sector; label: string; icon?: string }[] = [
 const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export default async function Projects(props: { searchParams: Promise<{ secteur?: string; q?: string }> }) {
+  const t = await getT();
   const searchParams = await props.searchParams;
   const user = (await getSessionUser())!;
   const db = await readDb();
@@ -49,17 +52,17 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
 
   return (
     <>
-      <AppHeader title="Projets" user={user} />
+      <AppHeader title={t('Projets')} user={user} />
 
       {/* ---------- phone ---------- */}
       <main id="contenu" className="px-space-md pb-28 pt-20 lg:hidden">
         <div className="mb-space-md flex items-center justify-between">
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {all.length} projet{all.length > 1 ? 's' : ''} · une étape payée = une preuve validée
+            {all.length} <Tc>projet</Tc>{all.length > 1 ? 's' : ''} <Tc>· une étape payée = une preuve validée</Tc>
           </p>
         </div>
 
-        <nav aria-label="Filtrer par secteur" className="-mx-space-md mb-space-md flex gap-2 overflow-x-auto px-space-md pb-1">
+        <nav aria-label={t('Filtrer par secteur')} className="-mx-space-md mb-space-md flex gap-2 overflow-x-auto px-space-md pb-1">
           {FILTERS.map((f) => {
             const on = f.id === active;
             const count = f.id === 'all' ? all.length : all.filter((s) => s.project.sector === f.id).length;
@@ -86,7 +89,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
               <ProjectCard key={s.project.id} summary={s} />
             ))}
             <Link href="/app/projets/nouveau" className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-outline-variant/70 p-space-md font-label-lg text-label-lg text-primary transition hover:bg-surface-container-low">
-              <Icon name="add_circle" size={22} /> Nouveau projet
+              <Icon name="add_circle" size={22} /> <Tc>Nouveau projet</Tc>
             </Link>
           </div>
         )}
@@ -99,35 +102,35 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
           <div className="relative z-10 flex items-center justify-between gap-8">
             <div className="flex max-w-2xl flex-col gap-2">
               <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 font-label-sm text-label-sm uppercase tracking-wider text-on-secondary-container">
-                <Icon name="lock" size={14} /> Fonds en séquestre, libérés sur preuve
+                <Icon name="lock" size={14} /> <Tc>Fonds en séquestre, libérés sur preuve</Tc>
               </span>
-              <h2 className="font-headline-lg text-headline-lg tracking-tight text-on-surface">Projets de la diaspora</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Suivi des projets, scolarités et stocks que vous financez, étape par étape.</p>
+              <h2 className="font-headline-lg text-headline-lg tracking-tight text-on-surface"><Tc>Projets de la diaspora</Tc></h2>
+              <p className="font-body-md text-body-md text-on-surface-variant"><Tc>Suivi des projets, scolarités et stocks que vous financez, étape par étape.</Tc></p>
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Pill icon="folder_special">
-                  <strong className="font-title-md text-title-md">{totals.projects}</strong> projet{totals.projects > 1 ? 's' : ''}
+                  <strong className="font-title-md text-title-md">{totals.projects}</strong> <Tc>projet</Tc>{totals.projects > 1 ? 's' : ''}
                 </Pill>
                 <Pill icon="account_balance">
-                  <strong className="font-title-md text-title-md">{formatUsdShort(totals.escrow)}</strong> en séquestre
+                  <strong className="font-title-md text-title-md">{formatUsdShort(totals.escrow)}</strong> <Tc>en séquestre</Tc>
                 </Pill>
                 <Pill icon="currency_bitcoin" tone="bg-tertiary-fixed text-on-tertiary-fixed">
-                  {totals.anchorsTotal === 0 ? 'Aucun ancrage Bitcoin pour le moment' : `${totals.anchorsConfirmed} sur ${totals.anchorsTotal} ancrage${totals.anchorsTotal > 1 ? 's' : ''} confirmé${totals.anchorsConfirmed > 1 ? 's' : ''} sur Bitcoin`}
+                  {totals.anchorsTotal === 0 ? t('Aucun ancrage Bitcoin pour le moment') : t('{anchorsConfirmed} sur {anchorsTotal} ancrage{s} confirmé{s2} sur Bitcoin', { anchorsConfirmed: totals.anchorsConfirmed, anchorsTotal: totals.anchorsTotal, s: totals.anchorsTotal > 1 ? 's' : '', s2: totals.anchorsConfirmed > 1 ? 's' : '' })}
                 </Pill>
               </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-3">
               <Link href="/app/projets/nouveau" className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-container px-6 font-label-lg text-label-lg text-on-primary shadow-lg shadow-primary-container/20 transition hover:bg-primary active:scale-95">
-                <Icon name="add_circle" size={20} /> Créer un projet
+                <Icon name="add_circle" size={20} /> <Tc>Créer un projet</Tc>
               </Link>
               <span className="flex items-center gap-1.5 font-body-sm text-body-sm text-on-surface-variant">
-                <Icon name="verified_user" size={16} className="text-primary" /> Chaque paiement exige une preuve que vous validez
+                <Icon name="verified_user" size={16} className="text-primary" /> <Tc>Chaque paiement exige une preuve que vous validez</Tc>
               </span>
             </div>
           </div>
         </section>
 
         <div className="flex items-center justify-between gap-4">
-          <nav aria-label="Filtrer par secteur" className="flex items-center gap-2">
+          <nav aria-label={t('Filtrer par secteur')} className="flex items-center gap-2">
             {FILTERS.map((f) => {
               const on = f.id === active;
               const count = f.id === 'all' ? all.length : all.filter((s) => s.project.sector === f.id).length;
@@ -139,7 +142,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                   className={`inline-flex h-10 items-center gap-1.5 rounded-full px-4 font-label-md text-label-md shadow-sm transition active:scale-95 ${on ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
                 >
                   {f.icon && <Icon name={f.icon} size={16} />}
-                  {f.id === 'all' ? 'Tous les projets' : f.label}
+                  {f.id === 'all' ? t('Tous les projets') : f.label}
                   <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${on ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>{count}</span>
                 </Link>
               );
@@ -151,8 +154,8 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
             <input
               name="q"
               defaultValue={q}
-              placeholder="Rechercher un projet, une ville…"
-              aria-label="Rechercher un projet"
+              placeholder={t('Rechercher un projet, une ville…')}
+              aria-label={t('Rechercher un projet')}
               className="h-10 w-full rounded-full bg-surface-container-lowest pl-10 pr-4 font-body-sm text-body-sm text-on-surface shadow-sm outline-none placeholder:text-outline focus:ring-2 focus:ring-primary/20"
             />
           </form>
@@ -181,19 +184,20 @@ function Pill({ icon, tone = 'bg-surface-container text-on-surface', children }:
   );
 }
 
-function Empty({ hasProjects }: { hasProjects: boolean }) {
+async function Empty({ hasProjects }: { hasProjects: boolean }) {
+  const t = await getT();
   return (
     <div className="rounded-3xl bg-surface-container-low p-space-lg text-center lg:p-12">
       <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Icon name="folder_open" size={28} />
       </span>
-      <p className="mb-1 font-title-lg text-title-lg">{hasProjects ? 'Aucun projet ne correspond' : 'Aucun projet pour le moment'}</p>
+      <p className="mb-1 font-title-lg text-title-lg">{hasProjects ? t('Aucun projet ne correspond') : t('Aucun projet pour le moment')}</p>
       <p className="mb-space-md font-body-md text-body-md text-on-surface-variant">
-        {hasProjects ? 'Essayez un autre secteur ou une autre recherche.' : 'Décrivez ce que vous voulez construire, cultiver ou vendre. Chaque paiement sera lié à une preuve.'}
+        {hasProjects ? t('Essayez un autre secteur ou une autre recherche.') : t('Décrivez ce que vous voulez construire, cultiver ou vendre. Chaque paiement sera lié à une preuve.')}
       </p>
       {!hasProjects && (
         <Link href="/app/projets/nouveau" className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-container px-6 font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25">
-          <Icon name="add" size={20} /> Nouveau projet
+          <Icon name="add" size={20} /> <Tc>Nouveau projet</Tc>
         </Link>
       )}
     </div>

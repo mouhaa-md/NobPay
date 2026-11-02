@@ -22,6 +22,8 @@ import { findProject, findStep } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
 import { proofChecks } from '@/server/proofChecks';
 import { receiptToken } from '@/server/receipt';
+import { Tc } from '@/lib/i18n/client';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Étape' };
@@ -36,6 +38,7 @@ const STATUS = {
 } as const;
 
 export default async function StepPage(props: { params: Promise<{ id: string; stepId: string }> }) {
+  const t = await getT();
   const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
@@ -58,25 +61,25 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
   return (
     <main id="contenu" className="min-h-screen pb-16 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
       <AutoRefresh active={step.status === 'releasing'} />
-      <FlowHeader title={`Étape ${step.index} sur ${project.steps.length}`} backHref={`/app/projets/${project.id}`} />
+      <FlowHeader title={t('Étape {index} sur {length}', { index: step.index, length: project.steps.length })} backHref={`/app/projets/${project.id}`} />
 
       <div className="flex flex-col gap-space-lg px-space-md pt-space-md lg:grid lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_auto_auto_auto_1fr] lg:items-start lg:gap-x-8 lg:gap-y-6 lg:px-0 lg:pt-0">
         {/* Title */}
         <section className="lg:col-span-2 lg:row-start-1">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="font-label-md text-label-md text-on-surface-variant">{project.name}</p>
-            <Chip tone={status.tone}>{status.label}</Chip>
+            <Chip tone={status.tone}><Tc>{status.label}</Tc></Chip>
           </div>
-          <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight lg:font-headline-xl lg:text-headline-xl">{step.title}</h2>
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight lg:font-headline-xl lg:text-headline-xl"><Tc>{step.title}</Tc></h2>
           <p className="mt-1 flex items-baseline gap-2">
             <span className="font-headline-md text-headline-md font-bold text-primary">{formatUsdShort(step.amountCents)}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa((step.amountCents / 100) * usdXof)} (taux indicatif)</span>
+            <span className="font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa((step.amountCents / 100) * usdXof)} <Tc>(taux indicatif)</Tc></span>
           </p>
           <p className="mt-2 flex flex-wrap items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
-            Preuves attendues :
+            <Tc>Preuves attendues :</Tc>
             {step.proofKinds.map((k) => (
               <span key={k} className="rounded-full bg-surface-container px-2.5 py-0.5 font-label-sm text-label-sm text-on-surface">
-                {PROOF_LABEL[k]}
+                <Tc>{PROOF_LABEL[k]}</Tc>
               </span>
             ))}
           </p>
@@ -86,18 +89,18 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
         {step.status === 'upcoming' && (
           <section className="rounded-2xl bg-surface-container-low p-4 lg:col-start-1 lg:row-start-2 lg:p-6">
             <p className="mb-1 flex items-center gap-2 font-title-md text-title-md">
-              <Icon name="lock" size={20} /> Pas encore débloquée
+              <Icon name="lock" size={20} /> <Tc>Pas encore débloquée</Tc>
             </p>
             <p className="mb-3 font-body-sm text-body-sm text-on-surface-variant">
               {blockedBy
-                ? `L'étape ${blockedBy.index} (« ${blockedBy.title} ») doit d'abord être payée.`
+                ? t('L\'étape {index} (« {title} ») doit d\'abord être payée.', { index: blockedBy.index, title: blockedBy.title })
                 : escrow < step.amountCents
-                  ? `Le séquestre (${formatUsdShort(escrow)}) doit couvrir cette étape (${formatUsdShort(step.amountCents)}).`
-                  : 'Elle se débloque automatiquement.'}
+                  ? t('Le séquestre ({formatUsdShort}) doit couvrir cette étape ({formatUsdShort2}).', { formatUsdShort: formatUsdShort(escrow), formatUsdShort2: formatUsdShort(step.amountCents) })
+                  : t('Elle se débloque automatiquement.')}
             </p>
             {escrow < step.amountCents && (
               <Link href={`/app/projets/${project.id}/financer`} className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-container px-5 font-label-lg text-label-lg font-bold text-on-primary shadow-md">
-                <Icon name="bolt" size={20} filled /> Financer le projet
+                <Icon name="bolt" size={20} filled /> <Tc>Financer le projet</Tc>
               </Link>
             )}
           </section>
@@ -107,15 +110,15 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
           <section className="flex flex-col gap-3 rounded-2xl bg-surface-container-low p-4 lg:col-start-1 lg:row-start-2 lg:p-6">
             <p className="flex items-center gap-2 font-title-md text-title-md">
               <Icon name={step.status === 'rejected' ? 'undo' : 'hourglass_top'} size={20} className={step.status === 'rejected' ? 'text-error' : 'text-primary'} />
-              {step.status === 'rejected' ? 'Preuve refusée : en attente d’une nouvelle preuve' : `En attente de ${project.managerName}`}
+              {step.status === 'rejected' ? t('Preuve refusée : en attente d’une nouvelle preuve') : t('En attente de {managerName}', { managerName: project.managerName })}
             </p>
             {step.decision?.note && <p className="rounded-xl bg-error-container/60 px-3 py-2 font-body-sm text-body-sm text-on-error-container">« {step.decision.note} »</p>}
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              L&apos;étape est financée. {project.managerName} doit maintenant envoyer les photos et la facture depuis son lien privé.
+              <Tc>L&apos;étape est financée.</Tc> {project.managerName} <Tc>doit maintenant envoyer les photos et la facture depuis son lien privé.</Tc>
             </p>
             <ShareManagerLink token={managerLinkToken(project)} managerName={project.managerName} projectName={project.name} projectId={project.id} />
             <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
-              Ou envoyer la preuve moi-même
+              <Tc>Ou envoyer la preuve moi-même</Tc>
             </Link>
           </section>
         )}
@@ -126,14 +129,14 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
             <div className="flex items-start gap-3 rounded-2xl bg-[#FFFBEB] p-3.5 ring-1 ring-[#F59E0B]/30">
               <Icon name="rate_review" size={22} className="mt-0.5 shrink-0 text-[#B45309]" />
               <p className="font-body-sm text-body-sm text-[#92400E]">
-                Preuve reçue {formatDateTime(step.proof.submittedAt)}. Regardez les photos et la facture, puis décidez. Rien n&apos;est payé sans votre accord.
+                <Tc>Preuve reçue</Tc> {formatDateTime(step.proof.submittedAt)}<Tc>. Regardez les photos et la facture, puis décidez. Rien n&apos;est payé sans votre accord.</Tc>
               </p>
             </div>
             {lastFailure && (
               <div className="flex items-start gap-3 rounded-2xl bg-error-container p-3.5 text-on-error-container" role="alert">
                 <Icon name="error" size={22} className="mt-0.5 shrink-0" />
                 <p className="font-body-sm text-body-sm">
-                  <strong>Le dernier paiement n&apos;a pas abouti</strong> {lastFailure.error ? `(${lastFailure.error})` : ''}. Vos fonds sont toujours en séquestre : vous pouvez réessayer.
+                  <strong><Tc>Le dernier paiement n&apos;a pas abouti</Tc></strong> {lastFailure.error ? `(${lastFailure.error})` : ''}<Tc>. Vos fonds sont toujours en séquestre : vous pouvez réessayer.</Tc>
                 </p>
               </div>
             )}
@@ -143,7 +146,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
               <ProofReviewPanel
                 projectId={project.id}
                 stepId={step.id}
-                checks={proofChecks({ db, project, step, usdXof })}
+                checks={proofChecks({ db, project, step, usdXof, t })}
                 aiEnabled={getConfig().ai.enabled}
                 review={step.proof.aiReview}
               />
@@ -181,14 +184,14 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
 
         {step.status === 'releasing' && (
           <p className="text-center font-label-sm text-label-sm text-on-surface-variant lg:col-start-2 lg:row-start-3" role="status">
-            {mode === 'mock' || step.payout?.mode === 'mock' ? 'Simulation : la confirmation arrive dans quelques secondes.' : 'La confirmation arrive par webhook signé de Bitnob. Cette page se met à jour toute seule.'}
+            {mode === 'mock' || step.payout?.mode === 'mock' ? t('Simulation : la confirmation arrive dans quelques secondes.') : t('La confirmation arrive par webhook signé de Bitnob. Cette page se met à jour toute seule.')}
           </p>
         )}
 
         {/* Audit trail */}
         {trail.length > 0 && (
           <section className={`lg:col-start-2 ${hasProof ? 'lg:row-start-4' : 'lg:row-start-2'}`}>
-            <h3 className="mb-2 font-title-md text-title-md">Trace de cette étape</h3>
+            <h3 className="mb-2 font-title-md text-title-md"><Tc>Trace de cette étape</Tc></h3>
             <ol className="flex flex-col divide-y divide-outline-variant/40 overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/30">
               {trail.map((e) => {
                 const meta = LEDGER_LABEL[e.type];
@@ -198,9 +201,9 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
                       <Icon name={meta.icon} size={17} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-label-lg text-label-lg">{meta.label}</span>
+                      <span className="block truncate font-label-lg text-label-lg"><Tc>{meta.label}</Tc></span>
                       <span className="block font-label-sm text-label-sm text-on-surface-variant">
-                        N° {e.seq} · {formatDateTime(e.at)}
+                        <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at)}
                       </span>
                     </span>
                     <span className="shrink-0 font-mono text-[11px] text-outline" title={e.hash}>
@@ -211,7 +214,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
               })}
             </ol>
             <Link href={`/app/certificat/${project.id}`} className="mt-3 flex items-center justify-center gap-2 font-label-md text-label-md font-semibold text-primary hover:underline">
-              <Icon name="workspace_premium" size={18} /> Voir le certificat et l&apos;ancrage Bitcoin
+              <Icon name="workspace_premium" size={18} /> <Tc>Voir le certificat et l&apos;ancrage Bitcoin</Tc>
             </Link>
           </section>
         )}

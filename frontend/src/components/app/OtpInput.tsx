@@ -1,9 +1,11 @@
 'use client';
 
 import { useRef } from 'react';
+import { useT } from '@/lib/i18n/client';
 
 /** Six boxes, auto-advance, backspace goes back, paste of a whole code supported. */
 export function OtpInput({ value, onChange, invalid = false }: { value: string; onChange: (v: string) => void; invalid?: boolean }) {
+  const t = useT();
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? '');
 
@@ -14,7 +16,7 @@ export function OtpInput({ value, onChange, invalid = false }: { value: string; 
   };
 
   return (
-    <div className="flex items-center justify-between gap-1.5" role="group" aria-label="Code de confirmation à 6 chiffres">
+    <div className="flex items-center justify-between gap-1.5" role="group" aria-label={t('Code de confirmation à 6 chiffres')}>
       {digits.map((d, i) => (
         <input
           key={i}
@@ -25,7 +27,7 @@ export function OtpInput({ value, onChange, invalid = false }: { value: string; 
           inputMode="numeric"
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
           maxLength={1}
-          aria-label={`Chiffre ${i + 1}`}
+          aria-label={t('Chiffre {digit}', { digit: i + 1 })}
           className={`h-12 w-11 rounded-2xl bg-surface-container-lowest text-center font-headline-md text-headline-md text-primary outline-none ring-2 transition ${
             invalid ? 'ring-error' : d ? 'ring-primary-container' : 'ring-transparent focus:ring-primary-container'
           }`}

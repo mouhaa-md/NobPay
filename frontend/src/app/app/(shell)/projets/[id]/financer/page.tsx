@@ -7,11 +7,13 @@ import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { getGateway } from '@/server/bitnob';
 import { summarize } from '@/server/views';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Financer' };
 
 export default async function Fund(props: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   const params = await props.params;
   const user = await getSessionUser();
   if (!user) redirect('/app/bienvenue');
@@ -37,7 +39,7 @@ export default async function Fund(props: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <DesktopTopbar title="Financer un projet" backHref={`/app/projets/${project.id}`} />
+      <DesktopTopbar title={t('Financer un projet')} backHref={`/app/projets/${project.id}`} />
       <FundingFlow
         projectId={project.id}
         projectName={project.name}
