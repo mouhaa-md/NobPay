@@ -60,6 +60,17 @@ Avec `AI_REVIEW=1` et une clé `ANTHROPIC_API_KEY`, le financeur peut demander �
 - **Les contrôles sans IA sont toujours affichés**, clé ou pas : fichier déjà utilisé ailleurs (photo ou facture réutilisée), position des photos (au Sénégal ?), date des photos, montant de la facture comparé à l'étape.
 - Limite connue : les images de plus de 5 Mo ne sont pas envoyées (l'écran le dit) et seules les 4 premières photos sont lues.
 
+### Démarrage rapide : `deploy/bootstrap.sh`
+
+Sur le serveur (Docker installé, DNS déjà pointé), depuis la racine du dépôt :
+
+```bash
+sh deploy/bootstrap.sh demo    # tout simulé : jury et vote du public, données fictives
+sh deploy/bootstrap.sh real    # vrais sats : demande les deux chaînes NWC (saisie masquée), plafonds bas, comptes invités
+```
+
+Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **sur le serveur** (jamais affichés), écrit `deploy/.env` en `600`, lance `docker compose`, attend `/api/health` et rappelle quoi sauvegarder. Il refuse d'écraser un `deploy/.env` existant. **Il a été essayé avec de faux `docker` et `curl`, pas sur un vrai serveur** : lisez sa dernière sortie et `/api/health`.
+
 ## 2. Prérequis
 
 - Un serveur Linux avec Docker et Docker Compose (un VPS de 1 à 2 Go de mémoire suffit).

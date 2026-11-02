@@ -63,4 +63,4 @@ docs/                      audit and plan, changelog of this hackathon, deployme
 deploy/                    Docker Compose + Caddy + backup script
 ```
 
-[`ARCHITECTURE.md`](ARCHITECTURE.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md) · translations are welcome: the English wording lives in one file, [`frontend/src/lib/i18n/en.ts`](frontend/src/lib/i18n/en.ts), and a language is one more dictionary (Wolof help wanted).
+[`ARCHITECTURE.md`](ARCHITECTURE.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md) · translations are welcome: the English wording lives in one file, [`frontend/src/lib/i18n/en.ts`](frontend/src/lib/i18n/en.ts), and a language is one more dictionary (Wolof help wanted: [`docs/TRADUIRE.md`](docs/TRADUIRE.md)).

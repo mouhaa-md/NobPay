@@ -108,7 +108,8 @@
 - **Outils de migration conservés** : `scripts/i18n-wrap.mjs` (texte JSX) et `i18n-wrap-strings.mjs` (attributs, conditions, gabarits) ont enveloppé 680 textes ; ils ne changent rien s'ils sont relancés. Fichiers non traduits exprès : le tableau de bord administrateur (outil de l'opérateur).
 - **Côté serveur aussi** : les messages d'erreur à texte fixe (une soixantaine), les contrôles « À regarder avant de payer » et les points tirés de la lecture de la facture par l'IA sont produits dans la langue du visiteur ; l'IA reçoit la consigne de répondre dans cette langue. Les statuts et libellés issus de tables du code (secteurs, étapes types, événements du registre) passent par le même dictionnaire.
 - **Limites connues** : les montants et les dates gardent le format français (« 6 000,00 $ », « 1 nov. ») ; les messages d'erreur à texte variable (avec un nombre) restent en français ; les titres de pages (onglet du navigateur) aussi ; les noms de projets, d'étapes personnalisées et les messages de l'équipe sur place sont affichés tels qu'écrits.
-- `README.en.md` : un README anglais.
+- `README.en.md` : un README anglais ; `docs/TRADUIRE.md` : comment corriger l'anglais ou ajouter une langue (le wolof : aide bienvenue, une traduction n'a de valeur que par quelqu'un qui le parle).
+- **`deploy/bootstrap.sh demo|real`** : prépare `deploy/.env` sur le serveur (secrets générés sur place, jamais affichés ; chaînes NWC saisies masquées), lance Docker et attend `/api/health`. Essayé avec de faux `docker`/`curl`, pas sur un vrai serveur.
 - Tests : `i18n` (10), `landing-copy` (7), `server-i18n` (5). **737 tests verts sur 50 fichiers.**
 
 ## À venir (voir le plan du rapport d'audit)
