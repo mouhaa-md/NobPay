@@ -31,5 +31,33 @@
 ### Tests
 - **357 tests verts** (avant : 323), dont ceux qui prouvent chaque correctif ci-dessus : refus avant lecture du corps, plafond sans `Content-Length`, étape fermée, vue admin de démonstration, SSRF, format du numéro, plafond SMS, durabilité de la base, icônes, cohérence des factures.
 
+## Jalon M1 : vrais bitcoins sur Lightning (2 novembre 2026)
+
+> Branche `dbd4/m1-real-bitcoin`. Tout ce chemin est **testé contre un portefeuille simulé**, pas encore avec un vrai portefeuille (il faut une connexion NWC de l'équipe : voir §11 de l'audit).
+
+### Le séquestre et les paiements passent par de vrais éclairs
+- **`LIGHTNING_RAIL=nwc`** : Nostr Wallet Connect (NIP-47, `@getalby/sdk`), sans intermédiaire de paiement. **Deux connexions de droits différents** : *réception* (créer et consulter des factures, ne peut pas dépenser) et *paiement* (seule à dépenser, avec un budget fixé dans le portefeuille).
+- **Versement** : facture au montant en dollars converti au cours du moment (mempool.space, Coinbase en secours), valable 1 h. Le séquestre n'est crédité que lorsque **le portefeuille confirme** la facture réglée, **une seule fois**, au montant de la facture ; un montant inférieur ou une preuve de paiement qui ne correspond pas ne créditent rien.
+- **Paiement du fournisseur à son adresse Lightning** (`nom@domaine`, LNURL-pay) : la facture rendue par le domaine du fournisseur est **vérifiée avant d'être payée** (montant exact, bon réseau Bitcoin, empreinte de description conforme aux métadonnées annoncées, durée restante). Un décodeur BOLT11 maison (validé sur le vecteur officiel de la spécification) lit ces factures.
+- **Une réponse perdue ne fait jamais payer deux fois ni perdre l'argent** : le paiement n'est cru qu'avec une **préimage dont l'empreinte est celle de la facture** (elle devient la preuve de paiement du reçu et du registre public) ; si la réponse est inconnue, les fonds restent réservés et on interroge le portefeuille par l'empreinte du paiement ; « jamais envoyé » n'est conclu qu'après 5 minutes sans trace.
+- **Remboursement du séquestre inutilisé** vers l'adresse Lightning du financeur, avec la même discipline (la somme quitte le séquestre avant l'envoi, revient en cas de refus, reste réservée si le résultat est inconnu). Refusé tant qu'une preuve attend une décision.
+- **Sur une instance de vrais sats, le fournisseur est payé par Lightning uniquement** et le démarrage est **refusé** si `ALLOW_DEMO` est actif (le code partagé ouvrirait un compte qui contient de vrais sats), si le secret de session est faible ou si une chaîne NWC est illisible (sans jamais l'imprimer).
+- **Plafonds de phase pilote** (`LIGHTNING_MAX_FUNDING_USD`, `_PAYOUT_USD`, `_ESCROW_USD`) et **contrôle de solvabilité chaque minute** : si ce que l'instance doit dépasse ce que contiennent ses portefeuilles (une même connexion comptée une seule fois), versements et paiements sont suspendus (visible dans `/api/health` pour les administrateurs).
+- **Comptes invités** (`ALLOW_GUEST=1`) : « Essayer sans compte » crée un compte privé par visiteur, sans téléphone, jamais administrateur, avec limite par adresse IP. C'est ainsi que le jury essaie une instance de vrais sats.
+
+### Sécurité du nouveau code
+- **Client HTTPS anti-SSRF** pour les adresses Lightning (qu'un utilisateur tape) : HTTPS seulement, domaine seulement (ni IP, ni `localhost`, ni suffixe interne, ni port), **la vérification est la résolution DNS de la connexion elle-même** (pas de « public puis privé »), adresses IPv4 enveloppées dans de l'IPv6 jugées comme IPv4, redirections refusées, réponse bornée en taille et en temps, y compris l'adresse de rappel donnée par le domaine.
+- Les messages d'erreur d'un portefeuille sont traduits en français et ne répètent jamais son texte brut.
+
+### Écrans
+- La page dit **toujours dans quel mode elle tourne** (simulation, test Bitnob, bitcoin réel) ; les jetons USDT/USDC qui n'existaient pas sont retirés ; le versement explique « Comment payer avec Lightning ? » ; le fournisseur se saisit par adresse Lightning ; le devis, le suivi, le reçu et la page terrain montrent les sats, le cours et la preuve de paiement ; panneau de remboursement.
+
+### Corrigé en chemin
+- `resetDb` ne vidait pas les collections optionnelles que le jeu de démonstration ne contient pas (les remboursements d'un test ou d'une réinitialisation survivaient).
+
+### Tests
+- **560 tests verts sur 40 fichiers** (avant M1 : 357), `tsc --noEmit` sans erreur.
+- Nouveaux : `bolt11` (15), `lnurl` (26), `safe-fetch` (60), `nwc-adapter` (51), **`lightning-flows` (34 : versement, paiement, réponses perdues, factures falsifiées, remboursements, solvabilité, intégrité du registre)**, `guest` (4), démarrage (+14).
+
 ## À venir (voir le plan du rapport d'audit)
-M1 Bitcoin réel (NWC, paiement vers adresse Lightning, remboursement, SQLite) · M2 Nostr (engagements du registre sur relais, NIP-03, vérification sans notre serveur) · M3 IA consultative · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.
+M1 (suite) architecture en ports/adaptateurs et SQLite · M2 Nostr (engagements du registre sur relais, NIP-03, vérification sans notre serveur) · M3 IA consultative · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

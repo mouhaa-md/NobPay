@@ -15,6 +15,28 @@
 
 **Ne jamais mélanger.** Avec `ALLOW_DEMO=1`, le code de connexion est public et le compte démo ouvre l'administration (limitée, depuis le 1er nov., aux données de démonstration). Une instance qui porte de vraies données doit avoir `ALLOW_DEMO=0`. Chaque instance a **son propre dossier de déploiement, son `.env` et son volume**.
 
+### Troisième profil : instance « vrais sats » (essai par le jury avec quelques centimes)
+
+| | **Vrais sats** |
+|---|---|
+| Adresse | `essai.<votre-domaine>` |
+| `LIGHTNING_RAIL` | **`nwc`** : le séquestre et les paiements passent par de vrais éclairs (Lightning) |
+| `ALLOW_DEMO` | **`0` obligatoire** : le serveur refuse de démarrer sinon (le code partagé ouvrirait un compte qui contient de vrais sats) |
+| `ALLOW_GUEST` | `1` : bouton « Essayer sans compte », un compte invité privé par visiteur |
+| Fournisseur payé | **par adresse Lightning uniquement** (pas de mobile money sur cette instance) |
+| Plafonds | `LIGHTNING_MAX_FUNDING_USD` 100, `LIGHTNING_MAX_PAYOUT_USD` 100, `LIGHTNING_MAX_ESCROW_USD` 500 : **baissez-les** (5 à 20 $) pour un jury |
+
+**Deux connexions Nostr Wallet Connect, deux niveaux de droits** (à créer dans votre portefeuille, par exemple Alby Hub) :
+
+1. `NWC_RECEIVE_URL` : droits **créer des factures, les consulter, lire le solde** seulement. Elle ne peut **pas dépenser** : si elle fuit, personne ne vide le portefeuille.
+2. `NWC_PAYOUT_URL` : la seule qui dépense (paiements aux fournisseurs, remboursements). **Donnez-lui un budget** dans le portefeuille (par exemple 20 $ par jour). Vide = paiements et remboursements désactivés, les versements restent possibles.
+
+Les deux chaînes sont des **secrets** : elles vont dans `deploy/.env` (droits `600`), jamais dans Git, jamais dans une conversation.
+
+Ce que le serveur vérifie tout seul : un versement n'est crédité que lorsque le **portefeuille** confirme la facture réglée, au montant exact de la facture ; un paiement n'est cru qu'avec la **preuve de paiement** (la préimage dont l'empreinte est celle de la facture) ; une réponse perdue garde l'argent **réservé** jusqu'à ce que le portefeuille dise ce qu'il en est (jamais payé deux fois) ; la somme due ne doit jamais dépasser ce que contiennent les portefeuilles (sinon versements et paiements sont suspendus, voir `/api/health`).
+
+**Contrôle avant d'ouvrir au jury** (5 minutes, avec 1 à 2 $) : financer 1 $ depuis un portefeuille personnel → l'étape se débloque ; envoyer une preuve avec votre propre adresse Lightning comme fournisseur → valider → les sats arrivent chez vous et le reçu montre la preuve de paiement ; demander le remboursement du reste.
+
 ## 2. Prérequis
 
 - Un serveur Linux avec Docker et Docker Compose (un VPS de 1 à 2 Go de mémoire suffit).

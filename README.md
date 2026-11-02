@@ -40,9 +40,15 @@ Sources : [ONU Info](https://news.un.org/en/story/2026/09/1168330) · [IFAD](htt
 
 Détail de ce qui a été observé chez Bitnob : [`docs/BITNOB-SANDBOX-REPORT.md`](docs/BITNOB-SANDBOX-REPORT.md).
 
+### Vrais bitcoins sur Lightning (Dakar Bitcoin Hack #4)
+
+Avec `LIGHTNING_RAIL=nwc`, une instance utilise de **vrais sats** par Nostr Wallet Connect (NIP-47), sans intermédiaire : le financeur règle une vraie facture Lightning, le fournisseur est payé **à son adresse Lightning** (`nom@domaine`) et le reçu public montre la **preuve de paiement** (la préimage dont l'empreinte est celle de la facture). Le séquestre inutilisé peut être **remboursé**. Deux connexions de droits différents : l'une ne fait que créer et consulter des factures (elle ne peut pas dépenser), l'autre paie et porte un budget. Des plafonds de phase pilote bornent ce qui peut être en jeu. Mise en place : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md), réglages : [`frontend/.env.example`](frontend/.env.example).
+
+**État de la vérification :** ce chemin est testé de bout en bout contre un **portefeuille simulé** (réponses perdues, refus, paiement à moitié connu, montant faux, facture falsifiée, adresse piégée) ; il n'a pas encore été essayé avec un vrai portefeuille. Les écrans l'appellent « Bitcoin réel » seulement sur une instance configurée ainsi.
+
 Limites à connaître :
 
-- Aucun argent réel n'est géré. En sandbox, le portefeuille se finance avec de l'**USDC de test** (faucet Circle, ~10 min de délai de détection) ; **on ne peut pas payer une facture Lightning de test**, donc l'entrée Lightning et la conversion BTC→stablecoin n'ont pas été vues en vrai (en démonstration, le bouton « Simuler la réception » (`ALLOW_DEMO=1`) crédite le séquestre par un évènement signé par NobPay : ce versement est marqué `simulated` dans le registre public). `GET /api/balances` est instable en sandbox : voir le rapport.
+- Hors du mode vrais bitcoins, aucun argent réel n'est géré. En sandbox, le portefeuille se finance avec de l'**USDC de test** (faucet Circle, ~10 min de délai de détection) ; **on ne peut pas payer une facture Lightning de test**, donc l'entrée Lightning et la conversion BTC→stablecoin n'ont pas été vues en vrai (en démonstration, le bouton « Simuler la réception » (`ALLOW_DEMO=1`) crédite le séquestre par un évènement signé par NobPay : ce versement est marqué `simulated` dans le registre public). `GET /api/balances` est instable en sandbox : voir le rapport.
 - **Un paiement mobile money au Sénégal est limité à 200 000 FCFA (environ 336 $)** par Bitnob : en sandbox, une étape de plus de 330 $ est refusée dès la création du projet (réglable : `MAX_STEP_USD`) ; en mode simulé, pas de limite. Le taux réel observé est d'environ 593 FCFA pour 1 $.
 - La base est un fichier JSON local (`.data/db.json`), un seul processus : parfait pour une démonstration, inadapté à un hébergement sans disque partagé (serverless).
 - La limitation de débit est en mémoire (un seul processus). Le prototype n'a pas été audité : lisez [`SECURITY.md`](SECURITY.md) avant toute exposition publique.
