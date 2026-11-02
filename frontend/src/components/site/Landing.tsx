@@ -23,7 +23,8 @@ const PHONES = ['/site/phone-financer.webp', '/site/phone-preuve.webp', '/site/p
 /** The landing page, in French (`/`) or in English (`/en`): same layout, the text comes from landingCopy.ts. */
 export function Landing({ lang }: { lang: Lang }) {
   const c = LANDING_COPY[lang];
-  // the language chosen on this page follows the visitor into the app
+  // The language chosen on this page follows the visitor into the app. These links are never prefetched: the language
+  // route sets a cookie, and a prefetch (which is not a click) must not change the visitor's language.
   const to = (path: string) => `/lang/${lang}?next=${path}`;
   const sector = (id: Sector) =>
     lang === 'en'
@@ -47,13 +48,13 @@ export function Landing({ lang }: { lang: Lang }) {
             <a href="#secteurs" className="hide-sm">
               {c.nav.corridors}
             </a>
-            <Link href={to('/verifier')} className="hide-sm">
+            <Link prefetch={false} href={to('/verifier')} className="hide-sm">
               {c.nav.verify}
             </Link>
-            <Link href={c.nav.switchHref} hrefLang={lang === 'en' ? 'fr' : 'en'} lang={lang === 'en' ? 'fr' : 'en'} aria-label={`${c.nav.switchLabel}: ${c.nav.switchTo}`}>
+            <Link prefetch={false} href={c.nav.switchHref} hrefLang={lang === 'en' ? 'fr' : 'en'} lang={lang === 'en' ? 'fr' : 'en'} aria-label={`${c.nav.switchLabel}: ${c.nav.switchTo}`}>
               {c.nav.switchTo}
             </Link>
-            <Link href={to('/app')} className="pill nm-btn">
+            <Link prefetch={false} href={to('/app')} className="pill nm-btn">
               {c.nav.open}
             </Link>
           </nav>
@@ -71,10 +72,10 @@ export function Landing({ lang }: { lang: Lang }) {
             {c.hero.sub}
           </p>
           <div className="cta-row">
-            <Link href={to('/app')} className="btn nm-btn">
+            <Link prefetch={false} href={to('/app')} className="btn nm-btn">
               {c.hero.cta} <Icon name="arrow_forward" size={22} />
             </Link>
-            <Link href={to('/verifier')} className="btn btn--ghost nm-btn">
+            <Link prefetch={false} href={to('/verifier')} className="btn btn--ghost nm-btn">
               {c.hero.verify}
             </Link>
           </div>
@@ -227,7 +228,7 @@ export function Landing({ lang }: { lang: Lang }) {
                   </li>
                 ))}
               </ul>
-              <Link href={to('/app')} className="btn nm-btn">
+              <Link prefetch={false} href={to('/app')} className="btn nm-btn">
                 {c.peek.cta} <Icon name="arrow_forward" size={22} />
               </Link>
             </div>
@@ -279,7 +280,7 @@ export function Landing({ lang }: { lang: Lang }) {
               <p data-nm-reveal="lines" data-nm-margin="10">
                 {c.verify.text}
               </p>
-              <Link href={to('/verifier')} className="btn btn--dark nm-btn">
+              <Link prefetch={false} href={to('/verifier')} className="btn btn--dark nm-btn">
                 {c.verify.cta} <Icon name="arrow_forward" size={22} />
               </Link>
             </div>
@@ -344,18 +345,18 @@ export function Landing({ lang }: { lang: Lang }) {
             {c.final.text}
           </p>
           <div className="cta-row">
-            <Link href={to('/app')} className="btn btn--white nm-btn">
+            <Link prefetch={false} href={to('/app')} className="btn btn--white nm-btn">
               {c.final.open} <Icon name="arrow_forward" size={22} />
             </Link>
-            <Link href={to('/verifier')} className="btn btn--ghost on-blue nm-btn">
+            <Link prefetch={false} href={to('/verifier')} className="btn btn--ghost on-blue nm-btn">
               {c.final.verify}
             </Link>
           </div>
           <div className="foot">
             <span>{c.final.copyright}</span>
             <nav aria-label={c.final.footerLabel}>
-              <Link href={to('/app')}>{c.final.links.app}</Link>
-              <Link href={to('/verifier')}>{c.final.links.verify}</Link>
+              <Link prefetch={false} href={to('/app')}>{c.final.links.app}</Link>
+              <Link prefetch={false} href={to('/verifier')}>{c.final.links.verify}</Link>
               <a href="#how">{c.final.links.how}</a>
             </nav>
           </div>

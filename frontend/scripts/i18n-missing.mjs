@@ -55,7 +55,7 @@ for (const file of walk('src')) {
   visit(source);
 }
 
-const missing = [...used].filter(([k]) => !(k in EN));
+const missing = [...used].filter(([k]) => !Object.prototype.hasOwnProperty.call(EN, k));
 console.log(`${used.size - missing.length}/${used.size} sentences translated, ${missing.length} missing.`);
 for (const [k, files] of missing) console.log(JSON.stringify(k), '<-', [...files].map((f) => f.split('/').pop()).join(', '));
 if (showUnused) {

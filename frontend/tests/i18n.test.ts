@@ -26,6 +26,10 @@ describe('translate', () => {
     expect(normalizeKey('  a \n b ')).toBe('a b');
   });
 
+  it('a user-written text that looks like an Object property is shown as written (a step called « constructor »)', () => {
+    for (const name of ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf']) expect(translate('en', name)).toBe(name);
+  });
+
   it('plural forms are separate sentences, because French agreement does not carry over', () => {
     expect(translate('en', '{n} événements enchaînés.', { n: 3 })).toBe('3 chained events.');
     expect(translate('en', '{n} événement enchaîné.', { n: 1 })).toBe('1 chained event.');

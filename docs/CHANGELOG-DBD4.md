@@ -112,5 +112,17 @@
 - **`deploy/bootstrap.sh demo|real`** : prépare `deploy/.env` sur le serveur (secrets générés sur place, jamais affichés ; chaînes NWC saisies masquées), lance Docker et attend `/api/health`. Essayé avec de faux `docker`/`curl`, pas sur un vrai serveur.
 - Tests : `i18n` (10), `landing-copy` (7), `server-i18n` (5). **737 tests verts sur 50 fichiers.**
 
+## Relecture contradictoire des derniers jours (2 novembre 2026)
+
+Une relecture du code écrit depuis le début de M1, en cherchant ce qui casse en conditions réelles, a trouvé et fait corriger :
+
+- **Argent perdu pour le financeur (le plus grave).** Une facture réglée dans les dernières secondes de sa vie pouvait être refermée « expirée » par la tâche de fond **avant** que le paiement soit vu ; le séquestre n'était alors jamais crédité alors que les sats étaient arrivés. Désormais une facture expirée depuis moins de 24 h est encore interrogée (une fois par minute) et créditée si le portefeuille dit qu'elle a été payée. Deux tests.
+- **Paiement échoué enregistré deux fois, ou sur une nouvelle tentative.** Si `reconcile()` concluait pendant que le portefeuille répondait encore, la réponse tardive refusait une seconde fois le même paiement ; elle ne touche plus qu'un paiement encore en cours et de même référence.
+- **Un titre d'étape appelé « constructor »** (ou `toString`, `__proto__`…) faisait afficher du code JavaScript dans l'interface anglaise : le dictionnaire ne cherche plus que ses propres entrées.
+- **Les liens de changement de langue se préchargeaient** : le simple fait de voir la page d'accueil pouvait changer la langue du visiteur, parce que la route de langue pose un cookie. Ils ne sont plus préchargés (un test le vérifie).
+- **Clés Nostr devinables.** Publier sans `NOSTR_MASTER_KEY` avec un secret de session absent, par défaut ou court laissait n'importe qui signer des engagements au nom d'un projet : le serveur refuse maintenant de démarrer dans ce cas.
+- **Parcours d'un juge.** « Essai rapide » est proposé directement sur le tableau de bord vide (`/app/projets/nouveau?essai=1` ouvre le récapitulatif de l'essai).
+- 742 tests verts sur 50 fichiers.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

@@ -7,7 +7,7 @@ import { ProjectCardWide } from '@/components/app/ProjectCardWide';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, ProgressBar, SectionTitle } from '@/components/ui/primitives';
 import { formatUsdShort } from '@/lib/money';
-import { RESIDENCE_COUNTRIES, SECTORS } from '@/lib/templates';
+import { QUICK_TRIAL_BUDGET_CENTS, RESIDENCE_COUNTRIES, SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
 import { getConfig, instanceMode } from '@/server/config';
@@ -274,6 +274,11 @@ function NoProject() {
       <Link href="/app/projets/nouveau" className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-container px-6 font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25">
         <Icon name="add" size={20} /> <Tc>Nouveau projet</Tc>
       </Link>
+      {getConfig().minBudgetUsd * 100 <= QUICK_TRIAL_BUDGET_CENTS && (
+        <Link href="/app/projets/nouveau?essai=1" className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-surface-container px-6 font-label-lg text-label-lg font-semibold text-primary hover:bg-surface-container-high">
+          <Icon name="bolt" size={20} /> <Tc>Essai rapide</Tc> · {formatUsdShort(QUICK_TRIAL_BUDGET_CENTS)}
+        </Link>
+      )}
     </div>
   );
 }

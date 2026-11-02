@@ -133,13 +133,26 @@ describe('startup configuration check', () => {
       }
     });
 
+    it('refuses to publish with keys that anyone could derive: no master key and a missing, default or short session secret', () => {
+      vi.stubEnv('NOSTR_PUBLISH', '1');
+      vi.stubEnv('NOSTR_MASTER_KEY', '');
+      for (const secret of ['', 'change-me', 'x'.repeat(20)]) {
+        vi.stubEnv('SESSION_SECRET', secret);
+        expect(checkStartupConfig().fatal.join(' '), secret).toMatch(/NOSTR_MASTER_KEY/);
+      }
+      vi.stubEnv('NOSTR_MASTER_KEY', 'ab'.repeat(32)); // with its own master key the session secret is another matter
+      vi.stubEnv('SESSION_SECRET', '');
+      expect(checkStartupConfig().fatal.join(' ')).not.toMatch(/Nostr|NOSTR/);
+    });
+
     it('accepts a good master key; warns about the fallback only where it matters (production, real bitcoin)', () => {
       vi.stubEnv('NOSTR_PUBLISH', '1');
       vi.stubEnv('NOSTR_MASTER_KEY', 'ab'.repeat(32));
       expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
 
       vi.stubEnv('NOSTR_MASTER_KEY', '');
-      expect(checkStartupConfig().warnings).toEqual([]); // a local demo may derive the keys from SESSION_SECRET
+      vi.stubEnv('SESSION_SECRET', STRONG);
+      expect(checkStartupConfig().warnings).toEqual([]); // a demo may derive the keys from a strong SESSION_SECRET
       vi.stubEnv('NODE_ENV', 'production');
       vi.stubEnv('SESSION_SECRET', STRONG);
       expect(checkStartupConfig().warnings.join(' ')).toMatch(/NOSTR_MASTER_KEY/);

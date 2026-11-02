@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LANDING_COPY, type LandingCopy } from '@/components/site/landingCopy';
 import { SECTORS, STEP_TEMPLATES } from '@/lib/templates';
@@ -66,5 +68,12 @@ describe('the landing page copy', () => {
       const all = strings(LANDING_COPY[lang]).map(([, t]) => t.toLowerCase()).join(' ');
       expect(all, lang).not.toMatch(/instantan|instant payment|100 ?% (secure|sûr)|garanti|guaranteed/);
     }
+  });
+
+  it('links that set the language cookie are never prefetched (a prefetch is not a click)', () => {
+    const source = readFileSync(path.join(process.cwd(), 'src/components/site/Landing.tsx'), 'utf8');
+    const links = source.split(/\r?\n/).filter((l) => l.includes("<Link") && (l.includes('href={to(') || l.includes('href={c.nav.switchHref}')));
+    expect(links.length).toBeGreaterThan(5);
+    for (const l of links) expect(l, l).toContain('prefetch={false}');
   });
 });
