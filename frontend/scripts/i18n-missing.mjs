@@ -48,6 +48,10 @@ for (const file of walk('src')) {
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && (node.expression.text === 't' || node.expression.text === 'fr')) {
       const arg = node.arguments[0];
       if (arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))) add(arg.text, file);
+      // t(plural(n, 'one', 'many'), vars): both forms are sentences
+      if (arg && ts.isCallExpression(arg) && ts.isIdentifier(arg.expression) && arg.expression.text === 'plural') {
+        for (const form of arg.arguments.slice(1, 3)) if (ts.isStringLiteral(form) || ts.isNoSubstitutionTemplateLiteral(form)) add(form.text, file);
+      }
       // t(cond ? 'a' : 'b')
       if (arg && ts.isConditionalExpression(arg)) for (const branch of [arg.whenTrue, arg.whenFalse]) if (ts.isStringLiteral(branch) || ts.isNoSubstitutionTemplateLiteral(branch)) add(branch.text, file);
     }

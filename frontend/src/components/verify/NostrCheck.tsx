@@ -71,6 +71,7 @@ export function NostrCheck({ ledger }: { ledger: DossierEventLike[] }) {
           {t(plural(report.total, '{n}/{total} engagement retrouvé sur {relays} relais.', '{n}/{total} engagements retrouvés sur {relays} relais.'), { n: report.confirmed, total: report.total, relays: reached })}
           {missing.length > 0 && ` ${t(plural(missing.length, 'Absent des relais : événement {list}.', 'Absents des relais : événements {list}.'), { list: missing.slice(0, 6).join(', ') + (missing.length > 6 ? '…' : '') })}`}
           {pending > 0 && ` ${t('{pending} en cours de publication (quelques secondes à quelques minutes).', { pending })}`}
+          {report.thin > 0 && ` ${t(plural(report.thin, '{n} engagement ne se trouve que sur un seul relais : une copie unique prouve peu.', '{n} engagements ne se trouvent que sur un seul relais : une copie unique prouve peu.'), { n: report.thin })}`}
           {missing.length > 0 && ` ${t('Un relais peut être lent ou ne pas tout garder : relancez, ou comparez avec un autre client Nostr.')}`} {retry}
         </>
       )}

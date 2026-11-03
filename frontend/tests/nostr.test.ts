@@ -73,7 +73,7 @@ async function newProject() {
     steps: [{ title: 'Seule étape', amountCents: 1_500, proofKinds: ['photos'] }],
   });
 }
-const publish = (extra: { now?: number } = {}) => publisher.publishCommitments({ WebSocketImpl: net.WebSocketImpl, timeoutMs: 500, ...extra });
+const publish = (extra: { now?: number; relays?: string[] } = {}) => publisher.publishCommitments({ WebSocketImpl: net.WebSocketImpl, timeoutMs: 500, ...extra });
 
 describe('relay addresses', () => {
   it.each(['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.example:443/path'])('accepts %s', (url) => {
@@ -366,6 +366,24 @@ describe('publishing the commitments of a real project', () => {
   });
 });
 
+describe('a project whose key no longer matches', () => {
+  it('is skipped, and the alarm is raised once an hour rather than at every round (it runs every few seconds)', async () => {
+    publisher.resetKeyAlarmsForTests();
+    const p = await newProject();
+    vi.stubEnv('NOSTR_MASTER_KEY', MASTER_B); // the key of the project is no longer the one the ledger names
+    const lines: string[] = [];
+    vi.spyOn(console, 'error').mockImplementation((l) => void lines.push(String(l)));
+    const t0 = Date.now();
+    for (let i = 0; i < 5; i++) await publish({ now: t0 + i * 2_000 });
+    expect(lines.filter((l) => l.includes('nostr_key_mismatch'))).toHaveLength(1);
+    await publish({ now: t0 + 61 * 60_000 });
+    expect(lines.filter((l) => l.includes('nostr_key_mismatch'))).toHaveLength(2);
+    expect((await db.readDb()).nostr ?? []).toHaveLength(0); // nothing was signed under another key
+    expect(p.id).toBeTruthy();
+    vi.restoreAllMocks();
+  });
+});
+
 describe('verifying a ledger on the relays, as a visitor would', () => {
   const verify = async (projectId: string, extra: { now?: number; relays?: string[] } = {}) => {
     const d = await db.readDb();
@@ -422,6 +440,18 @@ describe('verifying a ledger on the relays, as a visitor would', () => {
     expect(r.state).toBe('confirmed');
     expect(r.relays.map((x) => x.ok)).toEqual([false, false, true]);
     expect(r.comparison!.perSeq[0].relays).toBe(1);
+  });
+
+  it('a commitment found on one relay only, while others answered without it, is not called replicated', async () => {
+    const p = await newProject();
+    await publish({ relays: [RELAYS[0]] }); // as if the other relays had refused it
+    const r = await verify(p.id);
+    expect(r.comparison!.perSeq[0]).toEqual({ seq: 1, state: 'confirmed', relays: 1 });
+    expect(r).toMatchObject({ state: 'partial', confirmed: 1, thin: 1 });
+    // with the relays that answer reduced to that one, nothing more can be asked of the others
+    net.relay(RELAYS[1]).behaviour = { down: true };
+    net.relay(RELAYS[2]).behaviour = { down: true };
+    expect(await verify(p.id)).toMatchObject({ state: 'confirmed', thin: 0 });
   });
 
   it('is "unreachable" when no relay answers, and "none" for a project that never used Nostr', async () => {

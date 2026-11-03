@@ -142,7 +142,12 @@ export interface NostrReport {
   comparison?: CommitmentComparison;
   confirmed: number;
   total: number;
+  /** positions found on fewer relays than the server wants for "published" (2), though more relays answered */
+  thin: number;
 }
+
+/** A commitment counts as published once this many relays have it (NOSTR_MIN_ACKS on the server); the verifier asks no less. */
+const REPLICAS_WANTED = 2;
 
 /** The relays to ask: those named by the project, then the defaults, only the usable ones, at most a handful. */
 export function relaysToAsk(named: string[], allowLocal = false): string[] {
@@ -164,7 +169,7 @@ export async function verifyOnRelays(
 ): Promise<NostrReport> {
   const total = ledger.length;
   const binding = bindingOf(ledger[0]?.data);
-  if (!binding) return { state: 'none', relays: [], confirmed: 0, total };
+  if (!binding) return { state: 'none', relays: [], confirmed: 0, total, thin: 0 };
   const urls = opts.relays ?? relaysToAsk(binding.relays, opts.allowLocal);
 
   const byRelay = new Map<string, Event[]>();
@@ -181,11 +186,15 @@ export async function verifyOnRelays(
     }),
   );
   relays.sort((a, b) => urls.indexOf(a.url) - urls.indexOf(b.url));
-  if (byRelay.size === 0) return { state: 'unreachable', pubkey: binding.pubkey, relays, confirmed: 0, total };
+  if (byRelay.size === 0) return { state: 'unreachable', pubkey: binding.pubkey, relays, confirmed: 0, total, thin: 0 };
 
   const comparison = compareCommitments(ledger, binding.pubkey, byRelay, opts.now);
   const confirmed = comparison.perSeq.filter((p) => p.state === 'confirmed').length;
   const allAccountedFor = comparison.perSeq.every((p) => p.state === 'confirmed' || p.state === 'pending');
-  const state: NostrState = comparison.conflicts.length > 0 || comparison.continuity === false ? 'conflict' : allAccountedFor && confirmed > 0 ? 'confirmed' : 'partial';
-  return { state, pubkey: binding.pubkey, relays, comparison, confirmed, total };
+  // "replicated" means on several relays that nobody owns together: one copy on one relay proves little (it may be the
+  // operator's own). With fewer relays reachable than that, what can be asked of them is asked.
+  const wanted = Math.min(REPLICAS_WANTED, byRelay.size);
+  const thin = comparison.perSeq.filter((p) => p.state === 'confirmed' && p.relays < wanted).length;
+  const state: NostrState = comparison.conflicts.length > 0 || comparison.continuity === false ? 'conflict' : allAccountedFor && confirmed > 0 && thin === 0 ? 'confirmed' : 'partial';
+  return { state, pubkey: binding.pubkey, relays, comparison, confirmed, total, thin };
 }
