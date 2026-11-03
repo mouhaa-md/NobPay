@@ -29,6 +29,12 @@ export interface PublishSummary {
   confirmed: number;
 }
 
+/** The alarm about a key that no longer matches is repeated at most once an hour per project: this runs every few seconds. */
+const KEY_ALARM_EVERY_MS = 60 * 60_000;
+const lastKeyAlarm = new Map<string, number>();
+/** Tests only. */
+export const resetKeyAlarmsForTests = (): void => lastKeyAlarm.clear();
+
 /** True once enough relays accepted: `minAcks`, or every configured relay when fewer are configured. */
 const enough = (accepted: number, configured: number) => accepted >= Math.min(getConfig().nostr.minAcks, configured);
 
@@ -58,7 +64,10 @@ export async function publishCommitments(opts: PublishOptions = {}): Promise<Pub
       sk = projectSecretKey(project.id);
       if (getPublicKey(sk) !== binding.pubkey) throw new Error('la clé dérivée ne correspond plus à celle inscrite dans le registre');
     } catch (err) {
-      logger.error('nostr_key_mismatch', { projectId: project.id, error: err, hint: 'NOSTR_MASTER_KEY (ou SESSION_SECRET) a changé depuis la création du projet' });
+      if (now - (lastKeyAlarm.get(project.id) ?? -Infinity) >= KEY_ALARM_EVERY_MS) {
+        lastKeyAlarm.set(project.id, now);
+        logger.error('nostr_key_mismatch', { projectId: project.id, error: err, hint: 'NOSTR_MASTER_KEY (ou SESSION_SECRET) a changé depuis la création du projet' });
+      }
       continue;
     }
 

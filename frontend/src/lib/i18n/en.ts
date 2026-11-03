@@ -815,6 +815,7 @@ export const EN: Record<string, string> = {
   '{label} : format non lisible par l’IA, non envoyée.': '{label}: format the AI cannot read, not sent.',
   '{label} : trop lourde pour l’IA (5 Mo au plus), non envoyée.': '{label}: too big for the AI (5 MB at most), not sent.',
   'Facture : format ou taille non pris en charge par l’IA, non envoyée.': 'Invoice: format or size not supported by the AI, not sent.',
+  'Facture : trop de pages pour l’IA ({max} au plus), non envoyée.': 'Invoice: too many pages for the AI ({max} at most), not sent.',
   'L’IA n’a pas pu lire la facture : vérifiez-la vous-même.': 'The AI could not read the invoice: check it yourself.',
   'La facture est en {currency} ({amount}) : comparez-la à la main.': 'The invoice is in {currency} ({amount}): compare it by hand.',
   'une devise non lue': 'a currency that could not be read',
@@ -957,6 +958,10 @@ export const EN: Record<string, string> = {
   'Paiement refusé par le réseau': 'Payment refused by the network',
   'Paiement confirmé par le réseau Lightning': 'Payment confirmed by the Lightning network',
   'Paiement confirmé par Bitnob': 'Payment confirmed by Bitnob',
+
+  // verification: replication on Nostr relays
+  '{n} engagement ne se trouve que sur un seul relais : une copie unique prouve peu.': '{n} commitment is on a single relay only: one copy proves little.',
+  '{n} engagements ne se trouvent que sur un seul relais : une copie unique prouve peu.': '{n} commitments are on a single relay only: one copy proves little.',
 
   // page titles and link previews
   'NobPay · Investissez au pays. Avec preuve.': 'NobPay · Pay on proof. Money sent home, released step by step.',
