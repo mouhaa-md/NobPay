@@ -661,3 +661,34 @@ describe('taking unused escrow back', () => {
     expect(await escrowOf(project.id)).toBe(4_000);
   });
 });
+
+describe('what the pilot ceilings forbid to pay or to hold cannot be created (it would be funded, then stuck)', () => {
+  const create = (steps: number[], budget = steps.reduce((a, b) => a + b, 0)) =>
+    services.createProject(owner, {
+      name: 'Plafonds',
+      sector: 'commerce',
+      city: 'Dakar',
+      budgetCents: budget * 100,
+      managerName: 'Moussa',
+      steps: steps.map((d, i) => ({ title: `Étape ${i + 1}`, amountCents: d * 100, proofKinds: ['photos'] as ['photos'] })),
+    });
+
+  it('a step above the payout ceiling is refused at creation, with what to do', async () => {
+    vi.stubEnv('LIGHTNING_MAX_PAYOUT_USD', '50');
+    await expect(create([60, 40])).rejects.toMatchObject({ status: 400, code: 'pilot_cap', message: expect.stringMatching(/limité à 50\s\$/) });
+    await expect(create([50, 50])).resolves.toBeTruthy(); // exactly at the ceiling is fine
+  });
+
+  it('a budget above the total escrow ceiling is refused', async () => {
+    vi.stubEnv('LIGHTNING_MAX_PAYOUT_USD', '1000');
+    vi.stubEnv('LIGHTNING_MAX_ESCROW_USD', '150');
+    await expect(create([100, 100])).rejects.toMatchObject({ status: 400, code: 'pilot_cap', message: expect.stringMatching(/limité à 150\s\$/) });
+    await expect(create([75, 75])).resolves.toBeTruthy();
+  });
+
+  it('nothing changes where the money is not real (mock): no pilot ceiling applies', async () => {
+    vi.stubEnv('LIGHTNING_RAIL', '');
+    vi.stubEnv('LIGHTNING_MAX_PAYOUT_USD', '50');
+    await expect(create([60, 40])).resolves.toBeTruthy();
+  });
+});

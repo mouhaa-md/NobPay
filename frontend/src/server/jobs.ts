@@ -1,4 +1,5 @@
 import { getConfig } from './config';
+import { refreshUsdXof } from './lightning/price';
 import { logger } from './logger';
 import { autoAnchorProjects, refreshPendingAnchors } from './anchors';
 import { checkWalletSolvency, pollPendingLightningFundings, reconcileRefunds } from './lightningFlows';
@@ -26,14 +27,18 @@ interface State {
   lastAnchors: number;
   lastSolvency: number;
   lastWalletSolvency: number;
+  lastFx: number;
   lastLogged: Map<string, number>;
 }
 const g = globalThis as unknown as { __nobpayJobs?: State };
 
 const ANCHOR_EVERY_MS = 10 * 60_000;
 const SOLVENCY_EVERY_MS = 60_000;
+const FX_EVERY_MS = 30 * 60_000;
+/** The dollar in FCFA from public prices: not under test, and off with LIVE_FX=0 (it calls two public APIs). */
+const liveFx = () => process.env.NODE_ENV !== 'test' && process.env.LIVE_FX !== '0';
 
-const stateOf = (): State => (g.__nobpayJobs ??= { running: false, nostrRunning: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastLogged: new Map() });
+const stateOf = (): State => (g.__nobpayJobs ??= { running: false, nostrRunning: false, lastAnchors: 0, lastSolvency: 0, lastWalletSolvency: 0, lastFx: 0, lastLogged: new Map() });
 
 /**
  * One step of a round gets this long. Without a limit, a single call that never answers (a wallet, a relay) would keep
@@ -105,6 +110,10 @@ export async function tick(): Promise<void> {
       }, { limit: false }).finally(() => {
         state.nostrRunning = false;
       });
+    }
+    if (liveFx() && Date.now() - state.lastFx > FX_EVERY_MS) {
+      state.lastFx = Date.now();
+      await safely(state, 'usd-xof', async () => void (await refreshUsdXof()));
     }
     if (Date.now() - state.lastAnchors > ANCHOR_EVERY_MS) {
       state.lastAnchors = Date.now();

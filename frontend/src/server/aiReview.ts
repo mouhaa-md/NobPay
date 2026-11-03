@@ -9,6 +9,7 @@ import { readDb, withDb } from './db';
 import { findProject } from './domain';
 import { readUpload, sniffMime } from './files';
 import { HttpError } from './http';
+import { currentUsdXof } from './lightning/price';
 import { logger } from './logger';
 import { AMOUNT_TOLERANCE, inFrench, type Translate } from './proofChecks';
 
@@ -347,7 +348,7 @@ export async function requestProofReview(owner: User, projectId: string, stepId:
           at,
           notes,
           declaredAmountFcfa: step.proof.invoiceAmountFcfa,
-          expectedFcfa: (step.amountCents / 100) * cfg.usdXof,
+          expectedFcfa: (step.amountCents / 100) * currentUsdXof(),
           declaredSupplier: step.proof.supplier?.name,
           submittedAt,
           t,

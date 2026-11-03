@@ -55,8 +55,8 @@ describe('the points made about a proof', () => {
     const french = proofChecks({ db: { projects: [p] }, project: p, step: s, usdXof: 600 });
     const english = proofChecks({ db: { projects: [p] }, project: p, step: s, usdXof: 600, t: en });
     expect(english.map((c) => c.level)).toEqual(french.map((c) => c.level));
-    expect(french.find((c) => c.id === 'gps')!.text).toContain('géolocalisée');
-    expect(english.find((c) => c.id === 'gps')!.text).toBe('No photo is geotagged: there is no way to know where they were taken.');
+    expect(french.find((c) => c.id === 'gps')!.text).toContain('position');
+    expect(english.find((c) => c.id === 'gps')!.text).toBe('No position was attached to the photos: there is no way to know where the proof was sent from.');
   });
 
   it('the comparisons made on what the AI read are translated too', () => {

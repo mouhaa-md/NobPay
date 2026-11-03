@@ -32,6 +32,8 @@ export interface User {
   guest?: boolean;
   /** raised to sign the user out everywhere (cookies carry the version they were issued with); missing = 0 */
   sessionVersion?: number;
+  /** guests only: raised to renew the recovery link, which kills every older one; missing = 0 */
+  recoveryVersion?: number;
 }
 
 export interface Supplier {

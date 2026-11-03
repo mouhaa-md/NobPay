@@ -10,7 +10,7 @@ import { appendLedger } from './ledger';
 import { getPayoutWallet, getReceiveWallet, walletNetwork, WalletError, type LightningWallet } from './lightning';
 import { decodeBolt11 } from './lightning/bolt11';
 import { LnurlError, normalizeLightningAddress, requestInvoice } from './lightning/lnurl';
-import { getBtcUsdForMoney } from './lightning/price';
+import { currentUsdXof, getBtcUsdForMoney } from './lightning/price';
 import { logger } from './logger';
 
 /**
@@ -215,6 +215,7 @@ export async function quoteLightningPayout(step: Step, supplier: Supplier): Prom
   const wallet = getPayoutWallet()!;
   const address = assertLightningSupplier(supplier);
   const { usd: btcUsd } = await getBtcUsdForMoney();
+  const usdXof = currentUsdXof();
   const amountSats = usdToSats(step.amountCents, btcUsd);
   try {
     const balance = await wallet.balanceSats();
@@ -227,9 +228,9 @@ export async function quoteLightningPayout(step: Step, supplier: Supplier): Prom
       quoteId: `ln_${randomId('q', 6)}`,
       reference: `nobpay:pay:${step.id}:${Date.now().toString(36)}`,
       amountUsdCents: step.amountCents,
-      rate: cfg.usdXof,
+      rate: usdXof,
       feeUsdCents: 0,
-      amountFcfa: Math.round((step.amountCents / 100) * cfg.usdXof),
+      amountFcfa: Math.round((step.amountCents / 100) * usdXof),
       expiresAt,
       mode: 'nwc',
       lightning: { amountSats, btcUsd, address, bolt11: invoice.bolt11, paymentHash: invoice.paymentHash, invoiceExpiresAt: invoice.expiresAt },

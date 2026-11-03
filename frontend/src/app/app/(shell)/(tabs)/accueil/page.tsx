@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ActivityList } from '@/components/app/ActivityList';
 import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { BalanceCard } from '@/components/app/BalanceCard';
+import { GuestBanner } from '@/components/app/GuestBanner';
 import { InstallCard } from '@/components/app/InstallCard';
 import { ProjectCardWide } from '@/components/app/ProjectCardWide';
 import { Icon } from '@/components/ui/Icon';
@@ -12,6 +13,7 @@ import { QUICK_TRIAL_BUDGET_CENTS, RESIDENCE_COUNTRIES, SECTORS } from '@/lib/te
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
 import { getConfig, instanceMode } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { readDb } from '@/server/db';
 import { buildActivity, totalsOf, userProjects } from '@/server/views';
 import { Tc } from '@/lib/i18n/client';
@@ -30,7 +32,8 @@ export default async function Home() {
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);
   const activity = buildActivity(db, user.id, 6, t);
-  const { usdXof, mode } = getConfig();
+  const { mode } = getConfig();
+  const usdXof = currentUsdXof();
   const country = RESIDENCE_COUNTRIES.find((c) => c.code === user.country)?.name ?? 'Diaspora';
 
   // Field teams = distinct people who are our eyes on the ground.
@@ -76,6 +79,7 @@ export default async function Home() {
 
         {/* Sheet overlapping the header */}
         <section className="relative z-20 -mt-6 flex flex-col gap-6 rounded-t-3xl bg-surface-container-lowest px-5 pb-6 pt-6 shadow-[0_-8px_30px_rgba(10,15,36,0.08)]">
+          {user.guest && <GuestBanner />}
           <InstallCard />
 
           <div className="grid grid-cols-3 gap-2">
@@ -205,6 +209,7 @@ export default async function Home() {
           </section>
 
           <aside className="flex flex-col gap-4">
+            {user.guest && <GuestBanner />}
             <InstallCard />
             {teams.length > 0 && (
               <section className="rounded-3xl bg-surface-container-lowest p-5 shadow-sm">

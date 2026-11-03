@@ -161,5 +161,17 @@ Relecture ligne à ligne des flux Lightning, du portefeuille, du cours du bitcoi
 - Vérifié sans rien changer : la dérivation des clés, la signature et la forme des engagements, le rejet d'un événement mal formé côté navigateur (`verifyEvent` renvoie faux, il ne lève pas), les adresses de relais (wss seulement, pas d'IP, pas de nom interne), l'attestation NIP-03.
 - 770 tests verts sur 51 fichiers.
 
+## Audit du 3 novembre : les cinq bugs (3 novembre 2026)
+
+Voir `docs/AUDIT-2026-11-03.md`. Corrigés, chacun avec ses tests :
+
+- **B1, compte invité perdu pour toujours** : lien de récupération signé (`/app/recuperer/<jeton>`), renouvelable, affiché dans le profil (jamais imprimé à l'écran, copié ou envoyé), bannière sur le tableau de bord, et confirmation avant de se déconnecter d'un espace invité. Trouvé en chemin : **le bouton « Se déconnecter » appelait `useT()` hors d'un rendu** (introduit par la traduction) ; un test analyse maintenant tout le code pour refuser ce cas.
+- **B2, étape que les plafonds interdisent de payer** : refusée dès la création (étape au-dessus du plafond de paiement, budget au-dessus du plafond de séquestre), et l'assistant affiche ces plafonds.
+- **B3, base illisible remplacée par les données de démonstration** : sur une instance qui détient de l'argent, le fichier n'est plus jamais remplacé ; le serveur s'arrête au démarrage en disant quelle sauvegarde restaurer, et reprend sans redémarrage une fois le fichier restauré. L'écriture force le disque (`fsync`) avant le renommage.
+- **B4, « photos prises au Sénégal »** : ce qui est vérifié est la position du **téléphone à l'envoi**, et la date vient du fichier. Les contrôles, le README et le texte Devpost le disent maintenant.
+- **B5, taux dollar → FCFA figé** : calculé en direct (1 € = 655,957 FCFA, donc FCFA par dollar = 655,957 × BTC/EUR ÷ BTC/USD, deux sources qui concordent à 2 %), rafraîchi toutes les 30 minutes, `USD_XOF_RATE` l'emporte, repli sur 593 après 6 heures. Sert à l'affichage et aux comparaisons ; `LIVE_FX=0` le coupe.
+- **I1** : `ARCHITECTURE.md` réécrit. **I2** : nombre de tests du texte Devpost.
+- 788 tests verts sur 54 fichiers.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

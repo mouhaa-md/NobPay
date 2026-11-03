@@ -91,7 +91,7 @@ En production locale : `npm run build && npm start`. Le service worker (installa
 
 1. `/` : la vitrine, puis « Essayer la démo ».
 2. Compte démo → **Résidence à Thiès** : une preuve attend votre décision (étape 3).
-3. Ouvrez l'étape, regardez photos géolocalisées et facture, **Valider et payer** : devis, confirmation, suivi du paiement (reçu par webhook signé).
+3. Ouvrez l'étape, regardez les photos (avec la position du téléphone) et la facture, **Valider et payer** : devis, confirmation, suivi du paiement (reçu par webhook signé).
 4. Étape 4 débloquée → ouvrez `/terrain/demo-villa-thies` (vue de la personne sur place) et envoyez une preuve avec une photo et une facture.
 5. Revenez côté financeur, validez à nouveau.
 6. **Nouveau projet** : assistant en 5 écrans, puis **Financer** : clavier, facture Lightning, « Simuler le paiement ».

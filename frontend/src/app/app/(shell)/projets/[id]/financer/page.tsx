@@ -4,6 +4,7 @@ import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { FundingFlow } from '@/components/app/FundingFlow';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { getGateway } from '@/server/bitnob';
@@ -26,7 +27,8 @@ export default async function Fund(props: { params: Promise<{ id: string }> }) {
   if (!project || project.ownerId !== user.id) notFound();
 
   const s = summarize(db, project);
-  const { mode, usdXof, btcUsd: fallbackBtcUsd, allowDemo } = getConfig();
+  const { mode, btcUsd: fallbackBtcUsd, allowDemo } = getConfig();
+  const usdXof = currentUsdXof();
   let btcUsd = fallbackBtcUsd;
   try {
     btcUsd = await getGateway().btcUsd();

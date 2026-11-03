@@ -63,7 +63,10 @@ describe('files already used', () => {
 
 describe('where the photos were taken', () => {
   it('ok when all are located in Senegal', () => {
-    expect(byId(run(project('p1', [step('s1', 1, proof())])), 'gps')).toMatchObject({ level: 'ok' });
+    // what is known is where the PHONE was when it sent the proof: the text must not say where each photo was taken
+    const check = byId(run(project('p1', [step('s1', 1, proof())])), 'gps');
+    expect(check).toMatchObject({ level: 'ok', text: expect.stringContaining('position du téléphone à l’envoi') });
+    expect(check!.text).not.toMatch(/prise|prises/);
   });
   it('attention when none is located', () => {
     const p = project('p1', [step('s1', 1, proof({ photos: [photo('a', { gps: undefined })] }))]);

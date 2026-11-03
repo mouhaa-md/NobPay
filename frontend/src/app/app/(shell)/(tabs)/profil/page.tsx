@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { AppHeader } from '@/components/app/AppHeader';
 import { CopyButton } from '@/components/app/CopyButton';
 import { InstallCard } from '@/components/app/InstallCard';
+import { GuestRecoveryCard } from '@/components/app/GuestRecoveryCard';
 import { ProfileActions } from '@/components/app/ProfileActions';
 import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
@@ -12,6 +13,7 @@ import { isAdmin } from '@/server/admin';
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
 import { getConfig, instanceMode } from '@/server/config';
+import { recoveryTokenOf } from '@/server/guestRecovery';
 import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { userProjects } from '@/server/views';
@@ -50,6 +52,8 @@ export default async function Profile() {
             </p>
           </div>
         </section>
+
+        {user.guest && <GuestRecoveryCard path={`/app/recuperer/${recoveryTokenOf(user)}`} escrowCents={summaries.reduce((n, s) => n + s.escrow, 0)} />}
 
         <section>
           <SectionTitle><Tc>Mode de fonctionnement</Tc></SectionTitle>
@@ -119,7 +123,7 @@ export default async function Profile() {
 
         <InstallCard />
 
-        <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} />
+        <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} guest={!!user.guest} />
 
         <p className="text-center font-label-sm text-label-sm text-on-surface-variant/80 lg:col-span-2">
           <Tc>NobPay · prototype Code &amp; Chain Dakar · code ouvert (licence MIT)</Tc>

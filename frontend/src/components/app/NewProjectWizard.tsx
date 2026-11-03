@@ -38,7 +38,7 @@ const STEP_LABELS = ['Secteur', 'Projet', 'Étapes', 'Équipe', 'Récapitulatif'
 const MAX_STEPS = 12;
 /** budgets offered in sandbox, where one payout is capped (only those whose automatic split fits are shown) */
 const SANDBOX_PRESETS = [100, 150, 200, 300, 500, 800];
-const MAX_BUDGET = 500_000;
+const MAX_BUDGET_ABSOLUTE = 500_000;
 
 const nf = { format: formatInt };
 const digits = (v: string) => v.replace(/\D/g, '');
@@ -62,6 +62,7 @@ const largestStep = (sector: Sector, budgetUsd: number) => Math.max(0, ...buildS
 export function NewProjectWizard({
   usdXof,
   maxStepUsd = 0,
+  maxBudgetUsd = 0,
   minBudgetUsd = 100,
   real = false,
   autoTrial = false,
@@ -69,6 +70,8 @@ export function NewProjectWizard({
   usdXof: number;
   /** sandbox: Bitnob refuses a payout above this (0 = no limit) */
   maxStepUsd?: number;
+  /** real bitcoin: the escrow ceiling of the pilot, above which a project could never be funded (0 = none) */
+  maxBudgetUsd?: number;
   /** smallest budget this instance accepts */
   minBudgetUsd?: number;
   /** the instance moves real bitcoin */
@@ -78,6 +81,7 @@ export function NewProjectWizard({
 }) {
   const t = useT();
   const MIN_BUDGET = minBudgetUsd;
+  const MAX_BUDGET = maxBudgetUsd > 0 ? Math.min(maxBudgetUsd, MAX_BUDGET_ABSOLUTE) : MAX_BUDGET_ABSOLUTE;
   const router = useRouter();
   const [stage, setStage] = useState(0);
   const [sector, setSector] = useState<Sector | null>(null);
@@ -122,20 +126,20 @@ export function NewProjectWizard({
     if (steps.some((s) => s.proofKinds.length === 0)) return 'Choisissez au moins une preuve par étape';
     if (maxStepUsd > 0) {
       const big = steps.find((s) => dollars(s.amount) > maxStepUsd);
-      if (big) return `En mode sandbox, un paiement est limité à ${formatUsdShort(maxStepUsd * 100)} : réduisez l'étape « ${big.title.trim()} » ou ajoutez des étapes.`;
+      if (big) return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.' : 'En mode sandbox, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.', { cap: formatUsdShort(maxStepUsd * 100), title: big.title.trim() });
     }
     if (remaining !== 0) return remaining > 0 ? `Il reste ${formatUsdShort(remaining * 100)} à répartir` : `Les étapes dépassent le budget de ${formatUsdShort(-remaining * 100)}`;
     return '';
-  }, [steps, remaining, maxStepUsd]);
+  }, [steps, remaining, maxStepUsd, real, t]);
 
   const problem = (): string => {
     if (stage === 0) return sector ? '' : 'Choisissez un secteur';
     if (stage === 1) {
       if (name.trim().length < 2) return 'Donnez un nom au projet';
       if (!city.trim()) return 'Indiquez la ville';
-      if (budgetUsd < MIN_BUDGET || budgetUsd > MAX_BUDGET) return `Le budget doit être compris entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`;
+      if (budgetUsd < MIN_BUDGET || budgetUsd > MAX_BUDGET) return maxBudgetUsd > 0 && budgetUsd > MAX_BUDGET ? t('Pendant cette phase pilote, un projet est limité à {cap}.', { cap: formatUsdShort(MAX_BUDGET * 100) }) : `Le budget doit être compris entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`;
       if (maxStepUsd > 0 && budgetUsd > MAX_STEPS * maxStepUsd) {
-        return `En mode sandbox, un paiement est limité à ${formatUsdShort(maxStepUsd * 100)} : un projet ne peut pas dépasser ${formatUsdShort(MAX_STEPS * maxStepUsd * 100)} (${MAX_STEPS} étapes au plus).`;
+        return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).' : 'En mode sandbox, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).', { cap: formatUsdShort(maxStepUsd * 100), max: formatUsdShort(MAX_STEPS * maxStepUsd * 100), steps: MAX_STEPS });
       }
     }
     if (stage === 2) return stepsProblem;

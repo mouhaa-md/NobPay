@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Db } from '@/lib/types';
-import { getConfig } from './config';
+import { getConfig, sessionSecretMustBeStrong } from './config';
 import { buildSeed } from './seed';
 
 /**
@@ -23,12 +23,39 @@ const holder: Holder = (g.__nobpay ??= { db: null, loading: null, queue: Promise
 
 const dbFile = () => path.join(getConfig().dataDir, 'db.json');
 
+/** The database file exists but cannot be read, on an instance where that must never be hidden. */
+export class DatabaseUnreadableError extends Error {
+  constructor(file: string, cause: unknown) {
+    super(
+      `Le fichier de données ${file} est illisible (${(cause as Error)?.message ?? 'erreur inconnue'}). Il n'a pas été touché : restaurez la dernière sauvegarde (deploy/backup.sh) avant de redémarrer. Repartir de zéro ferait disparaître les séquestres de l'écran alors que l'argent est dans le portefeuille.`,
+    );
+    this.name = 'DatabaseUnreadableError';
+  }
+}
+
 async function persist(db: Db): Promise<void> {
   const file = dbFile();
   await fs.mkdir(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(db));
+  // the bytes must be on the disk before the rename makes them THE file: after a power cut a renamed but unwritten file is an empty database
+  const handle = await fs.open(tmp, 'w');
+  try {
+    await handle.writeFile(JSON.stringify(db));
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
   await fs.rename(tmp, file);
+  try {
+    const dir = await fs.open(path.dirname(file), 'r');
+    try {
+      await dir.sync(); // and the rename itself (not possible on every platform: best effort)
+    } finally {
+      await dir.close();
+    }
+  } catch {
+    /* Windows cannot open a directory */
+  }
 }
 
 async function load(): Promise<Db> {
@@ -39,7 +66,13 @@ async function load(): Promise<Db> {
       holder.db = JSON.parse(await fs.readFile(file, 'utf8')) as Db;
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-        // unreadable file: keep a copy, start again from the demo data
+        // A file that exists but cannot be read. On an instance that holds real money, never start again from the demo data
+        // (the escrows would vanish from the screens while the sats are in the wallet): stop, say why, leave the file as it is.
+        if (sessionSecretMustBeStrong()) {
+          holder.loading = null; // the operator restores the file; the next request reads it again, no restart needed
+          throw new DatabaseUnreadableError(file, err);
+        }
+        // a demonstration: keep a copy, start again from the demo data
         await fs.rename(file, `${file}.corrupt-${Date.now()}`).catch(() => undefined);
       }
       holder.db = buildSeed();

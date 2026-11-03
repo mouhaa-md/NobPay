@@ -8,6 +8,7 @@ import type { Funding } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
 import { getConfig, instanceMode } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
 import { Tc } from '@/lib/i18n/client';
@@ -44,7 +45,8 @@ export default async function Wallet() {
   const db = await readDb();
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);
-  const { usdXof, mode } = getConfig();
+  const { mode } = getConfig();
+  const usdXof = currentUsdXof();
   const ids = new Set(summaries.map((s) => s.project.id));
   const nameOf = new Map(summaries.map((s) => [s.project.id, s.project.name]));
   const deposited = summaries.reduce((n, s) => n + s.funded, 0);
