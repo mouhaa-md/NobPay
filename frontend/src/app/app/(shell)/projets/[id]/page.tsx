@@ -16,6 +16,10 @@ import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { currentUsdXof } from '@/server/lightning/price';
 import { managerLinkToken } from '@/server/managerToken';
+import { witnessLinkExpired, witnessLinkToken } from '@/server/witness';
+import { WitnessCard } from '@/components/app/WitnessCard';
+import { ContributionCard } from '@/components/app/ContributionCard';
+import { contributionLinkExpired, contributionLinkToken, contributionsOf } from '@/server/contribution';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
 import { ledgerFor } from '@/server/ledger';
@@ -164,6 +168,26 @@ export default async function ProjectPage(
             </Link>
           </div>
         </section>
+
+        {/* Family link */}
+        <div className="lg:col-start-2">
+          <ContributionCard
+            projectId={project.id}
+            projectName={project.name}
+            path={project.contribution && !contributionLinkExpired(project) ? `/contribuer/${contributionLinkToken(project)}` : null}
+            expired={!!project.contribution && contributionLinkExpired(project)}
+            contributions={contributionsOf(db, project.id)}
+          />
+        </div>
+
+        {/* Independent witness */}
+        <div className="lg:col-start-2">
+          <WitnessCard
+            projectId={project.id}
+            witness={project.witness ? { name: project.witness.name, required: project.witness.required, expired: witnessLinkExpired(project) } : null}
+            path={project.witness && !witnessLinkExpired(project) ? `/temoin/${witnessLinkToken(project)}` : null}
+          />
+        </div>
 
         {/* Certificate */}
         <Link href={`/app/certificat/${project.id}`} className={`flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30 transition hover:shadow-md lg:col-start-2 ${ROW[base + 2]}`}>

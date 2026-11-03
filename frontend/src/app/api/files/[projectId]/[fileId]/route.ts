@@ -4,6 +4,7 @@ import { clientIp, enforce, LIMITS } from '@/server/rateLimit';
 import { getSessionUser } from '@/server/auth';
 import { readDb } from '@/server/db';
 import { managerTokenMatches } from '@/server/managerToken';
+import { witnessTokenMatches } from '@/server/witness';
 import { readUpload, sniffMime } from '@/server/files';
 
 export const dynamic = 'force-dynamic';
@@ -26,11 +27,14 @@ export async function GET(
 
   const token = new URL(request.url).searchParams.get('t');
   const user = await getSessionUser();
-  const allowed = (user && user.id === project.ownerId) || (token && managerTokenMatches(project, token));
+  const asWitness = !!token && witnessTokenMatches(project, token);
+  const allowed = (user && user.id === project.ownerId) || (token && managerTokenMatches(project, token)) || asWitness;
   if (!allowed) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
 
   let file: StoredFile | undefined;
   for (const step of project.steps) {
+    // the witness sees the proof that waits for a decision, not the project's whole history
+    if (asWitness && !(user && user.id === project.ownerId) && step.status !== 'proof_submitted') continue;
     const candidates = [...(step.proof?.photos ?? []), ...(step.proof?.invoice ? [step.proof.invoice] : [])];
     file = candidates.find((f) => f.id === params.fileId);
     if (file) break;

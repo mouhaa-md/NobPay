@@ -70,6 +70,33 @@ export interface Proof {
   submittedBy: 'manager' | 'owner';
   /** the advice of the AI, asked for by the funder; advisory only, it never blocks or triggers a payment */
   aiReview?: AiReview;
+  /** what the independent witness said about THIS proof (a new proof starts without an answer) */
+  witness?: WitnessAnswer;
+}
+
+export interface WitnessAnswer {
+  at: string;
+  verdict: 'confirmed' | 'disputed';
+  /** private to the funder: it is not in the public ledger */
+  note?: string;
+}
+
+export interface ContributionLink {
+  /** signed link tokens carry this version; renewing raises it and kills every older link */
+  tokenVersion: number;
+  expiresAt: string;
+  createdAt: string;
+}
+
+/** The person the funder chose to look at the proofs from outside (a neighbour, a mason, a relative): one per project. */
+export interface Witness {
+  name: string;
+  /** when true, no payment is released until this witness has confirmed the proof */
+  required: boolean;
+  /** signed link tokens carry this version; renewing raises it and kills every older link */
+  tokenVersion: number;
+  expiresAt: string;
+  invitedAt: string;
 }
 
 export type CheckLevel = 'ok' | 'attention' | 'info';
@@ -187,6 +214,9 @@ export interface Project {
   managerTokenVersion?: number;
   managerTokenExpiresAt?: string;
   approvalRule: 'owner';
+  witness?: Witness;
+  /** the family link: anyone who has it can add to this project's escrow (and nothing else) */
+  contribution?: ContributionLink;
   steps: Step[];
   createdAt: string;
   demo?: boolean;
@@ -230,6 +260,8 @@ export interface Funding {
   };
   /** why a payment seen at Bitnob was not credited (e.g. different amount); never contains secrets */
   note?: string;
+  /** paid by someone else through the family link (the first name is optional and goes into the public ledger) */
+  contributor?: { name?: string };
   /** credited by our own signed event (demo button), not by a payment seen at Bitnob: the ledger says so */
   simulated?: boolean;
   demo?: boolean;
@@ -246,7 +278,8 @@ export type LedgerType =
   | 'payout_failed'
   | 'refund_started'
   | 'refund_completed'
-  | 'refund_failed';
+  | 'refund_failed'
+  | 'witness_response';
 
 export interface LedgerEvent {
   seq: number; // per project, starts at 1

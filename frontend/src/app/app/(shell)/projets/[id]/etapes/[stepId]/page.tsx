@@ -7,6 +7,7 @@ import { PayoutTracker } from '@/components/app/PayoutTracker';
 import { ReceiptCard } from '@/components/app/ReceiptCard';
 import { ProofReviewPanel } from '@/components/app/ProofReviewPanel';
 import { ProofView } from '@/components/app/ProofView';
+import { WitnessStatus } from '@/components/app/WitnessStatus';
 import { ReleasePanel } from '@/components/app/ReleasePanel';
 import { ShareManagerLink } from '@/components/app/ShareManagerLink';
 import { Icon } from '@/components/ui/Icon';
@@ -138,6 +139,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
                 <Tc>Preuve reçue</Tc> {formatDateTime(step.proof.submittedAt)}<Tc>. Regardez les photos et la facture, puis décidez. Rien n&apos;est payé sans votre accord.</Tc>
               </p>
             </div>
+            <WitnessStatus project={project} step={step} />
             {lastFailure && (
               <div className="flex items-start gap-3 rounded-2xl bg-error-container p-3.5 text-on-error-container" role="alert">
                 <Icon name="error" size={22} className="mt-0.5 shrink-0" />
