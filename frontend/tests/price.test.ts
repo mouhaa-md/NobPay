@@ -91,3 +91,64 @@ describe('the bitcoin price', () => {
     await expect(getBtcUsdForMoney()).rejects.toMatchObject({ status: 503, code: 'price_unavailable', message: expect.stringContaining('indisponible') });
   });
 });
+
+describe('the dollar in FCFA (the franc is pegged to the euro: 1 EUR = 655.957 XOF)', () => {
+  /** BTC in USD and in EUR for each source, or null when the source is down. */
+  let fx: { mempool: { usd: number; eur: number } | null; coinbase: { usd: number; eur: number } | null };
+  const fetchFx = async (url: string) => {
+    if (url.includes(MEMPOOL)) {
+      if (!fx.mempool) throw new Error('down');
+      return { ok: true, json: async () => ({ USD: fx.mempool!.usd, EUR: fx.mempool!.eur }) };
+    }
+    if (!fx.coinbase) throw new Error('down');
+    const price = url.includes('BTC-EUR') ? fx.coinbase.eur : fx.coinbase.usd;
+    return { ok: true, json: async () => ({ data: { amount: String(price) } }) };
+  };
+  beforeEach(async () => {
+    fx = { mempool: { usd: 100_000, eur: 86_000 }, coinbase: { usd: 100_000, eur: 86_000 } };
+    const { resetUsdXofForTests } = await import('@/server/lightning/price');
+    setPriceSourcesForTests(fetchFx, () => now);
+    resetUsdXofForTests();
+    vi.stubEnv('USD_XOF_RATE', '');
+  });
+
+  it('is 655.957 x (BTC in EUR) / (BTC in USD), and replaces the configured rate for what is displayed', async () => {
+    const { refreshUsdXof, currentUsdXof, usdXofSource } = await import('@/server/lightning/price');
+    expect(currentUsdXof()).toBe(593); // nothing known yet: the configured rate
+    expect(usdXofSource()).toBe('config');
+    const r = await refreshUsdXof();
+    expect(r!.usdXof).toBeCloseTo(655.957 * 0.86, 2); // 564.12
+    expect(currentUsdXof()).toBeCloseTo(564.12, 2);
+    expect(usdXofSource()).toBe('coinbase.com + mempool.space');
+  });
+
+  it('the operator\'s USD_XOF_RATE always wins, and the live one is forgotten after six hours', async () => {
+    const { refreshUsdXof, currentUsdXof } = await import('@/server/lightning/price');
+    await refreshUsdXof();
+    vi.stubEnv('USD_XOF_RATE', '600');
+    expect(currentUsdXof()).toBe(600);
+    vi.stubEnv('USD_XOF_RATE', '');
+    now += 6 * 3_600_000 + 1;
+    expect(currentUsdXof()).toBe(593);
+  });
+
+  it('works with one source down, and keeps the previous rate when nothing answers', async () => {
+    const { refreshUsdXof, currentUsdXof } = await import('@/server/lightning/price');
+    fx.coinbase = null;
+    expect((await refreshUsdXof())!.usdXof).toBeCloseTo(564.12, 2);
+    fx.mempool = null;
+    expect(await refreshUsdXof()).toBeNull();
+    expect(currentUsdXof()).toBeCloseTo(564.12, 2);
+  });
+
+  it('refuses a rate the two sources do not agree on, and one that cannot be a dollar rate', async () => {
+    const { refreshUsdXof, currentUsdXof } = await import('@/server/lightning/price');
+    fx.coinbase = { usd: 100_000, eur: 95_000 }; // 4.4 % apart
+    expect(await refreshUsdXof()).toBeNull();
+    expect(currentUsdXof()).toBe(593);
+    fx = { mempool: { usd: 100_000, eur: 20_000 }, coinbase: null }; // 131 XOF per dollar: not credible
+    expect(await refreshUsdXof()).toBeNull();
+    fx = { mempool: { usd: 0, eur: 86_000 }, coinbase: null };
+    expect(await refreshUsdXof()).toBeNull();
+  });
+});

@@ -44,6 +44,7 @@ export function setPriceSourcesForTests(f: Fetcher | null, now?: (() => number) 
   fetcher = f ?? ((url, init) => fetch(url, { ...init, cache: 'no-store' }));
   clock = now ?? Date.now;
   g.__nobpayPrice = undefined;
+  gfx.__nobpayFx = undefined;
 }
 
 async function ask(source: Source): Promise<{ name: string; usd: number } | null> {
@@ -78,6 +79,91 @@ export async function getBtcUsd(): Promise<BtcPrice> {
   }
   if (cached && now - cached.at < KEEP_MS) return { usd: cached.usd, source: cached.source, stale: true, disputed: false };
   return { usd: getConfig().btcUsd, source: 'config', stale: true, disputed: false };
+}
+
+/* ------------------------------------------------------------------------- *
+ * Dollars in FCFA. The CFA franc is pegged to the euro by treaty (1 EUR = 655.957 XOF), so the rate is exact once the
+ * dollar is known in euros, and the two bitcoin prices already asked for give just that: XOF per USD = 655.957 x
+ * (BTC in EUR) / (BTC in USD). Indicative only (display, comparisons); the payout of a quote keeps its own rate.
+ * ------------------------------------------------------------------------- */
+
+export const XOF_PER_EUR = 655.957;
+/** A rate computed from live prices is used for this long, then the configured one comes back. */
+const FX_KEEP_MS = 6 * 3_600_000;
+/** Two sources must give the same rate within this (relative). */
+const FX_MAX_SPREAD = 0.02;
+const gfx = globalThis as unknown as { __nobpayFx?: { usdXof: number; at: number; source: string } };
+
+const FX_SOURCES: { name: string; ask: (get: (url: string) => Promise<unknown>) => Promise<{ usd: number; eur: number }> }[] = [
+  {
+    name: 'mempool.space',
+    ask: async (get) => {
+      const j = (await get('https://mempool.space/api/v1/prices')) as { USD?: unknown; EUR?: unknown };
+      return { usd: Number(j?.USD), eur: Number(j?.EUR) };
+    },
+  },
+  {
+    name: 'coinbase.com',
+    ask: async (get) => {
+      const amount = async (pair: string) => Number(((await get(`https://api.coinbase.com/v2/prices/${pair}/spot`)) as { data?: { amount?: unknown } })?.data?.amount);
+      const [usd, eur] = await Promise.all([amount('BTC-USD'), amount('BTC-EUR')]);
+      return { usd, eur };
+    },
+  },
+];
+
+async function getJson(url: string): Promise<unknown> {
+  const res = await fetcher(url, { signal: AbortSignal.timeout(5_000), headers: { accept: 'application/json' } });
+  if (!res.ok) throw new Error(`HTTP error`);
+  return res.json();
+}
+
+/** Asks the sources and keeps the rate. Returns it, or null when nothing trustworthy came back (the previous one is kept). */
+export async function refreshUsdXof(): Promise<{ usdXof: number; source: string } | null> {
+  const answers: { name: string; rate: number }[] = [];
+  await Promise.all(
+    FX_SOURCES.map(async (s) => {
+      try {
+        const { usd, eur } = await s.ask(getJson);
+        const rate = (XOF_PER_EUR * eur) / usd;
+        // a sane price pair, and a sane rate (the dollar has been worth 350 to 800 XOF in the last twenty years)
+        if (Number.isFinite(rate) && usd > 1_000 && eur > 1_000 && rate > 350 && rate < 900) answers.push({ name: s.name, rate });
+      } catch {
+        /* this source is down: the other one may answer */
+      }
+    }),
+  );
+  if (answers.length === 0) return null;
+  const low = Math.min(...answers.map((a) => a.rate));
+  const high = Math.max(...answers.map((a) => a.rate));
+  if (answers.length > 1 && (high - low) / low > FX_MAX_SPREAD) return null; // the sources disagree: keep what we had
+  const usdXof = Math.round(((low + high) / 2) * 100) / 100;
+  const source = answers.map((a) => a.name).sort().join(' + ');
+  gfx.__nobpayFx = { usdXof, at: clock(), source };
+  return { usdXof, source };
+}
+
+/**
+ * The dollar in FCFA for display and for comparisons: the operator's USD_XOF_RATE when set (explicit wins), else the live
+ * rate when a recent one is known, else the configured one (observed at Bitnob on 18 October).
+ */
+export function currentUsdXof(): number {
+  if (Number(process.env.USD_XOF_RATE) > 0) return Number(process.env.USD_XOF_RATE);
+  const live = gfx.__nobpayFx;
+  if (live && clock() - live.at < FX_KEEP_MS) return live.usdXof;
+  return getConfig().usdXof;
+}
+
+/** Where the rate in use comes from, for the health page and the admin. */
+export function usdXofSource(): string {
+  if (Number(process.env.USD_XOF_RATE) > 0) return 'USD_XOF_RATE';
+  const live = gfx.__nobpayFx;
+  return live && clock() - live.at < FX_KEEP_MS ? live.source : 'config';
+}
+
+/** Tests only. */
+export function resetUsdXofForTests(): void {
+  gfx.__nobpayFx = undefined;
 }
 
 /**

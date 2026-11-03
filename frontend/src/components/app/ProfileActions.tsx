@@ -6,18 +6,19 @@ import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { Tc, useT } from '@/lib/i18n/client';
 
-async function post(url: string): Promise<void> {
-  const t = useT();
+async function post(url: string, fallback: string): Promise<void> {
   const res = await fetch(url, { method: 'POST' });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? t('Une erreur est survenue'));
+    throw new Error(body.error ?? fallback);
   }
 }
 
-/** Logout and (demo) reset buttons of the profile screen. */
-export function ProfileActions({ demo }: { demo: boolean }) {
+/** Logout and (demo) reset buttons of the profile screen. A guest is asked to be sure: signing out closes its only door. */
+export function ProfileActions({ demo, guest = false }: { demo: boolean; guest?: boolean }) {
+  const t = useT();
   const router = useRouter();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [busy, setBusy] = useState<'logout' | 'reset' | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [error, setError] = useState('');
@@ -27,10 +28,10 @@ export function ProfileActions({ demo }: { demo: boolean }) {
     setError('');
     try {
       if (kind === 'logout') {
-        await post('/api/auth/logout');
+        await post('/api/auth/logout', t('Une erreur est survenue'));
         router.replace('/app/bienvenue');
       } else {
-        await post('/api/dev/reset');
+        await post('/api/dev/reset', t('Une erreur est survenue'));
         setConfirmReset(false);
       }
       router.refresh();
@@ -64,14 +65,29 @@ export function ProfileActions({ demo }: { demo: boolean }) {
           )}
         </div>
       )}
-      <button
-        type="button"
-        disabled={busy !== null}
-        onClick={() => run('logout')}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest font-label-lg text-label-lg font-semibold text-error shadow-sm ring-1 ring-error/30 transition active:scale-[0.98] hover:bg-error-container/40 disabled:opacity-60"
-      >
-        {busy === 'logout' ? <Spinner /> : <Icon name="logout" size={20} />} <Tc>Se déconnecter</Tc>
-      </button>
+      {guest && confirmLogout ? (
+        <div className="rounded-2xl bg-error-container p-4 text-on-error-container">
+          <p className="mb-1 font-title-md text-title-md"><Tc>Se déconnecter d’un espace invité ?</Tc></p>
+          <p className="mb-3 font-body-sm text-body-sm"><Tc>Cet espace n’a pas de numéro de téléphone. Si vous n’avez pas gardé votre lien de récupération (carte orange ci-dessus), vous ne le retrouverez plus, ni l’argent qui s’y trouve.</Tc></p>
+          <div className="flex gap-2">
+            <button type="button" disabled={busy !== null} onClick={() => run('logout')} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-error font-label-lg text-label-lg font-semibold text-on-error transition active:scale-[0.98] disabled:opacity-60">
+              {busy === 'logout' ? <Spinner /> : <Icon name="logout" size={20} />} <Tc>Oui, me déconnecter</Tc>
+            </button>
+            <button type="button" onClick={() => setConfirmLogout(false)} className="h-11 rounded-full px-5 font-label-lg text-label-lg hover:bg-error/10">
+              <Tc>Rester</Tc>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => (guest ? setConfirmLogout(true) : run('logout'))}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest font-label-lg text-label-lg font-semibold text-error shadow-sm ring-1 ring-error/30 transition active:scale-[0.98] hover:bg-error-container/40 disabled:opacity-60"
+        >
+          {busy === 'logout' ? <Spinner /> : <Icon name="logout" size={20} />} <Tc>Se déconnecter</Tc>
+        </button>
+      )}
     </div>
   );
 }

@@ -111,6 +111,21 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
       );
     }
   }
+  if (getConfig().lightning.rail === 'nwc') {
+    // real bitcoin: what the pilot ceilings forbid to pay or to hold must not be creatable (it would be funded, then stuck)
+    const { maxPayoutUsd, maxEscrowUsd } = getConfig().lightning;
+    const over = steps.findIndex((s) => s.amountCents > maxPayoutUsd * 100);
+    if (over >= 0) {
+      throw new HttpError(
+        400,
+        `Pendant cette phase pilote, un paiement est limité à ${formatUsdShort(maxPayoutUsd * 100)} : l'étape « ${steps[over].title} » (${formatUsdShort(steps[over].amountCents)}) ne pourrait pas être payée. Réduisez son montant ou ajoutez des étapes.`,
+        'pilot_cap',
+      );
+    }
+    if (input.budgetCents > maxEscrowUsd * 100) {
+      throw new HttpError(400, `Pendant cette phase pilote, un projet est limité à ${formatUsdShort(maxEscrowUsd * 100)} (le séquestre total de l'instance).`, 'pilot_cap');
+    }
+  }
   if (steps.reduce((sum, s) => sum + s.amountCents, 0) !== input.budgetCents) {
     throw new HttpError(400, 'La somme des étapes doit être égale au budget');
   }

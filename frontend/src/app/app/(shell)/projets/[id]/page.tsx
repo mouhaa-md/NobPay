@@ -14,6 +14,7 @@ import { formatFcfa, formatUsd, formatUsdShort } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject } from '@/server/domain';
@@ -47,7 +48,7 @@ export default async function ProjectPage(
   const s = summarize(db, project);
   const status = projectStatus(s, t);
   const sector = SECTORS[project.sector];
-  const { usdXof } = getConfig();
+  const usdXof = currentUsdXof();
   const anchors = db.anchors.filter((a) => a.projectId === project.id && a.status !== 'failed');
   const confirmed = anchors.filter((a) => a.status === 'confirmed').length;
   const events = ledgerFor(db, project.id).length;

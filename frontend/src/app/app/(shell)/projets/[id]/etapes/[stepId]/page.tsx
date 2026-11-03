@@ -17,6 +17,7 @@ import { PROOF_LABEL } from '@/lib/templates';
 import { escrowCents } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { managerLinkToken } from '@/server/managerToken';
 import { readDb } from '@/server/db';
 import { findProject, findStep } from '@/server/domain';
@@ -52,7 +53,8 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
   const step = findStep(project, params.stepId);
   if (!step) notFound();
 
-  const { usdXof, mode, allowDemo } = getConfig();
+  const { mode, allowDemo } = getConfig();
+  const usdXof = currentUsdXof();
   const escrow = escrowCents(db, project);
   const status = STATUS[step.status];
   const trail = ledgerFor(db, project.id).filter((e) => e.data.stepId === step.id);

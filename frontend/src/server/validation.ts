@@ -120,7 +120,8 @@ export const refundSchema = z
   })
   .strict();
 
-export const quoteSchema = z.object({ simulate: z.boolean().optional() }).strict();
+export const recoverSchema = z.object({ token: z.string().min(10).max(200) }).strict();
+export const quoteSchema =z.object({ simulate: z.boolean().optional() }).strict();
 export const rejectSchema = z.object({ note: z.string().max(1000, 'Note trop longue').optional() }).strict();
 
 /** One entry per photo, in the same order as the files. */

@@ -14,7 +14,7 @@ One engine, three corridors: **a project back home** (a house, a field, a shop),
 
 1. **Fund**: the funder splits a project into steps and pays a **Lightning invoice**. The money sits in escrow, counted per project.
 2. **Prove**: the trusted person on site opens a private link (no account) and sends dated, geotagged photos, the invoice, and who is to be paid.
-3. **Second opinion**: before deciding, the funder sees automatic checks (is this file already used elsewhere? were the photos taken in Senegal, and recently? does the invoice match the step?) and, **on request, Claude's advice** on the photos and the invoice. The AI reads, plain code compares, the funder decides; it never blocks or triggers a payment.
+3. **Second opinion**: before deciding, the funder sees automatic checks (is this file already used elsewhere? was the phone in Senegal when it sent the proof, and are the photos recent? does the invoice match the step?) and, **on request, Claude's advice** on the photos and the invoice. The AI reads, plain code compares, the funder decides; it never blocks or triggers a payment.
 4. **Release**: the supplier is paid **in sats at their Lightning address** (LNURL-pay); the receipt shows the **preimage**, the cryptographic proof of payment. Unused escrow can be refunded.
 5. **Verify**: every event joins a hash-chained record, anchored on Bitcoin with OpenTimestamps and **published on Nostr relays** as a signed commitment that carries no name and no amount. The public verification page re-checks everything in the visitor's browser, relays included.
 

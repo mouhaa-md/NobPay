@@ -9,6 +9,7 @@ import { SECTORS } from '@/lib/templates';
 import type { Sector } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
+import { currentUsdXof } from '@/server/lightning/price';
 import { readDb } from '@/server/db';
 import { totalsOf, userProjects } from '@/server/views';
 import { Tc } from '@/lib/i18n/client';
@@ -40,7 +41,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
   const db = await readDb();
   const all = userProjects(db, user.id);
   const totals = totalsOf(db, all);
-  const { usdXof } = getConfig();
+  const usdXof = currentUsdXof();
   const active = (FILTERS.find((f) => f.id === searchParams.secteur)?.id ?? 'all') as 'all' | Sector;
   const q = (searchParams.q ?? '').trim();
   const list = all

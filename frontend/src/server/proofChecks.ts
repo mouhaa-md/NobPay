@@ -70,15 +70,16 @@ export function proofChecks({ db, project, step, usdXof, t = inFrench }: ChecksI
   if (proof.photos.length > 0) {
     const located = proof.photos.filter((p) => p.gps);
     if (located.length === 0) {
-      checks.push({ id: 'gps', level: 'attention', text: t('Aucune photo n’est géolocalisée : impossible de savoir où elles ont été prises.') });
+      checks.push({ id: 'gps', level: 'attention', text: t('Aucune position n’a été jointe aux photos : impossible de savoir d’où la preuve a été envoyée.') });
     } else {
       const outside = project.country === 'SN' ? located.filter((p) => !(p.gps!.lat >= SENEGAL.latMin && p.gps!.lat <= SENEGAL.latMax && p.gps!.lng >= SENEGAL.lngMin && p.gps!.lng <= SENEGAL.lngMax)) : [];
       if (outside.length > 0) {
-        checks.push({ id: 'gps-outside', level: 'attention', text: one(outside.length, 'Une photo a été prise hors du Sénégal d’après sa position.', '{n} photos ont été prises hors du Sénégal d’après leur position.') });
+        checks.push({ id: 'gps-outside', level: 'attention', text: one(outside.length, 'Une photo a été envoyée depuis un téléphone situé hors du Sénégal (d’après sa position).', '{n} photos ont été envoyées depuis un téléphone situé hors du Sénégal (d’après sa position).') });
       } else if (located.length < proof.photos.length) {
-        checks.push({ id: 'gps', level: 'info', text: one(located.length, '{n} photo sur {total} est géolocalisée.', '{n} photos sur {total} sont géolocalisées.', { total: proof.photos.length }) });
+        checks.push({ id: 'gps', level: 'info', text: one(located.length, '{n} photo sur {total} porte la position du téléphone.', '{n} photos sur {total} portent la position du téléphone.', { total: proof.photos.length }) });
       } else {
-        checks.push({ id: 'gps', level: 'ok', text: one(located.length, 'La photo est géolocalisée, au Sénégal.', 'Les {n} photos sont géolocalisées, au Sénégal.') });
+        // what is checked is where the phone was when it SENT the proof, not where each photo was taken
+        checks.push({ id: 'gps', level: 'ok', text: one(located.length, 'La position du téléphone à l’envoi est au Sénégal.', 'La position du téléphone à l’envoi (jointe aux {n} photos) est au Sénégal.') });
       }
     }
 
@@ -89,7 +90,7 @@ export function proofChecks({ db, project, step, usdXof, t = inFrench }: ChecksI
     if (old.length > 0) {
       checks.push({ id: 'date-old', level: 'attention', text: one(old.length, 'Une photo date de plus d’une semaine avant l’envoi : a-t-elle été prise pour cette étape ?', '{n} photos datent de plus d’une semaine avant l’envoi : ont-elles été prises pour cette étape ?') });
     }
-    if (old.length === 0 && future.length === 0) checks.push({ id: 'date', level: 'ok', text: t('Les photos ont été prises dans la semaine qui précède l’envoi.') });
+    if (old.length === 0 && future.length === 0) checks.push({ id: 'date', level: 'ok', text: t('D’après la date de leurs fichiers, les photos datent de la semaine qui précède l’envoi.') });
   }
 
   // 4. The invoice against the step (indicative rate).

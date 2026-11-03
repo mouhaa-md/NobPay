@@ -36,7 +36,7 @@ How a payment goes:
 
 1. The funder creates a project, split into steps (templates for each corridor, editable), and funds it with a **Lightning invoice**. The money sits in escrow, counted per project.
 2. The person on site, who needs **no account**, opens a private link and sends dated, geotagged photos, the invoice, and who to pay.
-3. The funder gets a **second opinion** before deciding: automatic checks (is this photo or invoice already used somewhere else? were the photos taken in Senegal, and recently? does the invoice match the step?) and, on request, **Claude's advice** on the photos and the invoice. *(new)* The AI reads; plain code compares; the funder decides. The advice never blocks or triggers a payment.
+3. The funder gets a **second opinion** before deciding: automatic checks (is this photo or invoice already used somewhere else? was the phone in Senegal when it sent the proof, and are the photos recent? does the invoice match the step?) and, on request, **Claude's advice** on the photos and the invoice. *(new)* The AI reads; plain code compares; the funder decides. The advice never blocks or triggers a payment.
 4. On approval, the supplier is paid **in sats at their Lightning address**, and the receipt shows the **preimage**, the cryptographic proof of payment. Unused escrow can be refunded. *(new)*
 5. Every event goes into a **hash-chained ledger**. Its fingerprint is anchored on Bitcoin with OpenTimestamps, and each event is also **published on Nostr relays** as a signed commitment that carries no name and no amount. A public page **re-checks everything in the visitor's browser**, including asking the relays itself. Nobody has to trust our server. *(new)*
 
@@ -57,7 +57,7 @@ A one-click **"Essai rapide"** creates a 15 $ trial (three steps of 5 $) so a ju
 
 ## How we built it
 
-- **Next.js 16, React 19, TypeScript (strict), zod 4**; a single process with an append-only, hash-chained ledger; a file database for now (SQLite is planned). 715 automated tests; Docker and Caddy deployment files.
+- **Next.js 16, React 19, TypeScript (strict), zod 4**; a single process with an append-only, hash-chained ledger; a file database for now (SQLite is planned). 788 automated tests; Docker and Caddy deployment files.
 - **Lightning without an intermediary**: Nostr Wallet Connect (NIP-47) with two connections of different rights: one that can only make and look up invoices (it cannot spend), and one that pays and carries a budget. Our own BOLT11 decoder (the invoice libraries did not expose the description hash that LNURL-pay requires) and an SSRF-safe HTTPS client for Lightning addresses.
 - **Money safety under uncertainty**: a payment is only believed with a preimage that hashes to the invoice; a lost answer keeps the funds reserved and the payment is looked up by its hash, never repeated; "never sent" is concluded only after five minutes without a trace.
 - **Nostr**: one signing key per project derived from a master key, named in the first ledger event (so the Bitcoin anchor also commits to it), regular (non-replaceable) events so a forged second version appears next to the first, and NIP-03 proofs reduced to a single Bitcoin attestation.
@@ -116,7 +116,7 @@ Escrow is a bookkeeping promise until the books can be checked by someone else. 
 | Security by design | Two wallet connections with different rights; ceilings; solvency check; SSRF-safe client; proofs for every wallet answer; privacy-minimal commitments and AI requests |
 | UX/UI | A person on site with no account; a funder who is told exactly what to look at; plain French messages |
 | Originality | Pay on proof with Lightning, Nostr commitments and a verification that does not need us |
-| Technicality | NIP-47 two-wallet design, own BOLT11 and LNURL checks, NIP-03 proofs, 715 tests |
+| Technicality | NIP-47 two-wallet design, own BOLT11 and LNURL checks, NIP-03 proofs, 788 tests |
 
 ## Before submitting (checklist)
 
