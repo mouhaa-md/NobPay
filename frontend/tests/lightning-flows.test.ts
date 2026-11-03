@@ -692,3 +692,46 @@ describe('what the pilot ceilings forbid to pay or to hold cannot be created (it
     await expect(create([60, 40])).resolves.toBeTruthy();
   });
 });
+
+describe('the family link with real bitcoin', () => {
+  it('a relative pays the invoice with any wallet: the escrow is credited once the wallet says so, and the pilot ceiling applies to them too', async () => {
+    const contribution = await import('@/server/contribution');
+    const project = await newProject();
+    const { token } = await contribution.enableContribution(owner, project.id);
+
+    const invoice = await contribution.createContribution(token, { amountCents: 2_500, name: 'Awa' });
+    expect(invoice).toMatchObject({ status: 'pending', mode: 'nwc', amountSats: 25_000 });
+    expect(await escrowOf(project.id)).toBe(0);
+
+    wallet.settle(wallet.incoming.keys().next().value!);
+    expect((await contribution.contributionStatus(token, invoice.id)).status).toBe('paid');
+    expect(await escrowOf(project.id)).toBe(2_500);
+    const paid = (await ledger(project.id, 'funding_paid'))[0].data;
+    expect(paid).toMatchObject({ amountCents: 2_500, amountSats: 25_000, contributor: 'Awa' });
+    expect(typeof paid.preimage).toBe('string');
+
+    vi.stubEnv('LIGHTNING_MAX_FUNDING_USD', '20');
+    await expect(contribution.createContribution(token, { amountCents: 2_500 })).rejects.toMatchObject({ status: 400, code: 'pilot_cap' });
+  });
+
+  it('the family link of a demonstration project never makes a real invoice', async () => {
+    const contribution = await import('@/server/contribution');
+    const demo = (await db.readDb()).users.find((u) => u.demo)!;
+    const { token } = await contribution.enableContribution(demo, 'p_villa');
+    await expect(contribution.createContribution(token, { amountCents: 1_000 })).rejects.toMatchObject({ status: 403, code: 'demo_no_real_sats' });
+    expect(wallet.makeInvoiceCalls).toBe(0);
+  });
+
+  it('does not pay twice and credits nothing for an invoice that is not theirs', async () => {
+    const contribution = await import('@/server/contribution');
+    const project = await newProject();
+    const { token } = await contribution.enableContribution(owner, project.id);
+    const invoice = await contribution.createContribution(token, { amountCents: 1_000 });
+    wallet.settle([...wallet.incoming.keys()][0]);
+    await contribution.contributionStatus(token, invoice.id);
+    await contribution.contributionStatus(token, invoice.id);
+    await flows.settleLightningFunding(invoice.id);
+    expect(await escrowOf(project.id)).toBe(1_000);
+    expect(await ledger(project.id, 'funding_paid')).toHaveLength(1);
+  });
+});

@@ -29,6 +29,7 @@ import { readDb, withDb } from './db';
 import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep, simulatedMark } from './domain';
 import { HttpError } from './http';
 import { logger } from './logger';
+import { witnessGate } from './witness';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
 import { lightningPayoutsEnabled } from './lightning';
@@ -178,7 +179,7 @@ export async function createProject(owner: User, input: ProjectInput): Promise<P
 export async function createFunding(
   owner: User,
   projectId: string,
-  input: { amountCents: number; method: FundingMethod },
+  input: { amountCents: number; method: FundingMethod; contributor?: { name?: string } },
 ): Promise<Funding> {
   const db = await readDb();
   const project = ownedProject(db, owner, projectId);
@@ -192,7 +193,7 @@ export async function createFunding(
     throw new HttpError(400, 'Seuls les versements en Bitcoin Lightning existent. Utilisez Bitcoin Lightning.', 'method_unavailable');
   }
 
-  if (getConfig().lightning.rail === 'nwc') return createLightningFunding(owner, projectId, amountCents); // real bitcoin
+  if (getConfig().lightning.rail === 'nwc') return createLightningFunding(owner, projectId, amountCents, input.contributor); // real bitcoin
 
   const gateway = getGateway();
   const id = randomId('f', 5);
@@ -225,6 +226,7 @@ export async function createFunding(
     amountSats,
     btcUsd,
     expiresAt: invoice.expiresAt,
+    ...(input.contributor ? { contributor: input.contributor } : {}),
   };
   await withDb((d) => {
     d.fundings.push(funding);
@@ -586,6 +588,8 @@ export async function quoteRelease(owner: User, projectId: string, stepId: strin
   const step = stepOf(project, stepId);
   if (step.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à valider pour cette étape');
   if (!step.proof?.supplier) throw new HttpError(409, 'Le fournisseur à payer est manquant');
+  const gate = witnessGate(project, step);
+  if (gate) throw new HttpError(409, gate.message, gate.code);
   const escrow = escrowCents(db, project);
   if (escrow < step.amountCents) {
     throw new HttpError(409, `Le séquestre (${formatUsdShort(escrow)}) ne couvre pas cette étape (${formatUsdShort(step.amountCents)}). Financez le projet.`, 'insufficient_escrow');
@@ -636,7 +640,9 @@ export async function confirmRelease(owner: User, projectId: string, stepId: str
     const project = ownedProject(db, owner, projectId);
     const step = stepOf(project, stepId);
     if (step.status !== 'proof_submitted') throw new HttpError(409, 'Cette étape a déjà été traitée');
-    // the check above was made on an earlier read: what is reserved is decided on the current books, in this transaction
+    // the checks above were made on an earlier read: what is reserved is decided on the current books, in this transaction
+    const gate = witnessGate(project, step);
+    if (gate) throw new HttpError(409, gate.message, gate.code);
     if (escrowCents(db, project) < step.amountCents) throw new HttpError(409, 'Séquestre insuffisant', 'insufficient_escrow');
     const payout: Payout = isLightning
       ? buildLightningPayout(quote, supplier, startedAt)

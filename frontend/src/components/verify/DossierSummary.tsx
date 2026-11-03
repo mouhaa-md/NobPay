@@ -24,7 +24,9 @@ function describe(t: T, type: string, data: Record<string, unknown>): string {
   const step = String(data.index);
   switch (type) {
     case 'funding_paid':
-      return t('{amount} reçus ({method})', { amount: usd(data.amountCents), method: String(data.method ?? 'lightning') });
+      return typeof data.contributor === 'string' && data.contributor
+        ? t('{amount} reçus de {name} ({method})', { amount: usd(data.amountCents), name: data.contributor, method: String(data.method ?? 'lightning') })
+        : t('{amount} reçus ({method})', { amount: usd(data.amountCents), method: String(data.method ?? 'lightning') });
     case 'step_approved':
       return t('Étape {step} validée', { step }) + (data.amountCents ? ` · ${usd(data.amountCents)}` : '');
     case 'proof_submitted': {
@@ -37,6 +39,8 @@ function describe(t: T, type: string, data: Record<string, unknown>): string {
       return t('Étape {step} · fournisseur payé', { step });
     case 'step_rejected':
       return `${t('Étape {step}', { step })}${data.note ? ` · « ${String(data.note)} »` : ''}`;
+    case 'witness_response':
+      return t(data.verdict === 'confirmed' ? 'Étape {step} · confirmée par le témoin {name}' : 'Étape {step} · contestée par le témoin {name}', { step, name: String(data.witness ?? '') });
     case 'payout_failed':
       return t('Étape {step} · {error}', { step, error: String(data.error ?? t('refusé')) });
     default:

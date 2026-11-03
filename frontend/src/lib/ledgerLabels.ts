@@ -13,6 +13,7 @@ export const LEDGER_LABEL: Record<LedgerType, { label: string; icon: string; ton
   refund_started: { label: 'Remboursement demandé', icon: 'undo', tone: 'bg-surface-container text-primary' },
   refund_completed: { label: 'Séquestre remboursé', icon: 'payments', tone: 'bg-[#DCFCE7] text-[#15803D]' },
   refund_failed: { label: 'Remboursement non abouti', icon: 'error', tone: 'bg-error-container text-on-error-container' },
+  witness_response: { label: 'Réponse du témoin', icon: 'how_to_reg', tone: 'bg-[#E0F2FE] text-[#0369A1]' },
 };
 
 export const shortHash = (hash: string, head = 8, tail = 6): string => (hash.length > head + tail + 1 ? `${hash.slice(0, head)}…${hash.slice(-tail)}` : hash);

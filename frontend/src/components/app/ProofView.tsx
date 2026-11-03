@@ -13,13 +13,15 @@ interface Props {
   token?: string;
   /** what the step is worth, to compare with the invoice (indicative rate) */
   expectedFcfa?: number;
+  /** the witness sees who is paid, not where: no phone number, no Lightning address */
+  hideDestination?: boolean;
 }
 
 const fileUrl = (projectId: string, file: StoredFile, token?: string) => `/api/files/${projectId}/${file.id}${token ? `?t=${token}` : ''}`;
 const isImage = (f: StoredFile) => f.mime.startsWith('image/');
 
 /** What the person on site sent: photos with their metadata, invoice, who to pay, note. */
-export async function ProofView({ proof, projectId, token, expectedFcfa }: Props) {
+export async function ProofView({ proof, projectId, token, expectedFcfa, hideDestination = false }: Props) {
   const t = await getT();
   const gap = proof.invoiceAmountFcfa && expectedFcfa ? Math.round(((proof.invoiceAmountFcfa - expectedFcfa) / expectedFcfa) * 100) : null;
 
@@ -105,9 +107,9 @@ export async function ProofView({ proof, projectId, token, expectedFcfa }: Props
           <span className="min-w-0">
             <span className="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>Sera payé directement</Tc></span>
             <span className="block truncate font-title-md text-title-md">{proof.supplier.name}</span>
-            <span className="block truncate font-body-sm text-body-sm text-on-surface-variant">
-              {supplierRoute(proof.supplier)}
-            </span>
+            {!hideDestination && (
+              <span className="block truncate font-body-sm text-body-sm text-on-surface-variant">{supplierRoute(proof.supplier)}</span>
+            )}
           </span>
         </section>
       )}

@@ -47,6 +47,7 @@ export function applyFundingPaid(db: Db, funding: Funding, info: { preimage?: st
       amountSats: funding.amountSats,
       paymentHash: funding.paymentHash,
       preimage: funding.preimage,
+      ...(funding.contributor?.name ? { contributor: funding.contributor.name } : {}),
       ...simulatedMark(funding.mode === 'mock' || funding.simulated === true),
     },
     funding.paidAt,

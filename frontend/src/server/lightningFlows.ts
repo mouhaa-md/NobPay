@@ -82,7 +82,7 @@ export function realLiabilityCents(db: Db): number {
  * Funding
  * ------------------------------------------------------------------------- */
 
-export async function createLightningFunding(owner: User, projectId: string, amountCents: number): Promise<Funding> {
+export async function createLightningFunding(owner: User, projectId: string, amountCents: number, contributor?: { name?: string }): Promise<Funding> {
   const cfg = getConfig();
   const wallet = getReceiveWallet();
   if (!wallet) throw new HttpError(503, 'Le portefeuille Bitcoin de cette instance n’est pas configuré.', 'lightning_unavailable');
@@ -126,6 +126,7 @@ export async function createLightningFunding(owner: User, projectId: string, amo
     amountSats,
     btcUsd,
     expiresAt: invoice.expiresAt,
+    ...(contributor ? { contributor } : {}),
   };
   await withDb((d) => {
     d.fundings.push(funding);
