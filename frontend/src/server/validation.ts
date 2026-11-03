@@ -137,7 +137,7 @@ export const pushSubscribeSchema = z
   .strict();
 export const pushUnsubscribeSchema = z.object({ scope: pushScope, endpoint: z.string().max(700) }).strict();
 export const recoverSchema = z.object({ token: z.string().min(10).max(200) }).strict();
-export const quoteSchema =z.object({ simulate: z.boolean().optional() }).strict();
+export const quoteSchema = z.object({ simulate: z.boolean().optional() }).strict();
 export const rejectSchema = z.object({ note: z.string().max(1000, 'Note trop longue').optional() }).strict();
 
 /** One entry per photo, in the same order as the files. */
@@ -154,6 +154,16 @@ export const photoMetaSchema = z
         lat: z.number().min(-90).max(90).optional(),
         lng: z.number().min(-180).max(180).optional(),
         accuracy: z.number().min(0).max(1_000_000).optional(),
+        /** read by the phone inside the original photo */
+        exifTakenAt: z
+          .string()
+          .max(40)
+          .refine((s) => !Number.isNaN(Date.parse(s)), 'Date de prise de vue invalide')
+          .refine((s) => Date.parse(s) <= Date.now() + 86_400_000, 'Date de prise de vue dans le futur')
+          .optional(),
+        exifLat: z.number().min(-90).max(90).optional(),
+        exifLng: z.number().min(-180).max(180).optional(),
+        dhash: z.string().regex(/^[0-9a-f]{16}$/, 'Empreinte de photo invalide').optional(),
       })
       .strict(),
   )

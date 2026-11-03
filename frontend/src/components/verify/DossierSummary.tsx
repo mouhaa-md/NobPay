@@ -17,10 +17,10 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: 'Preuve à refaire',
 };
 
-type T = (fr: string, vars?: Record<string, string | number>) => string;
+type T = ((fr: string, vars?: Record<string, string | number>) => string) & { lang?: 'fr' | 'en' };
 
 function describe(t: T, type: string, data: Record<string, unknown>): string {
-  const usd = (v: unknown) => (typeof v === 'number' ? formatUsdShort(v) : '');
+  const usd = (v: unknown) => (typeof v === 'number' ? formatUsdShort(v, t) : '');
   const step = String(data.index);
   switch (type) {
     case 'funding_paid':
@@ -65,7 +65,7 @@ export function DossierSummary({ dossier }: { dossier: DossierLike }) {
         </p>
         <h3 className="mt-1 font-title-lg text-title-lg">{project.name}</h3>
         <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-          <Tc>Budget</Tc> {formatUsdShort(project.budgetCents)} · {t(paid > 1 ? '{paid} étapes payées sur {total}' : '{paid} étape payée sur {total}', { paid, total: project.steps.length })}
+          <Tc>Budget</Tc> {formatUsdShort(project.budgetCents, t)} · {t(paid > 1 ? '{paid} étapes payées sur {total}' : '{paid} étape payée sur {total}', { paid, total: project.steps.length })}
         </p>
         <ol className="mt-3 flex flex-col gap-1.5">
           {project.steps.map((s) => (
@@ -77,7 +77,7 @@ export function DossierSummary({ dossier }: { dossier: DossierLike }) {
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block font-label-lg text-label-lg font-bold">{formatUsdShort(s.amountCents)}</span>
+                <span className="block font-label-lg text-label-lg font-bold">{formatUsdShort(s.amountCents, t)}</span>
                 <span className="block font-label-sm text-label-sm text-on-surface-variant">{STATUS_LABEL[s.status] ? t(STATUS_LABEL[s.status]) : s.status}</span>
               </span>
             </li>
@@ -97,9 +97,9 @@ export function DossierSummary({ dossier }: { dossier: DossierLike }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-label-lg text-label-lg">{meta ? t(meta.label) : e.type}</span>
-                  <span className="block truncate font-label-sm text-label-sm text-on-surface-variant">{describe(t, e.type, e.data) || formatDateTime(e.at)}</span>
+                  <span className="block truncate font-label-sm text-label-sm text-on-surface-variant">{describe(t, e.type, e.data) || formatDateTime(e.at, t)}</span>
                   <span className="block font-label-sm text-label-sm text-outline">
-                    <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at)}
+                    <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at, t)}
                   </span>
                 </span>
                 <span className="hidden shrink-0 font-mono text-[11px] text-outline sm:block" title={e.hash}>

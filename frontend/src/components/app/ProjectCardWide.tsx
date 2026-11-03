@@ -37,7 +37,7 @@ export async function ProjectCardWide({ summary, usdXof }: { summary: ProjectSum
     strip = { tone: 'bg-surface-container text-on-surface', icon: 'hourglass_top', text: t('En attente de la preuve de {name} : {title}', { name: project.managerName, title: t(current.title) }) };
   } else if (current) {
     const missing = Math.max(0, current.amountCents - summary.escrow);
-    strip = { tone: 'bg-[#FEF3C7] text-[#92400E]', icon: 'account_balance_wallet', text: missing > 0 ? t("Il manque {amount} pour débloquer l'étape {index}", { amount: formatUsdShort(missing), index: current.index }) : t("L'étape {index} va s'ouvrir", { index: current.index }), cta: missing > 0 ? { href: `${href}/financer`, label: t('Financer') } : undefined };
+    strip = { tone: 'bg-[#FEF3C7] text-[#92400E]', icon: 'account_balance_wallet', text: missing > 0 ? t("Il manque {amount} pour débloquer l'étape {index}", { amount: formatUsdShort(missing, t), index: current.index }) : t("L'étape {index} va s'ouvrir", { index: current.index }), cta: missing > 0 ? { href: `${href}/financer`, label: t('Financer') } : undefined };
   } else {
     strip = { tone: 'bg-surface-container text-on-surface', icon: 'info', text: t('Aucune étape à traiter') };
   }
@@ -75,8 +75,8 @@ export async function ProjectCardWide({ summary, usdXof }: { summary: ProjectSum
           <div className="min-w-0">
             <h2 className="truncate font-title-lg text-title-lg font-bold text-on-surface">{project.name}</h2>
             <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
-              <span className="font-headline-lg text-headline-lg font-extrabold tracking-tight text-on-surface">{formatUsd(project.budgetCents)}</span>
-              <span className="font-title-md text-title-md font-medium text-on-surface-variant">≈ {formatFcfa((project.budgetCents / 100) * usdXof)}</span>
+              <span className="font-headline-lg text-headline-lg font-extrabold tracking-tight text-on-surface">{formatUsd(project.budgetCents, t)}</span>
+              <span className="font-title-md text-title-md font-medium text-on-surface-variant">≈ {formatFcfa((project.budgetCents / 100) * usdXof, t)}</span>
             </p>
           </div>
           <Link href={href} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-primary-container px-6 font-label-lg text-label-lg text-on-primary shadow-sm transition hover:bg-primary active:scale-95">
@@ -97,9 +97,9 @@ export async function ProjectCardWide({ summary, usdXof }: { summary: ProjectSum
             <span className="h-full bg-primary-container" style={{ width: `${pct(summary.escrow)}%` }} />
           </div>
           <div className="grid grid-cols-3 gap-2 pt-1">
-            <Metric dot="bg-primary-container" label={t('En séquestre')} value={formatUsdShort(summary.escrow)} note="Libéré sur preuve" />
-            <Metric dot="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(summary.released)} note={`${paidCount} étape${paidCount > 1 ? 's' : ''} payée${paidCount > 1 ? 's' : ''}`} tone="text-[#15803D]" />
-            <Metric dot="bg-outline-variant" label={t('Reste à financer')} value={formatUsdShort(toFund)} note={toFund === 0 ? 'Budget entièrement financé' : 'Pour couvrir le budget'} />
+            <Metric dot="bg-primary-container" label={t('En séquestre')} value={formatUsdShort(summary.escrow, t)} note="Libéré sur preuve" />
+            <Metric dot="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(summary.released, t)} note={`${paidCount} étape${paidCount > 1 ? 's' : ''} payée${paidCount > 1 ? 's' : ''}`} tone="text-[#15803D]" />
+            <Metric dot="bg-outline-variant" label={t('Reste à financer')} value={formatUsdShort(toFund, t)} note={toFund === 0 ? 'Budget entièrement financé' : 'Pour couvrir le budget'} />
           </div>
         </div>
 

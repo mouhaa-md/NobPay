@@ -75,10 +75,10 @@ export function RefundPanel({ projectId, escrowCents, simulated, blockedReason }
                 <h3 className="font-headline-md text-headline-md font-bold">{done.uncertain ? t('Remboursement en cours') : t('Séquestre remboursé')}</h3>
                 <p className="font-body-md text-body-md text-on-surface-variant">
                   {done.uncertain
-                    ? t('{formatUsd} sont réservés. Le portefeuille n’a pas encore confirmé : NobPay vérifie, la page se met à jour toute seule. Ne refaites pas la demande.', { formatUsd: formatUsd(done.amountCents) })
+                    ? t('{formatUsd} sont réservés. Le portefeuille n’a pas encore confirmé : NobPay vérifie, la page se met à jour toute seule. Ne refaites pas la demande.', { formatUsd: formatUsd(done.amountCents, t) })
                     : done.simulated
-                      ? t('{formatUsd} sortent du séquestre. Démonstration : aucun argent réel n’a bougé.', { formatUsd: formatUsd(done.amountCents) })
-                      : t('{formatUsd} ont été envoyés en sats à votre adresse Lightning.', { formatUsd: formatUsd(done.amountCents) })}
+                      ? t('{formatUsd} sortent du séquestre. Démonstration : aucun argent réel n’a bougé.', { formatUsd: formatUsd(done.amountCents, t) })
+                      : t('{formatUsd} ont été envoyés en sats à votre adresse Lightning.', { formatUsd: formatUsd(done.amountCents, t) })}
                 </p>
                 <button type="button" onClick={() => setOpen(false)} className="mt-2 h-11 w-full rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary">
                   <Tc>Fermer</Tc>
@@ -88,7 +88,7 @@ export function RefundPanel({ projectId, escrowCents, simulated, blockedReason }
               <>
                 <h3 className="font-headline-md text-headline-md font-bold"><Tc>Reprendre le séquestre</Tc></h3>
                 <p className="mb-space-md font-body-sm text-body-sm text-on-surface-variant">
-                  <Tc>Disponible :</Tc> <strong>{formatUsdShort(escrowCents)}</strong><Tc>. Les fonds déjà libérés ou réservés ne peuvent pas être repris.</Tc>
+                  <Tc>Disponible :</Tc> <strong>{formatUsdShort(escrowCents, t)}</strong><Tc>. Les fonds déjà libérés ou réservés ne peuvent pas être repris.</Tc>
                 </p>
                 <label className="mb-3 flex flex-col gap-1.5 font-label-md text-label-md text-on-surface-variant">
                   <Tc>Montant à reprendre ($)</Tc>
@@ -118,7 +118,7 @@ export function RefundPanel({ projectId, escrowCents, simulated, blockedReason }
                 <ErrorNote>{error}</ErrorNote>
                 <div className="mt-2 flex flex-col gap-2">
                   <button type="button" disabled={busy || invalid || address.trim().length < 3} onClick={submit} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition active:scale-[0.98] disabled:opacity-50">
-                    {busy ? <Spinner /> : <Icon name="undo" size={20} />} <Tc>Reprendre</Tc> {invalid ? '' : formatUsdShort(cents)}
+                    {busy ? <Spinner /> : <Icon name="undo" size={20} />} <Tc>Reprendre</Tc> {invalid ? '' : formatUsdShort(cents, t)}
                   </button>
                   <button type="button" onClick={() => setOpen(false)} disabled={busy} className="h-11 rounded-full font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container">
                     <Tc>Annuler</Tc>

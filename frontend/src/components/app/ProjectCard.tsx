@@ -73,9 +73,9 @@ export async function ProjectCard({ summary }: { summary: ProjectSummary }) {
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">
-        <Metric label={t('En séquestre')} value={formatUsdShort(summary.escrow)} tone="text-primary" />
-        <Metric label={t('Libérés')} value={formatUsdShort(summary.released)} tone="text-tertiary-container" />
-        <Metric label={t('Budget total')} value={formatUsdShort(project.budgetCents)} tone="text-on-surface" />
+        <Metric label={t('En séquestre')} value={formatUsdShort(summary.escrow, t)} tone="text-primary" />
+        <Metric label={t('Libérés')} value={formatUsdShort(summary.released, t)} tone="text-tertiary-container" />
+        <Metric label={t('Budget total')} value={formatUsdShort(project.budgetCents, t)} tone="text-on-surface" />
       </div>
 
       <div className="flex items-center justify-between pt-1">

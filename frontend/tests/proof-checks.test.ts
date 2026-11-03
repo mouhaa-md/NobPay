@@ -129,3 +129,75 @@ describe('a step with no proof', () => {
     expect(run(project('p1', [step('s1', 1, undefined, { status: 'active' })]))).toEqual([]);
   });
 });
+
+describe('what the photos say about themselves (Exif) and look-alikes', () => {
+  const dh = (bits: number) => (bits === 0 ? '0000000000000000' : `${'0'.repeat(16 - Math.ceil(bits / 4))}${'f'.repeat(Math.floor(bits / 4))}${bits % 4 ? ((1 << (bits % 4)) - 1).toString(16) : ''}`.slice(-16).padStart(16, '0'));
+
+  it('an old photo sent again: its file date is new, the date inside it is not — and that is what counts', () => {
+    const resent = photo('a', { takenAt: iso(SUBMITTED - 60_000), exif: { takenAt: iso(SUBMITTED - 90 * 86_400_000) } });
+    const checks = run(project('p1', [step('s1', 1, proof({ photos: [resent] }))]));
+    expect(byId(checks, 'date-old')).toMatchObject({ level: 'attention' });
+    expect(byId(checks, 'date')).toBeUndefined();
+  });
+
+  it('without Exif nothing changes: the file date decides, and the text says it is the file\'s', () => {
+    const checks = run(project('p1', [step('s1', 1, proof())]));
+    expect(byId(checks, 'date')!.text).toContain('date de leurs fichiers');
+    expect(byId(checks, 'exif-none')).toMatchObject({ level: 'info' }); // said, not alarming: a messaging app erases it
+  });
+
+  it('with the date of the shot inside every photo, the text says so', () => {
+    const p = photo('a', { exif: { takenAt: iso(SUBMITTED - 3_600_000) } });
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [p] }))])), 'date')!.text).toContain('données de prise de vue');
+  });
+
+  it('the position written in the photo: in Senegal is good, outside is an alarm, some of them is an information', () => {
+    const inside = photo('a', { exif: { gps: { lat: 14.8, lng: -16.9 } } });
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [inside] }))])), 'exif-gps')).toMatchObject({ level: 'ok' });
+
+    const paris = photo('b', { exif: { gps: { lat: 48.85, lng: 2.35 } } });
+    const out = byId(run(project('p1', [step('s1', 1, proof({ photos: [inside, paris] }))])), 'exif-gps-outside');
+    expect(out).toMatchObject({ level: 'attention' });
+    expect(out!.text).toContain('hors du Sénégal');
+
+    const bare = photo('c');
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [inside, bare] }))])), 'exif-gps')).toMatchObject({ level: 'info', text: expect.stringContaining('1 photo sur 2') });
+  });
+
+  it('the same picture sent for another step or another project is spotted although its file is not the same', () => {
+    const earlier = project('p0', [step('s0', 1, proof({ photos: [photo('old', { dhash: dh(0) })] }), { status: 'paid' })]);
+    const recropped = photo('new', { dhash: dh(4) }); // 4 bits apart: the same picture, saved again
+    const checks = run(project('p1', [step('s1', 1, proof({ photos: [recropped] }))]), [earlier]);
+    const c = byId(checks, 'duplicate-similar');
+    expect(c).toMatchObject({ level: 'attention' });
+    expect(c!.text).toContain('un autre projet');
+    expect(byId(checks, 'duplicate-elsewhere')).toBeUndefined(); // the files differ: it is not the exact-copy check that speaks
+
+    const sameProject = project('p1', [step('s1', 1, proof({ photos: [recropped] })), step('s2', 2, proof({ photos: [photo('x', { dhash: dh(0) })] }), { status: 'paid' })]);
+    expect(byId(run(sameProject), 'duplicate-similar')!.text).toContain('l’étape 2 de ce projet');
+  });
+
+  it('another picture is left alone, and so are photos that have no fingerprint (demonstration files, old proofs)', () => {
+    const earlier = project('p0', [step('s0', 1, proof({ photos: [photo('old', { dhash: dh(0) })] }), { status: 'paid' })]);
+    const other = photo('new', { dhash: 'ffffffffffffffff' });
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [other] }))]), [earlier]), 'duplicate-similar')).toBeUndefined();
+    const noHash = photo('nh');
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [noHash] }))]), [earlier]), 'duplicate-similar')).toBeUndefined();
+    const demo = photo('d', { dhash: dh(0), publicPath: '/demo/x.jpg' });
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: [demo] }))]), [earlier]), 'duplicate-similar')).toBeUndefined();
+  });
+
+  it('two photos of the same proof that are almost the same picture are pointed out; two different shots are not', () => {
+    const twins = [photo('a', { dhash: dh(0) }), photo('b', { dhash: dh(2) })];
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: twins }))])), 'duplicate-similar-here')).toMatchObject({ level: 'attention', text: expect.stringContaining('presque identiques') });
+    const shots = [photo('a', { dhash: dh(0) }), photo('b', { dhash: dh(12) })];
+    expect(byId(run(project('p1', [step('s1', 1, proof({ photos: shots }))])), 'duplicate-similar-here')).toBeUndefined();
+  });
+
+  it('the wording comes out in English too', async () => {
+    const { translatorFor } = await import('@/lib/i18n/messages');
+    const p = project('p1', [step('s1', 1, proof({ photos: [photo('a', { exif: { gps: { lat: 48.85, lng: 2.35 } } })] }))]);
+    const en = proofChecks({ db: { projects: [p] }, project: p, step: p.steps[0], usdXof: 600, t: translatorFor('en') });
+    expect(en.find((c) => c.id === 'exif-gps-outside')!.text).toBe('A photo carries, in its own data, a position outside Senegal: it was not taken there.');
+  });
+});

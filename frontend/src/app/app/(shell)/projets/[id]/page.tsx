@@ -10,7 +10,7 @@ import { Flag } from '@/components/ui/Flag';
 import { RefundPanel } from '@/components/app/RefundPanel';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, Chip, ProgressBar, SectionTitle } from '@/components/ui/primitives';
-import { formatFcfa, formatUsd, formatUsdShort } from '@/lib/money';
+import { formatFcfa, formatUsd, formatUsdShort, formatEur, usdToEur, usesEuro } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
@@ -105,8 +105,8 @@ export default async function ProjectPage(
           <div className="mb-3 flex items-end justify-between gap-2">
             <div>
               <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant"><Tc>En séquestre</Tc></p>
-              <p className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">{formatUsd(s.escrow)}</p>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa((s.escrow / 100) * usdXof)} <Tc>(taux indicatif)</Tc></p>
+              <p className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">{formatUsd(s.escrow, t)}</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa((s.escrow / 100) * usdXof, t)}{usesEuro(user.country) && ` · ≈ ${formatEur(usdToEur(s.escrow, usdXof), t)}`} <Tc>(taux indicatif)</Tc></p>
             </div>
             <div className="text-right">
               <p className="font-label-sm text-label-sm text-on-surface-variant"><Tc>Avancement</Tc></p>
@@ -115,15 +115,15 @@ export default async function ProjectPage(
           </div>
           <ProgressBar value={s.progress} className="mb-3" />
           <div className="grid grid-cols-3 gap-2 text-center">
-            <Figure label={t('Budget')} value={formatUsdShort(project.budgetCents)} />
-            <Figure label={t('Déposé')} value={formatUsdShort(s.funded)} />
-            <Figure label={t('Libéré')} value={formatUsdShort(s.released)} tone="text-[#15803D]" />
+            <Figure label={t('Budget')} value={formatUsdShort(project.budgetCents, t)} />
+            <Figure label={t('Déposé')} value={formatUsdShort(s.funded, t)} />
+            <Figure label={t('Libéré')} value={formatUsdShort(s.released, t)} tone="text-[#15803D]" />
           </div>
           {!done && (
             <div className="mt-4 flex flex-col gap-2">
               {missingForNext > 0 && nextLocked && (
                 <p className="rounded-xl bg-[#FEF3C7] px-3 py-2 font-label-md text-label-md text-[#B45309]">
-                  <Tc>Il manque</Tc> {formatUsdShort(missingForNext)} <Tc>pour débloquer l&apos;étape</Tc> {nextLocked.index}.
+                  <Tc>Il manque</Tc> {formatUsdShort(missingForNext, t)} <Tc>pour débloquer l&apos;étape</Tc> {nextLocked.index}.
                 </p>
               )}
               <Link href={`/app/projets/${project.id}/financer`} className="flex h-12 items-center justify-center gap-2 rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98]">

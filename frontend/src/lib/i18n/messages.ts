@@ -24,6 +24,10 @@ export const fr = (sentence: string): string => sentence;
 
 export type Vars = Record<string, string | number>;
 
+/** What `getT()` and `useT()` return: the translator, which also knows its language (amounts and dates follow it). */
+export type Translator = ((fr: string, vars?: Vars) => string) & { lang: Lang };
+export const translatorFor = (lang: Lang): Translator => Object.assign((fr: string, vars?: Vars) => translate(lang, fr, vars), { lang });
+
 export function translate(lang: Lang, sentence: string, vars?: Vars): string {
   let text = sentence;
   if (lang === 'en') {

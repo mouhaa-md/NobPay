@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { formatFcfa, formatUsd } from '@/lib/money';
+import { formatEur, formatFcfa, formatUsd, usdToEur } from '@/lib/money';
 import { Tc, useT } from '@/lib/i18n/client';
 
 /** Big escrow balance with the hide/show eye of the Stitch design. */
-export function BalanceCard({ escrowCents, rate }: { escrowCents: number; rate: number }) {
+export function BalanceCard({ escrowCents, rate, euro = false }: { escrowCents: number; rate: number; /** the funder lives in the euro area: show euros too */ euro?: boolean }) {
   const t = useT();
   const [hidden, setHidden] = useState(false);
   return (
@@ -18,9 +18,9 @@ export function BalanceCard({ escrowCents, rate }: { escrowCents: number; rate: 
           <Icon name={hidden ? 'visibility_off' : 'visibility'} size={17} />
         </button>
       </div>
-      <div className="mb-1.5 font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight text-white">{hidden ? '••••••••' : formatUsd(escrowCents)}</div>
+      <div className="mb-1.5 font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight text-white">{hidden ? '••••••••' : formatUsd(escrowCents, t)}</div>
       <div className={`font-body-sm text-body-sm font-medium text-surface-variant transition-opacity ${hidden ? 'opacity-30' : ''}`}>
-        ≈ {hidden ? '••••••' : formatFcfa((escrowCents / 100) * rate)} <span className="opacity-70"><Tc>(taux indicatif)</Tc></span>
+        ≈ {hidden ? '••••••' : formatFcfa((escrowCents / 100) * rate, t)}{euro && !hidden && ` · ≈ ${formatEur(usdToEur(escrowCents, rate), t)}`} <span className="opacity-70"><Tc>(taux indicatif)</Tc></span>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Link href="/app/projets" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white font-label-lg text-label-lg text-on-surface shadow-lg transition hover:bg-slate-50 active:scale-95">

@@ -28,7 +28,7 @@ export async function WitnessStatus({ project, step }: { project: Pick<Project, 
       <div className="font-body-sm text-body-sm">
         <p>
           <strong>{ok ? t('Le témoin ({name}) confirme cette preuve.', { name: w.name }) : t('Le témoin ({name}) conteste cette preuve.', { name: w.name })}</strong>{' '}
-          <span className="opacity-80">{formatDateTime(answer.at)}</span>
+          <span className="opacity-80">{formatDateTime(answer.at, t)}</span>
         </p>
         {answer.note && <p className="mt-1 italic">« {answer.note} »</p>}
       </div>

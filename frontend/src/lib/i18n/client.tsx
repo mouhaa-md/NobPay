@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import { translate, type Lang, type Vars } from './messages';
+import { translate, translatorFor, type Lang, type Translator, type Vars } from './messages';
 
 const LangContext = createContext<Lang>('fr');
 
@@ -13,9 +13,8 @@ export function I18nProvider({ lang, children }: { lang: Lang; children: ReactNo
 export const useLang = (): Lang => useContext(LangContext);
 
 /** `const t = useT(); t('Bonjour {name}', { name })` in a client component. */
-export function useT() {
-  const lang = useLang();
-  return (fr: string, vars?: Vars) => translate(lang, fr, vars);
+export function useT(): Translator {
+  return translatorFor(useLang());
 }
 
 /** `<Tc>Texte</Tc>` in a client component (the server counterpart is `T` from ./server). */

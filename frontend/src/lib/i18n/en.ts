@@ -1063,6 +1063,21 @@ export const EN: Record<string, string> = {
   'Étape {step} · avis de l’IA demandé ({model})': 'Step {step} · AI opinion asked for ({model})',
   'Avis de l’IA demandé': 'AI opinion asked for',
 
+  // what the photos say about themselves (Exif) and look-alike photos
+  'Date lue dans la photo elle-même': 'Date read inside the photo itself',
+  'Date du fichier': 'Date of the file',
+  'Une photo ressemble beaucoup à une photo déjà envoyée comme preuve pour {where} (la même image, recadrée ou réenregistrée ?).': 'A photo looks very much like a photo already sent as proof for {where} (the same picture, cropped or saved again?).',
+  '{n} photos ressemblent beaucoup à des photos déjà envoyées comme preuve pour {where} (les mêmes images, recadrées ou réenregistrées ?).': '{n} photos look very much like photos already sent as proof for {where} (the same pictures, cropped or saved again?).',
+  'Deux photos de cette preuve sont presque identiques.': 'Two photos of this proof are almost identical.',
+  '{n} paires de photos de cette preuve sont presque identiques.': '{n} pairs of photos of this proof are almost identical.',
+  'Ces photos ne portent ni date ni position de prise de vue (elles ont peut-être transité par une messagerie, qui les efface) : on ne peut s’appuyer que sur la date du fichier et la position du téléphone.': 'These photos carry neither a date nor a position of the shot (they may have gone through a messaging app, which erases them): all that can be relied on is the file date and the phone’s position.',
+  'Une photo porte, dans ses données, une position hors du Sénégal : elle n’a pas été prise là.': 'A photo carries, in its own data, a position outside Senegal: it was not taken there.',
+  '{n} photos portent, dans leurs données, une position hors du Sénégal : elles n’ont pas été prises là.': '{n} photos carry, in their own data, a position outside Senegal: they were not taken there.',
+  '{n} photo sur {total} porte sa propre position de prise de vue.': '{n} photo out of {total} carries its own position of the shot.',
+  '{n} photos sur {total} portent leur propre position de prise de vue.': '{n} photos out of {total} carry their own position of the shot.',
+  'La position inscrite dans les photos elles-mêmes (celle de la prise de vue) est au Sénégal.': 'The position written inside the photos themselves (that of the shot) is in Senegal.',
+  'D’après leurs données de prise de vue, les photos datent de la semaine qui précède l’envoi.': 'According to their shot data, the photos date from the week before sending.',
+
   // witness and recovery: messages of the server
   'Ce lien n’est pas valable (ou il a été renouvelé).': 'This link is not valid (or it was renewed).',
   'Ce lien de récupération n’est pas valable (ou il a été renouvelé).': 'This recovery link is not valid (or it was renewed).',

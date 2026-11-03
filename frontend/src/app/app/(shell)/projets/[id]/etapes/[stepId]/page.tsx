@@ -79,8 +79,8 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
           </div>
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight lg:font-headline-xl lg:text-headline-xl"><Tc>{step.title}</Tc></h2>
           <p className="mt-1 flex items-baseline gap-2">
-            <span className="font-headline-md text-headline-md font-bold text-primary">{formatUsdShort(step.amountCents)}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa((step.amountCents / 100) * usdXof)} <Tc>(taux indicatif)</Tc></span>
+            <span className="font-headline-md text-headline-md font-bold text-primary">{formatUsdShort(step.amountCents, t)}</span>
+            <span className="font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa((step.amountCents / 100) * usdXof, t)} <Tc>(taux indicatif)</Tc></span>
           </p>
           <p className="mt-2 flex flex-wrap items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
             <Tc>Preuves attendues :</Tc>
@@ -102,7 +102,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
               {blockedBy
                 ? t('L\'étape {index} (« {title} ») doit d\'abord être payée.', { index: blockedBy.index, title: t(blockedBy.title) })
                 : escrow < step.amountCents
-                  ? t('Le séquestre ({formatUsdShort}) doit couvrir cette étape ({formatUsdShort2}).', { formatUsdShort: formatUsdShort(escrow), formatUsdShort2: formatUsdShort(step.amountCents) })
+                  ? t('Le séquestre ({formatUsdShort}) doit couvrir cette étape ({formatUsdShort2}).', { formatUsdShort: formatUsdShort(escrow, t), formatUsdShort2: formatUsdShort(step.amountCents, t) })
                   : t('Elle se débloque automatiquement.')}
             </p>
             {escrow < step.amountCents && (
@@ -136,7 +136,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
             <div className="flex items-start gap-3 rounded-2xl bg-[#FFFBEB] p-3.5 ring-1 ring-[#F59E0B]/30">
               <Icon name="rate_review" size={22} className="mt-0.5 shrink-0 text-[#B45309]" />
               <p className="font-body-sm text-body-sm text-[#92400E]">
-                <Tc>Preuve reçue</Tc> {formatDateTime(step.proof.submittedAt)}<Tc>. Regardez les photos et la facture, puis décidez. Rien n&apos;est payé sans votre accord.</Tc>
+                <Tc>Preuve reçue</Tc> {formatDateTime(step.proof.submittedAt, t)}<Tc>. Regardez les photos et la facture, puis décidez. Rien n&apos;est payé sans votre accord.</Tc>
               </p>
             </div>
             <WitnessStatus project={project} step={step} />
@@ -211,7 +211,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-label-lg text-label-lg"><Tc>{meta.label}</Tc></span>
                       <span className="block font-label-sm text-label-sm text-on-surface-variant">
-                        <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at)}
+                        <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at, t)}
                       </span>
                     </span>
                     <span className="shrink-0 font-mono text-[11px] text-outline" title={e.hash}>

@@ -472,7 +472,7 @@ export async function simulateFundingPaid(owner: User, fundingId: string): Promi
 export type Actor = { kind: 'owner'; user: User } | { kind: 'manager'; token: string };
 
 export interface ProofInput {
-  photos: (StoredFile & { takenAt?: string; gps?: ProofPhoto['gps'] })[];
+  photos: (StoredFile & { takenAt?: string; gps?: ProofPhoto['gps']; exif?: ProofPhoto['exif']; dhash?: string })[];
   invoice?: StoredFile;
   invoiceAmountFcfa?: number;
   note?: string;

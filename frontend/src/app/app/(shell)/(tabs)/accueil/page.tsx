@@ -8,7 +8,7 @@ import { InstallCard } from '@/components/app/InstallCard';
 import { ProjectCardWide } from '@/components/app/ProjectCardWide';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, ProgressBar, SectionTitle } from '@/components/ui/primitives';
-import { formatUsdShort } from '@/lib/money';
+import { formatUsdShort, usesEuro } from '@/lib/money';
 import { QUICK_TRIAL_BUDGET_CENTS, RESIDENCE_COUNTRIES, SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
@@ -70,7 +70,7 @@ export default async function Home() {
             </Link>
           </div>
 
-          <BalanceCard escrowCents={totals.escrow} rate={usdXof} />
+          <BalanceCard escrowCents={totals.escrow} rate={usdXof} euro={usesEuro(user.country)} />
           <p className="relative z-10 mt-3 flex items-center gap-1.5 font-label-sm text-label-sm text-surface-variant/80">
             <Icon name="lock" size={14} />
             <Tc>{INSTANCE[instanceMode()].custody}</Tc>
@@ -141,7 +141,7 @@ export default async function Home() {
               <div className="flex items-center justify-between gap-2 font-label-sm text-label-sm text-on-surface-variant">
                 <span className="truncate">{focus.current ? t(focus.current.title) : t('Toutes les étapes sont payées')}</span>
                 <span className="shrink-0 font-medium text-on-surface">
-                  {formatUsdShort(focus.released)} / {formatUsdShort(focus.project.budgetCents)} <Tc>libérés</Tc>
+                  {formatUsdShort(focus.released, t)} / {formatUsdShort(focus.project.budgetCents, t)} <Tc>libérés</Tc>
                 </span>
               </div>
             </Link>
@@ -181,7 +181,7 @@ export default async function Home() {
                 <Icon name="lock" size={16} /> <Tc>{INSTANCE[instanceMode()].custody}</Tc>
               </p>
             </div>
-            <BalanceCard escrowCents={totals.escrow} rate={usdXof} />
+            <BalanceCard escrowCents={totals.escrow} rate={usdXof} euro={usesEuro(user.country)} />
           </div>
         </section>
 
@@ -275,7 +275,8 @@ function Kpi({ icon, label, value, tone, highlight = false }: { icon: string; la
   );
 }
 
-function NoProject() {
+async function NoProject() {
+  const t = await getT();
   return (
     <div className="rounded-2xl bg-surface-container-low p-5 text-center">
       <p className="mb-1 font-title-md text-title-md"><Tc>Aucun projet pour le moment</Tc></p>
@@ -285,7 +286,7 @@ function NoProject() {
       </Link>
       {getConfig().minBudgetUsd * 100 <= QUICK_TRIAL_BUDGET_CENTS && (
         <Link href="/app/projets/nouveau?essai=1" className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-surface-container px-6 font-label-lg text-label-lg font-semibold text-primary hover:bg-surface-container-high">
-          <Icon name="bolt" size={20} /> <Tc>Essai rapide</Tc> · {formatUsdShort(QUICK_TRIAL_BUDGET_CENTS)}
+          <Icon name="bolt" size={20} /> <Tc>Essai rapide</Tc> · {formatUsdShort(QUICK_TRIAL_BUDGET_CENTS, t)}
         </Link>
       )}
     </div>

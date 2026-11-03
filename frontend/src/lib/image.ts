@@ -1,3 +1,6 @@
+import { DHASH_COLS, DHASH_ROWS, dhash, grayGrid } from './dhash';
+import { readExif, type ExifInfo } from './exif';
+
 export const UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 /** What the server accepts (see src/server/files.ts); anything else (HEIC, GIF, SVG...) is refused before the upload. */
 export const isUploadableImage = (file: File) => UPLOAD_IMAGE_TYPES.includes(file.type);
@@ -33,4 +36,34 @@ export async function shrinkImage(file: File, maxSide = 1600, quality = 0.82): P
   } catch {
     return file;
   }
+}
+
+/**
+ * What the original photo says about itself, read BEFORE it is shrunk (shrinking drops it): the Exif date and position, and
+ * a perceptual fingerprint of the picture. Anything that fails gives less, never an error: a proof is never refused for it.
+ */
+export async function photoFingerprint(file: File): Promise<{ exif: ExifInfo; dhash?: string }> {
+  let exif: ExifInfo = {};
+  try {
+    if (file.type === 'image/jpeg') exif = readExif(await file.slice(0, 256 * 1024).arrayBuffer());
+  } catch {
+    /* unreadable: no Exif */
+  }
+  let hash: string | undefined;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const canvas = document.createElement('canvas');
+    canvas.width = DHASH_COLS * 8;
+    canvas.height = DHASH_ROWS * 8;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx) {
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      hash = dhash(grayGrid(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height));
+    }
+    bitmap.close();
+  } catch {
+    /* an image the browser cannot decode: no fingerprint */
+  }
+  return { exif, dhash: hash };
 }

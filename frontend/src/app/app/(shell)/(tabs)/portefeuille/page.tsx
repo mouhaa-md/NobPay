@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/ui/Icon';
 import { Chip, SectionTitle } from '@/components/ui/primitives';
-import { formatDateTime, formatFcfa, formatSats, formatUsd, formatUsdShort } from '@/lib/money';
+import { formatDateTime, formatFcfa, formatSats, formatUsd, formatUsdShort, formatEur, usdToEur, usesEuro } from '@/lib/money';
 import type { Funding } from '@/lib/types';
 import { getSessionUser } from '@/server/auth';
 import { INSTANCE } from '@/lib/instance';
@@ -61,12 +61,12 @@ export default async function Wallet() {
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A0F24] via-[#0B132B] to-[#1E40AF] p-5 text-white shadow-xl lg:col-span-2 lg:p-8">
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-container/25 blur-3xl" />
           <p className="relative font-label-sm text-label-sm font-semibold uppercase tracking-wider text-surface-variant"><Tc>En séquestre</Tc></p>
-          <p className="relative mt-1 font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight">{formatUsd(totals.escrow)}</p>
-          <p className="relative mt-1 font-body-sm text-body-sm text-surface-variant">≈ {formatFcfa((totals.escrow / 100) * usdXof)} <span className="opacity-70"><Tc>(taux indicatif)</Tc></span></p>
+          <p className="relative mt-1 font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight">{formatUsd(totals.escrow, t)}</p>
+          <p className="relative mt-1 font-body-sm text-body-sm text-surface-variant">≈ {formatFcfa((totals.escrow / 100) * usdXof, t)}{usesEuro(user.country) && ` · ≈ ${formatEur(usdToEur(totals.escrow, usdXof), t)}`} <span className="opacity-70"><Tc>(taux indicatif)</Tc></span></p>
           <div className="relative mt-5 grid grid-cols-3 gap-2 text-center">
-            <Mini label={t('Déposé')} value={formatUsdShort(deposited)} />
-            <Mini label={t('Libéré')} value={formatUsdShort(totals.released)} />
-            <Mini label={t('Budget')} value={formatUsdShort(totals.budget)} />
+            <Mini label={t('Déposé')} value={formatUsdShort(deposited, t)} />
+            <Mini label={t('Libéré')} value={formatUsdShort(totals.released, t)} />
+            <Mini label={t('Budget')} value={formatUsdShort(totals.budget, t)} />
           </div>
         </section>
 
@@ -94,9 +94,9 @@ export default async function Wallet() {
                         <span className="bg-primary-container" style={{ width: `${pct(s.escrow)}%` }} title={t('En séquestre')} />
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-label-sm text-label-sm text-on-surface-variant">
-                        <Legend color="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(s.released)} />
-                        <Legend color="bg-primary-container" label={t('Séquestre')} value={formatUsdShort(s.escrow)} />
-                        <Legend color="bg-surface-container-high ring-1 ring-outline-variant" label={t('À financer')} value={formatUsdShort(toFund)} />
+                        <Legend color="bg-[#16A34A]" label={t('Libéré')} value={formatUsdShort(s.released, t)} />
+                        <Legend color="bg-primary-container" label={t('Séquestre')} value={formatUsdShort(s.escrow, t)} />
+                        <Legend color="bg-surface-container-high ring-1 ring-outline-variant" label={t('À financer')} value={formatUsdShort(toFund, t)} />
                       </div>
                     </Link>
                   </li>
@@ -120,14 +120,14 @@ export default async function Wallet() {
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="flex items-center justify-between gap-2">
-                      <span className="truncate font-title-md text-title-md">{formatUsd(f.amountCents)}</span>
+                      <span className="truncate font-title-md text-title-md">{formatUsd(f.amountCents, t)}</span>
                       <Chip tone={STATUS[f.status].tone}><Tc>{STATUS[f.status].label}</Tc></Chip>
                     </span>
                     <span className="truncate font-body-sm text-body-sm text-on-surface-variant">
                       {nameOf.get(f.projectId)} · {METHOD[f.method]}
-                      {f.amountSats ? ` · ${formatSats(f.amountSats)}` : ''}
+                      {f.amountSats ? ` · ${formatSats(f.amountSats, t)}` : ''}
                     </span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant/80">{formatDateTime(f.paidAt ?? f.createdAt)}</span>
+                    <span className="font-label-sm text-label-sm text-on-surface-variant/80">{formatDateTime(f.paidAt ?? f.createdAt, t)}</span>
                   </span>
                 </li>
               ))}
@@ -154,7 +154,7 @@ export default async function Wallet() {
                     <span className="truncate font-label-md text-label-md text-on-surface">{OUTCOME[w.outcome] ?? w.outcome}</span>
                     <span className="truncate font-label-sm text-label-sm text-on-surface-variant">{w.type}</span>
                   </span>
-                  <span className="shrink-0 font-label-sm text-label-sm text-on-surface-variant">{formatDateTime(w.at)}</span>
+                  <span className="shrink-0 font-label-sm text-label-sm text-on-surface-variant">{formatDateTime(w.at, t)}</span>
                 </li>
               ))}
             </ul>

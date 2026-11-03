@@ -65,7 +65,7 @@ export default async function WitnessPage(props: { params: Promise<{ token: stri
               <p className="font-label-sm text-label-sm uppercase tracking-wider text-[#92400E]">{t('Étape {index} sur {total}', { index: step.index, total: project.steps.length })}</p>
               <p className="font-title-lg text-title-lg text-[#78350F]"><Tc>{step.title}</Tc></p>
               <p className="mt-1 font-body-sm text-body-sm text-[#92400E]">
-                {t('Preuve envoyée le {date}. Ce que vous voyez ci-dessous correspond-il à ce que cette étape annonce ?', { date: formatDateTime(step.proof.submittedAt) })}
+                {t('Preuve envoyée le {date}. Ce que vous voyez ci-dessous correspond-il à ce que cette étape annonce ?', { date: formatDateTime(step.proof.submittedAt, t) })}
               </p>
             </section>
 
@@ -77,7 +77,7 @@ export default async function WitnessPage(props: { params: Promise<{ token: stri
                   <Icon name={answer.verdict === 'confirmed' ? 'check_circle' : 'report'} size={22} filled />
                   {answer.verdict === 'confirmed' ? t('Vous avez confirmé cette preuve') : t('Vous avez contesté cette preuve')}
                 </p>
-                <p className="mt-1 font-body-sm text-body-sm">{t('Le {date}. Merci : le financeur le voit, et c’est inscrit au registre.', { date: formatDateTime(answer.at) })}</p>
+                <p className="mt-1 font-body-sm text-body-sm">{t('Le {date}. Merci : le financeur le voit, et c’est inscrit au registre.', { date: formatDateTime(answer.at, t) })}</p>
               </section>
             ) : (
               <WitnessResponder token={token} stepId={step.id} />

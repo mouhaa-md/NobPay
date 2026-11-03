@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import type { AiReview, CheckLevel, ProofCheck } from '@/lib/types';
 import { Tc, useT } from '@/lib/i18n/client';
+import { formatDateTime } from '@/lib/money';
 
 const LOOK: Record<CheckLevel, { icon: string; dot: string }> = {
   ok: { icon: 'check', dot: 'bg-[#16A34A] text-white' },
@@ -123,7 +124,7 @@ export function ProofReviewPanel({ projectId, stepId, checks, aiEnabled, review:
                 </p>
               ))}
               <p className="rounded-xl bg-surface-container-low px-3 py-2 font-label-sm text-label-sm text-on-surface-variant">
-                <Tc>L’IA peut se tromper : c’est un deuxième regard, pas une preuve. Vous décidez. Avis du</Tc> {new Date(review!.at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}.
+                <Tc>L’IA peut se tromper : c’est un deuxième regard, pas une preuve. Vous décidez. Avis du</Tc> {formatDateTime(review!.at, t)}.
               </p>
             </div>
           ) : (

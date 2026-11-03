@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
-import { translate, type Lang } from '@/lib/i18n/messages';
+import { translatorFor, type Lang } from '@/lib/i18n/messages';
 import { formatFcfa } from '@/lib/money';
 import type { AiReview, Project, ProofCheck, Step, StoredFile, User } from '@/lib/types';
 import { getConfig } from './config';
@@ -208,15 +208,15 @@ export function comparisons(opinion: Opinion, ctx: { declaredAmountFcfa?: number
         const gap = Math.abs(inv.total_amount - ctx.declaredAmountFcfa) / ctx.declaredAmountFcfa;
         checks.push(
           gap <= 0.02
-            ? { id: 'ai-amount-declared', level: 'ok', text: t('Le total lu sur la facture ({read}) correspond au montant saisi.', { read: formatFcfa(inv.total_amount) }) }
-            : { id: 'ai-amount-declared', level: 'attention', text: t('L’IA lit {read} sur la facture, mais {declared} ont été saisis.', { read: formatFcfa(inv.total_amount), declared: formatFcfa(ctx.declaredAmountFcfa) }) },
+            ? { id: 'ai-amount-declared', level: 'ok', text: t('Le total lu sur la facture ({read}) correspond au montant saisi.', { read: formatFcfa(inv.total_amount, t) }) }
+            : { id: 'ai-amount-declared', level: 'attention', text: t('L’IA lit {read} sur la facture, mais {declared} ont été saisis.', { read: formatFcfa(inv.total_amount, t), declared: formatFcfa(ctx.declaredAmountFcfa, t) }) },
         );
       } else {
-        checks.push({ id: 'ai-amount-undeclared', level: 'info', text: t('L’IA lit {read} sur la facture ; aucun montant n’avait été saisi.', { read: formatFcfa(inv.total_amount) }) });
+        checks.push({ id: 'ai-amount-undeclared', level: 'info', text: t('L’IA lit {read} sur la facture ; aucun montant n’avait été saisi.', { read: formatFcfa(inv.total_amount, t) }) });
       }
       const gapStep = (inv.total_amount - ctx.expectedFcfa) / ctx.expectedFcfa;
       if (Math.abs(gapStep) > AMOUNT_TOLERANCE) {
-        checks.push({ id: 'ai-amount-step', level: 'attention', text: t('Le total lu sur la facture s’écarte de {gap} % de l’étape (≈ {expected}).', { gap: Math.round(Math.abs(gapStep) * 100), expected: formatFcfa(ctx.expectedFcfa) }) });
+        checks.push({ id: 'ai-amount-step', level: 'attention', text: t('Le total lu sur la facture s’écarte de {gap} % de l’étape (≈ {expected}).', { gap: Math.round(Math.abs(gapStep) * 100), expected: formatFcfa(ctx.expectedFcfa, t) }) });
       }
     }
   } else {
@@ -304,7 +304,7 @@ function failure(err: unknown, t: Translate): string {
 
 export async function requestProofReview(owner: User, projectId: string, stepId: string, deps: { client?: ReviewClient; now?: number; lang?: Lang } = {}): Promise<AiReview> {
   const lang = deps.lang ?? 'fr';
-  const t: Translate = (fr, vars) => translate(lang, fr, vars);
+  const t: Translate = translatorFor(lang);
   const cfg = getConfig();
   if (!cfg.ai.enabled) throw new HttpError(409, 'L’avis de l’IA n’est pas activé sur cette instance.', 'ai_disabled');
   const now = deps.now ?? Date.now();

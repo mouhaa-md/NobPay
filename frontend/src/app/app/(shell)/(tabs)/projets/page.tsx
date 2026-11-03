@@ -117,7 +117,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                   <strong className="font-title-md text-title-md">{totals.projects}</strong> <Tc>projet</Tc>{totals.projects > 1 ? 's' : ''}
                 </Pill>
                 <Pill icon="account_balance">
-                  <strong className="font-title-md text-title-md">{formatUsdShort(totals.escrow)}</strong> <Tc>en séquestre</Tc>
+                  <strong className="font-title-md text-title-md">{formatUsdShort(totals.escrow, t)}</strong> <Tc>en séquestre</Tc>
                 </Pill>
                 <Pill icon="currency_bitcoin" tone="bg-tertiary-fixed text-on-tertiary-fixed">
                   {totals.anchorsTotal === 0 ? t('Aucun ancrage Bitcoin pour le moment') : t('{anchorsConfirmed} sur {anchorsTotal} ancrage{s} confirmé{s2} sur Bitcoin', { anchorsConfirmed: totals.anchorsConfirmed, anchorsTotal: totals.anchorsTotal, s: totals.anchorsTotal > 1 ? 's' : '', s2: totals.anchorsConfirmed > 1 ? 's' : '' })}

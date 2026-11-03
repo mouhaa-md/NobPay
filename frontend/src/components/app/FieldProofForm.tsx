@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
-import { isUploadableImage, isUploadableProof, shrinkImage } from '@/lib/image';
+import { isUploadableImage, isUploadableProof, photoFingerprint, shrinkImage } from '@/lib/image';
 import { formatInt } from '@/lib/money';
 import { MOBILE_NETWORKS } from '@/lib/templates';
 import type { MobileNetwork, ProofKind, Supplier } from '@/lib/types';
@@ -26,6 +26,9 @@ interface Photo {
   file: File;
   preview: string;
   takenAt: string;
+  /** read inside the original photo, before it was shrunk */
+  exif?: { takenAt?: string; gps?: { lat: number; lng: number } };
+  dhash?: string;
 }
 interface Gps {
   lat: number;
@@ -89,12 +92,12 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
     const next: Photo[] = [];
     let refused = 0;
     for (const original of files) {
-      const file = await shrinkImage(original);
+      const [file, print] = await Promise.all([shrinkImage(original), photoFingerprint(original)]);
       if (!isUploadableImage(file)) {
         refused += 1;
         continue;
       }
-      next.push({ id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}`, file, preview: URL.createObjectURL(file), takenAt: new Date(original.lastModified || Date.now()).toISOString() });
+      next.push({ id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}`, file, preview: URL.createObjectURL(file), takenAt: new Date(original.lastModified || Date.now()).toISOString(), exif: print.exif, dhash: print.dhash });
     }
     if (refused > 0) setError(t(refused === 1 ? 'Cette photo n’est pas dans un format accepté (JPEG, PNG ou WebP). Reprenez-la avec l’appareil photo.' : 'Ces photos ne sont pas dans un format accepté (JPEG, PNG ou WebP). Reprenez-les avec l’appareil photo.'));
     if (next.length === 0) return;
@@ -139,7 +142,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
       photos.forEach((p) => form.append('photos', p.file, p.file.name));
       form.set(
         'photoMeta',
-        JSON.stringify(photos.map((p) => ({ takenAt: p.takenAt, lat: gps?.lat, lng: gps?.lng, accuracy: gps?.accuracy }))),
+        JSON.stringify(photos.map((p) => ({ takenAt: p.takenAt, lat: gps?.lat, lng: gps?.lng, accuracy: gps?.accuracy, exifTakenAt: p.exif?.takenAt, exifLat: p.exif?.gps?.lat, exifLng: p.exif?.gps?.lng, dhash: p.dhash }))),
       );
       if (invoice) form.set('invoice', await shrinkImage(invoice));
       if (invoiceAmount) form.set('invoiceAmountFcfa', digits(invoiceAmount));

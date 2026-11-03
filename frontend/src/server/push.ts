@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { translate, type Lang } from '@/lib/i18n/messages';
+import { translatorFor, type Lang } from '@/lib/i18n/messages';
 import { formatUsdShort } from '@/lib/money';
 import type { Db, LedgerEvent, Project, PushSub, User } from '@/lib/types';
 import { getConfig } from './config';
@@ -107,7 +107,7 @@ export interface Notice {
   url: string;
   tag: string;
 }
-type Say = (fr: string, vars?: Record<string, string | number>) => string;
+type Say = ((fr: string, vars?: Record<string, string | number>) => string) & { lang?: Lang };
 interface Planned {
   role: PushSub['role'];
   make: (t: Say) => Notice;
@@ -135,10 +135,10 @@ export function plan(event: LedgerEvent, project: Project): Planned[] {
       break;
     case 'funding_paid': {
       const who = typeof event.data.contributor === 'string' ? event.data.contributor : '';
-      const amount = formatUsdShort(Number(event.data.amountCents) || 0);
+      const cents = Number(event.data.amountCents) || 0;
       // only a relative's money is news for the funder (their own payment is on their screen)
       if (event.data.byFamily === true) {
-        out.push({ role: 'owner', make: (t) => ({ title: t('Cotisation reçue'), body: who ? t('{who} a ajouté {amount} à {name}.', { who, amount, name }) : t('Un proche a ajouté {amount} à {name}.', { amount, name }), url: ownerUrl, tag }) });
+        out.push({ role: 'owner', make: (t) => ({ title: t('Cotisation reçue'), body: who ? t('{who} a ajouté {amount} à {name}.', { who, amount: formatUsdShort(cents, t), name }) : t('Un proche a ajouté {amount} à {name}.', { amount: formatUsdShort(cents, t), name }), url: ownerUrl, tag }) });
       }
       const active = project.steps.find((s) => s.status === 'active');
       if (active) out.push({ role: 'manager', make: (t) => ({ title: t('Étape financée'), body: t('{name} : vous pouvez envoyer la preuve de l’étape {index}.', { name, index: active.index }), url: fieldUrl, tag }) });
@@ -207,7 +207,7 @@ async function announce(event: LedgerEvent, project: Project, subs: PushSub[]): 
     const targets = subs.filter((s) => s.role === planned.role && (planned.role === 'owner' ? s.userId === project.ownerId : s.projectId === project.id));
     await Promise.all(
       targets.map(async (s) => {
-        const t: Say = (fr, vars) => translate(s.lang, fr, vars);
+        const t: Say = translatorFor(s.lang);
         results.set(s.id, await deliver(s, planned.make(t)));
       }),
     );

@@ -88,8 +88,8 @@ export function VerifyAnchor({ initial }: { initial: AnchorView }) {
         <CheckRow state={btcState} title={t('L’empreinte est dans la blockchain Bitcoin')}>
           {anchor.status === 'confirmed' ? (
             <>
-              <Tc>Inscrite dans le bloc</Tc> {anchor.bitcoinBlock ? formatInt(anchor.bitcoinBlock) : ''}
-              {anchor.confirmedAt ? t(' (constaté le {formatDateTime})', { formatDateTime: formatDateTime(anchor.confirmedAt) }) : ''}.
+              <Tc>Inscrite dans le bloc</Tc> {anchor.bitcoinBlock ? formatInt(anchor.bitcoinBlock, t) : ''}
+              {anchor.confirmedAt ? t(' (constaté le {formatDateTime})', { formatDateTime: formatDateTime(anchor.confirmedAt, t) }) : ''}.
               {anchor.blockCheck?.state === 'verified' && t(' Contrôle croisé avec un explorateur public : correspond.')}
               {anchor.blockCheck?.state === 'mismatch' && t(' Non vérifié localement : le contrôle croisé ne correspond pas, utilisez l’outil officiel ci-dessous.')}
               {anchor.blockCheck?.state === 'unavailable' && t(' Contrôle croisé indisponible pour l’instant.')}

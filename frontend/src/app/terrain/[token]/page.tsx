@@ -112,7 +112,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
               <section className="flex flex-col gap-3">
                 <div className="rounded-2xl bg-primary/5 p-4 ring-1 ring-primary-container/30">
                   <p className="font-label-sm text-label-sm uppercase tracking-wider text-primary">
-                    <Tc>Étape</Tc> {todo.index} <Tc>sur</Tc> {project.steps.length} · {formatUsdShort(todo.amountCents)}
+                    <Tc>Étape</Tc> {todo.index} <Tc>sur</Tc> {project.steps.length} · {formatUsdShort(todo.amountCents, t)}
                   </p>
                   <h2 className="mt-0.5 font-title-lg text-title-lg"><Tc>{todo.title}</Tc></h2>
                   <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant"><Tc>À envoyer :</Tc> {todo.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' + ')}</p>
@@ -138,7 +138,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                 <p className="font-body-md text-body-md text-on-surface-variant">
                   {waiting.status === 'releasing'
                     ? t('{name} va recevoir son paiement sur son mobile money.', { name: waiting.payout?.supplier.name ?? t('Le fournisseur') })
-                    : t('{ownerName} regarde votre envoi{s}. Cette page se met à jour toute seule.', { ownerName, s: waiting.proof ? ` du ${formatDateTime(waiting.proof.submittedAt)}` : '' })}
+                    : t('{ownerName} regarde votre envoi{s}. Cette page se met à jour toute seule.', { ownerName, s: waiting.proof ? ` du ${formatDateTime(waiting.proof.submittedAt, t)}` : '' })}
                 </p>
               </section>
             )}
@@ -216,7 +216,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
 
                         {s.proof && (
                           <span className="mt-1.5 block font-label-sm text-label-sm text-on-surface-variant">
-                            <Tc>Envoyée le</Tc> {formatDate(s.proof.submittedAt)} · {s.proof.photos.length} <Tc>photo</Tc>{s.proof.photos.length > 1 ? 's' : ''}
+                            <Tc>Envoyée le</Tc> {formatDate(s.proof.submittedAt, t)} · {s.proof.photos.length} <Tc>photo</Tc>{s.proof.photos.length > 1 ? 's' : ''}
                             {s.proof.invoice ? t(' + facture') : ''}
                             {s.proof.supplier ? t(' · à payer : {name}', { name: s.proof.supplier.name }) : ''}
                           </span>
@@ -255,7 +255,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
               <Icon name="lock" size={16} className="mt-px shrink-0" />
               <span>
                 <Tc>Ce lien est personnel : ne le partagez pas. Vous ne voyez pas le solde du financeur et vous ne pouvez pas débloquer d&apos;argent.</Tc>
-                {!tokenState.legacy && tokenState.expiresAt && !tokenState.expired && t(' Il est valable jusqu’au {formatDate} ; {ownerName} peut le renouveler.', { formatDate: formatDate(tokenState.expiresAt), ownerName })}
+                {!tokenState.legacy && tokenState.expiresAt && !tokenState.expired && t(' Il est valable jusqu’au {formatDate} ; {ownerName} peut le renouveler.', { formatDate: formatDate(tokenState.expiresAt, t), ownerName })}
               </span>
             </p>
           </div>

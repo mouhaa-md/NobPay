@@ -37,7 +37,7 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
               <li key={p.id} className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/30">
                 <a href={fileUrl(projectId, p, token)} target="_blank" rel="noopener noreferrer" className="relative block aspect-[4/3] bg-surface-container">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fileUrl(projectId, p, token)} alt={t('Photo prise le {formatDateTime}', { formatDateTime: formatDateTime(p.takenAt) })} className="h-full w-full object-cover" loading="lazy" />
+                  <img src={fileUrl(projectId, p, token)} alt={t('Photo prise le {formatDateTime}', { formatDateTime: formatDateTime(p.exif?.takenAt ?? p.takenAt, t) })} className="h-full w-full object-cover" loading="lazy" />
                   {p.gps && (
                     <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#0A0F24]/70 px-2 py-0.5 font-label-sm text-label-sm text-white backdrop-blur">
                       <Icon name="location_on" size={13} filled /> <Tc>Position jointe</Tc>
@@ -45,7 +45,7 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
                   )}
                 </a>
                 <div className="flex flex-col gap-0.5 p-2.5 font-label-sm text-label-sm text-on-surface-variant">
-                  <span>{formatDateTime(p.takenAt)}</span>
+                  <span title={p.exif?.takenAt ? t('Date lue dans la photo elle-même') : t('Date du fichier')}>{formatDateTime(p.exif?.takenAt ?? p.takenAt, t)}</span>
                   {p.gps ? (
                     <a
                       href={`https://www.openstreetmap.org/?mlat=${p.gps.lat}&mlon=${p.gps.lng}#map=17/${p.gps.lat}/${p.gps.lng}`}
@@ -87,10 +87,10 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
             )}
             <span className="min-w-0 flex-1">
               <span className="block truncate font-label-lg text-label-lg">{proof.invoice.name}</span>
-              {proof.invoiceAmountFcfa ? <span className="block font-title-md text-title-md font-bold text-primary">{formatFcfa(proof.invoiceAmountFcfa)}</span> : <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Montant non indiqué</Tc></span>}
+              {proof.invoiceAmountFcfa ? <span className="block font-title-md text-title-md font-bold text-primary">{formatFcfa(proof.invoiceAmountFcfa, t)}</span> : <span className="block font-body-sm text-body-sm text-on-surface-variant"><Tc>Montant non indiqué</Tc></span>}
               {gap !== null && (
                 <span className={`mt-0.5 block font-label-sm text-label-sm ${Math.abs(gap) <= 15 ? 'text-[#15803D]' : 'text-[#B45309]'}`}>
-                  {Math.abs(gap) <= 15 ? t('Cohérent avec le montant prévu') : t('Écart de {gap} % avec le montant prévu', { gap: `${gap > 0 ? '+' : ''}${gap}` })} (≈ {formatFcfa(expectedFcfa!)})
+                  {Math.abs(gap) <= 15 ? t('Cohérent avec le montant prévu') : t('Écart de {gap} % avec le montant prévu', { gap: `${gap > 0 ? '+' : ''}${gap}` })} (≈ {formatFcfa(expectedFcfa!, t)})
                 </span>
               )}
             </span>
