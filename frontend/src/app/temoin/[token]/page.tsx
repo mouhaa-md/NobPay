@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { AutoRefresh } from '@/components/app/AutoRefresh';
 import { ProofView } from '@/components/app/ProofView';
+import { PushToggle } from '@/components/app/PushToggle';
 import { WitnessResponder } from '@/components/app/WitnessResponder';
 import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { formatDateTime } from '@/lib/money';
 import { Tc } from '@/lib/i18n/client';
 import { getT } from '@/lib/i18n/server';
+import { getConfig } from '@/server/config';
 import { readDb } from '@/server/db';
 import { viewForWitness } from '@/server/witness';
 
@@ -91,6 +93,8 @@ export default async function WitnessPage(props: { params: Promise<{ token: stri
             </p>
           </section>
         )}
+
+        {getConfig().push.enabled && <PushToggle scope={{ kind: 'witness', token }} publicKey={getConfig().push.publicKey} />}
 
         <p className="rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
           {t('Votre avis est donné au financeur et inscrit au registre public sous le nom « {name} ». Il ne déclenche aucun paiement.', { name: witness.name })}

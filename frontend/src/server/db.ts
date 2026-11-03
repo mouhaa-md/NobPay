@@ -111,6 +111,8 @@ export async function resetDb(): Promise<void> {
     // optional collections the seed does not carry must not survive a reset
     delete db.refunds;
     delete db.nostr;
+    delete db.pushSubs;
+    delete db.pushCursor;
     Object.assign(db, fresh);
   });
 }

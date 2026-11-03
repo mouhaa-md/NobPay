@@ -54,6 +54,8 @@ Avec `NOSTR_PUBLISH=1`, chaque événement du registre est aussi publié sur des
 
 ### Un deuxième regard avant de payer (Dakar Bitcoin Hack #4)
 
+**Les proches autour du projet.** Le financeur peut nommer un **témoin indépendant** (un voisin, un maçon) qui regarde chaque preuve de l'extérieur et dit « je confirme » ou « je conteste », et décider que **rien n'est payé sans sa confirmation**. Un **lien famille** permet aux proches d'ajouter de l'argent au séquestre depuis n'importe quel portefeuille Lightning (sans rien pouvoir débloquer ni reprendre). Des **notifications** sur le téléphone (Web Push, sans SMS) préviennent chacun quand quelque chose l'attend. Les trois passent par des liens signés, sans compte ; la réponse du témoin est inscrite au registre. Détail : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
+
 Sur l'écran d'une preuve, **des contrôles sans IA** (photo ou facture déjà utilisée ailleurs, position des photos, date, montant de la facture comparé à l'étape) et, à la demande du financeur, **l'avis d'une IA** (Claude, via l'API officielle d'Anthropic) qui regarde les photos et lit la facture. Principe : **l'IA lit, le code compare, le financeur décide** ; l'avis est consultatif et ne bloque ni ne déclenche jamais un paiement. Les fichiers ne sont envoyés qu'à la demande, et l'écran le dit avant. Réglages : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
 
 **État de la vérification :** testé avec un faux client (forme de la requête, contenu envoyé, comparaisons, refus, erreurs, plafonds) ; **jamais exécuté contre l'API réelle**, faute de clé : la qualité de l'avis sur de vraies photos reste à constater.

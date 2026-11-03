@@ -16,6 +16,7 @@ import { ledgerFor } from '@/server/ledger';
 import { findProjectByManagerToken, managerTokenState } from '@/server/managerToken';
 import { receiptToken } from '@/server/receipt';
 import { Tc } from '@/lib/i18n/client';
+import { PushToggle } from '@/components/app/PushToggle';
 import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
@@ -247,6 +248,8 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                 })}
               </ol>
             </section>
+
+            {getConfig().push.enabled && <PushToggle scope={{ kind: 'manager', token: params.token }} publicKey={getConfig().push.publicKey} />}
 
             <p className="flex items-start gap-2 rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
               <Icon name="lock" size={16} className="mt-px shrink-0" />

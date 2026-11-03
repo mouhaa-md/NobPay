@@ -58,6 +58,9 @@ export async function PayoutTracker({ step }: { step: Step }) {
             <Item k={payout.lightning ? t('Destination') : t('Opérateur')} v={supplierRoute(payout.supplier)} />
             <Item k={t('Montant reçu')} v={payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)} strong />
             <Item k={t('Débité')} v={formatUsd(payout.amountUsdCents)} />
+            {payout.lightning?.feesSats !== undefined && payout.lightning.amountSats > 0 && (
+              <Item k={t('Frais de routage Lightning')} v={`${formatSats(payout.lightning.feesSats)} (${(Math.round((payout.lightning.feesSats / payout.lightning.amountSats) * 10_000) / 100).toLocaleString('fr-FR')} %)`} />
+            )}
             {payout.lightning ? (
               <Item k={t('Prix du bitcoin')} v={`1 BTC = ${Math.round(payout.lightning.btcUsd).toLocaleString('fr-FR')} $`} />
             ) : (
@@ -74,6 +77,11 @@ export async function PayoutTracker({ step }: { step: Step }) {
             )}
             <Item k={t('Mode')} v={payout.mode === 'mock' ? t('Simulation (aucun argent réel)') : payout.mode === 'nwc' ? t('Bitcoin réel (Lightning)') : t('Sandbox Bitnob (test)')} />
           </dl>
+          {payout.lightning?.feesSats !== undefined && (
+            <p className="mt-3 border-t border-[#16A34A]/20 pt-2.5 font-label-sm text-label-sm text-[#166534]">
+              <Tc>À titre de comparaison : le coût moyen d’un envoi d’argent dans le monde était de 6,49 % au 1er trimestre 2025 (Banque mondiale, Remittance Prices Worldwide). Ces frais de routage ne comptent pas l’achat des bitcoins par le financeur, qui a son propre coût.</Tc>
+            </p>
+          )}
         </section>
       )}
     </div>

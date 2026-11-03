@@ -1,6 +1,7 @@
 import { getConfig } from './config';
 import { refreshUsdXof } from './lightning/price';
 import { logger } from './logger';
+import { pushNewEvents } from './push';
 import { autoAnchorProjects, refreshPendingAnchors } from './anchors';
 import { checkWalletSolvency, pollPendingLightningFundings, reconcileRefunds } from './lightningFlows';
 import { attestCommitments } from './nostr/attestation';
@@ -111,6 +112,7 @@ export async function tick(): Promise<void> {
         state.nostrRunning = false;
       });
     }
+    if (getConfig().push.enabled) await safely(state, 'push', async () => void (await pushNewEvents()));
     if (liveFx() && Date.now() - state.lastFx > FX_EVERY_MS) {
       state.lastFx = Date.now();
       await safely(state, 'usd-xof', async () => void (await refreshUsdXof()));

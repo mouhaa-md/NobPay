@@ -25,6 +25,8 @@ export function checkStartupConfig(): StartupCheck {
         "N'importe qui qui connaît un numéro peut ouvrir ce compte. À réserver à une démonstration devant des personnes de confiance.",
     );
   }
+  const pushProblem = vapidProblem();
+  if (pushProblem) fatal.push(pushProblem);
   if (process.env.SMS_PROVIDER?.toLowerCase() === 'log' && (process.env.BITNOB_MODE === 'sandbox' || process.env.NODE_ENV === 'production')) {
     warnings.push('SMS_PROVIDER=log : les codes de connexion sont écrits dans les journaux du serveur. Réservé au développement ; configurez un vrai fournisseur SMS.');
   }
@@ -74,6 +76,23 @@ export function checkStartupConfig(): StartupCheck {
     }
   }
   return { fatal, warnings };
+}
+
+/**
+ * Why the notification keys cannot be used, or null (also when notifications are simply not set up). A bad key or subject
+ * would only show when the first notification is sent, and the phones that asked for them would then be dropped one by one.
+ */
+export function vapidProblem(): string | null {
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub && !priv) return null;
+  if (process.env.PUSH === '0') return null;
+  if (!pub || !priv) return 'VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY vont ensemble (node scripts/vapid-keys.mjs en fabrique une paire).';
+  if (!/^[A-Za-z0-9_-]{87}$/.test(pub)) return 'VAPID_PUBLIC_KEY n’est pas une clé publique VAPID valable (87 caractères base64url ; node scripts/vapid-keys.mjs).';
+  if (!/^[A-Za-z0-9_-]{43}$/.test(priv)) return 'VAPID_PRIVATE_KEY n’est pas une clé privée VAPID valable (43 caractères base64url).';
+  const subject = process.env.VAPID_SUBJECT || 'mailto:contact@nobpay.invalid';
+  if (!/^(mailto:[^\s@]+@[^\s@]+|https:\/\/\S+)$/.test(subject)) return 'VAPID_SUBJECT doit être une adresse « mailto:vous@exemple.org » ou une adresse https.';
+  return null;
 }
 
 /**

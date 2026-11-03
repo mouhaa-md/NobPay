@@ -169,3 +169,49 @@ describe('startup configuration check', () => {
     expect(checkStartupConfig().fatal).toEqual([]);
   });
 });
+
+describe('notification keys (Web Push)', () => {
+  const PUB = 'B'.repeat(87);
+  const PRIV = 'a'.repeat(43);
+  it('says nothing while notifications are not set up, or switched off', () => {
+    expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
+    vi.stubEnv('VAPID_PUBLIC_KEY', 'garbage');
+    vi.stubEnv('VAPID_PRIVATE_KEY', 'garbage');
+    vi.stubEnv('PUSH', '0');
+    expect(checkStartupConfig()).toEqual({ fatal: [], warnings: [] });
+  });
+
+  it('accepts a good pair and a mailto or https subject', () => {
+    vi.stubEnv('VAPID_PUBLIC_KEY', PUB);
+    vi.stubEnv('VAPID_PRIVATE_KEY', PRIV);
+    expect(checkStartupConfig().fatal).toEqual([]);
+    vi.stubEnv('VAPID_SUBJECT', 'mailto:ops@nobpay.example');
+    expect(checkStartupConfig().fatal).toEqual([]);
+    vi.stubEnv('VAPID_SUBJECT', 'https://nobpay.example/contact');
+    expect(checkStartupConfig().fatal).toEqual([]);
+  });
+
+  it('refuses to start with half a pair, a malformed key or a subject the push services reject (the phones would be dropped one by one)', () => {
+    vi.stubEnv('VAPID_PUBLIC_KEY', PUB);
+    expect(checkStartupConfig().fatal.join(' ')).toMatch(/VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY/);
+    vi.stubEnv('VAPID_PRIVATE_KEY', 'short');
+    expect(checkStartupConfig().fatal.join(' ')).toMatch(/VAPID_PRIVATE_KEY/);
+    vi.stubEnv('VAPID_PRIVATE_KEY', PRIV);
+    vi.stubEnv('VAPID_PUBLIC_KEY', `${PUB}x`);
+    expect(checkStartupConfig().fatal.join(' ')).toMatch(/VAPID_PUBLIC_KEY n’est pas/);
+    vi.stubEnv('VAPID_PUBLIC_KEY', PUB);
+    for (const bad of ['contact@nobpay.example', 'http://nobpay.example', 'mailto:', 'mailto:no-at-sign']) {
+      vi.stubEnv('VAPID_SUBJECT', bad);
+      expect(checkStartupConfig().fatal.join(' '), bad).toMatch(/VAPID_SUBJECT/);
+    }
+  });
+
+  it('a pair made by the script is accepted as it is', async () => {
+    const { createRequire } = await import('node:module');
+    const wp = createRequire(import.meta.url)('web-push') as typeof import('web-push');
+    const keys = wp.generateVAPIDKeys();
+    vi.stubEnv('VAPID_PUBLIC_KEY', keys.publicKey);
+    vi.stubEnv('VAPID_PRIVATE_KEY', keys.privateKey);
+    expect(checkStartupConfig().fatal).toEqual([]);
+  });
+});
