@@ -13,6 +13,7 @@ export const LEDGER_LABEL: Record<LedgerType, { label: string; icon: string; ton
   refund_started: { label: 'Remboursement demandé', icon: 'undo', tone: 'bg-surface-container text-primary' },
   refund_completed: { label: 'Séquestre remboursé', icon: 'payments', tone: 'bg-[#DCFCE7] text-[#15803D]' },
   refund_failed: { label: 'Remboursement non abouti', icon: 'error', tone: 'bg-error-container text-on-error-container' },
+  ai_review: { label: 'Avis de l’IA demandé', icon: 'smart_toy', tone: 'bg-surface-container text-primary' },
   witness_response: { label: 'Réponse du témoin', icon: 'how_to_reg', tone: 'bg-[#E0F2FE] text-[#0369A1]' },
 };
 

@@ -5,6 +5,7 @@ import { CopyButton } from '@/components/app/CopyButton';
 import { InstallCard } from '@/components/app/InstallCard';
 import { GuestRecoveryCard } from '@/components/app/GuestRecoveryCard';
 import { ProfileActions } from '@/components/app/ProfileActions';
+import { PushToggle } from '@/components/app/PushToggle';
 import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, Chip, SectionTitle } from '@/components/ui/primitives';
@@ -122,6 +123,8 @@ export default async function Profile() {
         )}
 
         <InstallCard />
+
+        {getConfig().push.enabled && <PushToggle scope={{ kind: 'owner' }} publicKey={getConfig().push.publicKey} />}
 
         <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} guest={!!user.guest} />
 

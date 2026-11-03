@@ -18,6 +18,8 @@ One engine, three corridors: **a project back home** (a house, a field, a shop),
 4. **Release**: the supplier is paid **in sats at their Lightning address** (LNURL-pay); the receipt shows the **preimage**, the cryptographic proof of payment. Unused escrow can be refunded.
 5. **Verify**: every event joins a hash-chained record, anchored on Bitcoin with OpenTimestamps and **published on Nostr relays** as a signed commitment that carries no name and no amount. The public verification page re-checks everything in the visitor's browser, relays included.
 
+**With the people around the project.** The funder can name an **independent witness** (a neighbour, a mason) who looks at each proof from outside and says "confirmed" or "disputed", and can decide that **nothing is paid without that confirmation**. A **family link** lets relatives add to the escrow from any Lightning wallet (they cannot release or take anything back). **Notifications** on the phone (Web Push, no SMS) tell each person when something needs them. All three go through signed links, no account, and the witness's answer is written in the ledger.
+
 A **"Quick trial"** button creates a 15 $ project in three steps so a visitor can see the whole path in a few minutes.
 
 ## What is real, and what is not

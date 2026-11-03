@@ -173,5 +173,17 @@ Voir `docs/AUDIT-2026-11-03.md`. Corrigés, chacun avec ses tests :
 - **I1** : `ARCHITECTURE.md` réécrit. **I2** : nombre de tests du texte Devpost.
 - 788 tests verts sur 54 fichiers.
 
+## Les proches autour du projet (3 novembre 2026)
+
+Suite de l'audit du 3 novembre (`docs/AUDIT-2026-11-03.md`, N1 à N3 et A2, A5, A7).
+
+- **Témoin indépendant.** Lien signé et renouvelable (`/temoin/…`), une réponse définitive par preuve (« je confirme » ou « je conteste », avec un mot privé), inscrite au registre (nom et verdict seulement). Exigence facultative « ne rien payer sans sa confirmation » : contrôlée à la demande de devis **et** dans la transaction qui réserve l'argent. Le témoin ne voit que la preuve en cours, jamais une adresse ni un numéro à payer.
+- **Lien famille.** `/contribuer/…` : un proche ajoute de l'argent au séquestre avec n'importe quel portefeuille Lightning ; prénom facultatif écrit au registre (la page le dit). Il ne montre ni solde ni preuves et ne débloque rien. 12 factures par heure et par IP, 5 factures en attente par projet, plafonds pilotes, aucune vraie facture pour un projet de démonstration, l'invoice n'est lisible que par le lien qui l'a fait.
+- **Notifications (Web Push).** Fabriquées **à partir du registre, après coup** : aucun paiement n'attend un service de notification. Adresses de notification limitées aux services des navigateurs (sinon le serveur appellerait n'importe quelle adresse), événements de plus de 10 minutes jamais annoncés, 5 appareils par compte, abandon d'un appareil après 5 échecs de suite ou à la première réponse 404/410. Le serveur refuse de démarrer avec une clé ou un sujet VAPID mal formé. `node scripts/vapid-keys.mjs`.
+- **A2** : l'avis de l'IA entre au registre (modèle et empreinte, jamais le texte). **A7** : NIP-05 (`/.well-known/nostr.json?name=<projet>`), pour qu'un client Nostr affiche un nom plutôt qu'une clé. **A5** : le reçu montre les frais de routage réellement payés, avec le coût moyen d'un envoi d'argent de la Banque mondiale (6,49 %, 1er trimestre 2025) et la mention que l'achat des bitcoins par le financeur n'y figure pas.
+- Un test analyse tout le code pour refuser un hook (`useT`) appelé hors d'un rendu.
+- Pas fait (voir l'audit) : modifier ou clore un projet (A1), euro à côté du dollar (A4), formats de date et de nombre selon la langue (A6), EXIF et empreinte perceptuelle (A3).
+- 846 tests verts sur 58 fichiers.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

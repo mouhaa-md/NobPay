@@ -39,6 +39,8 @@ function describe(t: T, type: string, data: Record<string, unknown>): string {
       return t('Étape {step} · fournisseur payé', { step });
     case 'step_rejected':
       return `${t('Étape {step}', { step })}${data.note ? ` · « ${String(data.note)} »` : ''}`;
+    case 'ai_review':
+      return t('Étape {step} · avis de l’IA demandé ({model})', { step, model: String(data.model ?? '') });
     case 'witness_response':
       return t(data.verdict === 'confirmed' ? 'Étape {step} · confirmée par le témoin {name}' : 'Étape {step} · contestée par le témoin {name}', { step, name: String(data.witness ?? '') });
     case 'payout_failed':

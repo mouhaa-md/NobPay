@@ -40,7 +40,7 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
                   <img src={fileUrl(projectId, p, token)} alt={t('Photo prise le {formatDateTime}', { formatDateTime: formatDateTime(p.takenAt) })} className="h-full w-full object-cover" loading="lazy" />
                   {p.gps && (
                     <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#0A0F24]/70 px-2 py-0.5 font-label-sm text-label-sm text-white backdrop-blur">
-                      <Icon name="location_on" size={13} filled /> <Tc>Géolocalisée</Tc>
+                      <Icon name="location_on" size={13} filled /> <Tc>Position jointe</Tc>
                     </span>
                   )}
                 </a>

@@ -5,11 +5,13 @@ import { translate, type Lang } from '@/lib/i18n/messages';
 import { formatFcfa } from '@/lib/money';
 import type { AiReview, Project, ProofCheck, Step, StoredFile, User } from '@/lib/types';
 import { getConfig } from './config';
+import { canonicalize, sha256Hex } from './crypto';
 import { readDb, withDb } from './db';
 import { findProject } from './domain';
 import { readUpload, sniffMime } from './files';
 import { HttpError } from './http';
 import { currentUsdXof } from './lightning/price';
+import { appendLedger } from './ledger';
 import { logger } from './logger';
 import { AMOUNT_TOLERANCE, inFrench, type Translate } from './proofChecks';
 
@@ -364,7 +366,14 @@ export async function requestProofReview(owner: User, projectId: string, stepId:
     // stored only if the proof is still the one that was reviewed
     await withDb((d) => {
       const s = findProject(d, projectId)?.steps.find((x) => x.id === stepId);
-      if (s?.proof && s.proof.submittedAt === submittedAt) s.proof.aiReview = review;
+      if (s?.proof && s.proof.submittedAt === submittedAt) {
+        s.proof.aiReview = review;
+        // the ledger says THAT an opinion was asked for and what it was (a hash, never the text): the funder cannot later be
+        // shown another one as if it had been the one they read
+        if (review.state === 'done') {
+          appendLedger(d, projectId, 'ai_review', { stepId, index: s.index, model: review.model, reviewHash: sha256Hex(canonicalize(review)) }, review.at);
+        }
+      }
     });
   } finally {
     inFlight.delete(step.id);

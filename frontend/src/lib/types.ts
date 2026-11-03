@@ -279,7 +279,8 @@ export type LedgerType =
   | 'refund_started'
   | 'refund_completed'
   | 'refund_failed'
-  | 'witness_response';
+  | 'witness_response'
+  | 'ai_review';
 
 export interface LedgerEvent {
   seq: number; // per project, starts at 1
@@ -362,6 +363,26 @@ export interface Db {
   refunds?: Refund[];
   /** where each ledger event stands on the Nostr relays; missing in databases created before commitments existed */
   nostr?: NostrCommit[];
+  /** phones that asked for notifications; missing in databases created before they existed */
+  pushSubs?: PushSub[];
+  /** last ledger position notified, per project */
+  pushCursor?: Record<string, number>;
+}
+
+/** A browser that agreed to receive notifications (Web Push), for one role on one account or project. */
+export interface PushSub {
+  id: string;
+  role: 'owner' | 'manager' | 'witness';
+  /** owner: the funder's account; manager and witness: the project the link opens */
+  userId?: string;
+  projectId?: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  lang: 'fr' | 'en';
+  createdAt: string;
+  lastOkAt?: string;
+  failures?: number;
 }
 
 /** One ledger event published (or being published) on Nostr relays as a signed commitment. */

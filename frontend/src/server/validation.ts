@@ -124,6 +124,18 @@ export const witnessInviteSchema = z.object({ name: z.string().min(2, 'Donnez le
 export const witnessRespondSchema = z.object({ stepId: z.string().min(1).max(80), verdict: z.enum(['confirmed', 'disputed']), note: z.string().max(300, 'Message trop long (300 caractères au plus).').optional() }).strict();
 export const contributionEnableSchema = z.object({ renew: z.boolean().optional() }).strict();
 export const contributeSchema = z.object({ amountCents: money(500, 50_000_000, 'Montant minimum : 5 $'), name: z.string().max(60).optional() }).strict();
+const pushScope = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('owner') }).strict(),
+  z.object({ kind: z.literal('manager'), token: z.string().min(10).max(300) }).strict(),
+  z.object({ kind: z.literal('witness'), token: z.string().min(10).max(300) }).strict(),
+]);
+export const pushSubscribeSchema = z
+  .object({
+    scope: pushScope,
+    subscription: z.object({ endpoint: z.string().max(700), keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }) }),
+  })
+  .strict();
+export const pushUnsubscribeSchema = z.object({ scope: pushScope, endpoint: z.string().max(700) }).strict();
 export const recoverSchema = z.object({ token: z.string().min(10).max(200) }).strict();
 export const quoteSchema =z.object({ simulate: z.boolean().optional() }).strict();
 export const rejectSchema = z.object({ note: z.string().max(1000, 'Note trop longue').optional() }).strict();

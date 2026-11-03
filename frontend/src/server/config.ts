@@ -97,6 +97,16 @@ export function getConfig() {
       maxEscrowUsd: positive(process.env.LIGHTNING_MAX_ESCROW_USD, 500),
     },
     /**
+     * Notifications on the phone (Web Push): need a pair of VAPID keys (node scripts/vapid-keys.mjs). Without them the
+     * feature is simply off. The private key never leaves the server.
+     */
+    push: {
+      enabled: process.env.PUSH !== '0' && !!process.env.VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY,
+      publicKey: process.env.VAPID_PUBLIC_KEY || '',
+      /** mailto: or https: address the push services can reach in case of trouble */
+      subject: process.env.VAPID_SUBJECT || 'mailto:contact@nobpay.invalid',
+    },
+    /**
      * The AI's advice on a proof (AI_REVIEW=1 and ANTHROPIC_API_KEY). Opt-in: the photos and the invoice of a proof are sent
      * to the Anthropic API when the funder asks for the advice, and each review costs money. Set a spending limit on the key.
      */
