@@ -144,6 +144,9 @@ export function plan(event: LedgerEvent, project: Project): Planned[] {
       if (active) out.push({ role: 'manager', make: (t) => ({ title: t('Étape financée'), body: t('{name} : vous pouvez envoyer la preuve de l’étape {index}.', { name, index: active.index }), url: fieldUrl, tag }) });
       break;
     }
+    case 'project_closed':
+      out.push({ role: 'manager', make: (t) => ({ title: t('Projet clos'), body: t('{name} : le financeur a clos le projet, plus aucune preuve n’est attendue.', { name }), url: fieldUrl, tag }) });
+      break;
     case 'step_rejected':
       out.push({ role: 'manager', make: (t) => ({ title: t('Preuve refusée'), body: t('{name} : envoyez une nouvelle preuve pour l’étape {index}.', { name, index: index ?? 0 }), url: fieldUrl, tag }) });
       break;

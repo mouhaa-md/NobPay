@@ -220,6 +220,8 @@ export interface Project {
   managerTokenVersion?: number;
   managerTokenExpiresAt?: string;
   approvalRule: 'owner';
+  /** the funder closed the project: no more funds, proofs or payments; what is left in escrow can be taken back */
+  closedAt?: string;
   witness?: Witness;
   /** the family link: anyone who has it can add to this project's escrow (and nothing else) */
   contribution?: ContributionLink;
@@ -286,7 +288,9 @@ export type LedgerType =
   | 'refund_completed'
   | 'refund_failed'
   | 'witness_response'
-  | 'ai_review';
+  | 'ai_review'
+  | 'project_updated'
+  | 'project_closed';
 
 export interface LedgerEvent {
   seq: number; // per project, starts at 1

@@ -3,6 +3,7 @@ import { hmacHex, safeEqual } from './crypto';
 import { readDb, withDb } from './db';
 import { findProject } from './domain';
 import { HttpError } from './http';
+import { assertOpen } from './projectEdit';
 import { assertSessionSecret } from './secret';
 import { createFunding, refreshFunding, simulateFundingPaid } from './services';
 
@@ -64,6 +65,7 @@ function owned(db: Db, owner: User, projectId: string): Project {
 export async function enableContribution(owner: User, projectId: string, opts: { renew?: boolean } = {}): Promise<{ token: string; expiresAt: string }> {
   return withDb((db) => {
     const project = owned(db, owner, projectId);
+    assertOpen(project);
     const previous = project.contribution;
     const renew = !!opts.renew || !previous || contributionLinkExpired(project);
     if (!renew) return { token: contributionLinkToken(project)!, expiresAt: previous!.expiresAt };

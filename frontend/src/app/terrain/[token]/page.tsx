@@ -54,7 +54,8 @@ export default async function FieldPage(props: { params: Promise<{ token: string
   const ownerName = owner?.firstName ?? 'Le financeur';
   const sector = SECTORS[project.sector];
 
-  const todo = project.steps.find((s) => s.status === 'active' || s.status === 'rejected');
+  const closed = !!project.closedAt;
+  const todo = closed ? undefined : project.steps.find((s) => s.status === 'active' || s.status === 'rejected');
   const waiting = project.steps.find((s) => s.status === 'proof_submitted' || s.status === 'releasing');
   const paidCount = project.steps.filter((s) => s.status === 'paid').length;
   const allDone = paidCount === project.steps.length;
@@ -108,6 +109,16 @@ export default async function FieldPage(props: { params: Promise<{ token: string
         <div className="mx-auto flex flex-col gap-space-lg px-space-md pt-space-md lg:grid lg:max-w-[1000px] lg:grid-cols-[1.2fr_1fr] lg:items-start lg:gap-8 lg:px-8 lg:pt-8">
           {/* ---- left: what to do now ---- */}
           <div className="flex flex-col gap-space-lg">
+            {closed && (
+              <section className="flex flex-col items-center gap-3 rounded-3xl bg-surface-container-low p-space-lg text-center" role="status">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
+                  <Icon name="lock" size={28} />
+                </span>
+                <p className="font-title-lg text-title-lg"><Tc>Projet clos</Tc></p>
+                <p className="font-body-md text-body-md text-on-surface-variant">{t('{ownerName} a clos ce projet : plus aucune preuve n’est attendue. Merci pour votre travail.', { ownerName })}</p>
+              </section>
+            )}
+
             {todo && (
               <section className="flex flex-col gap-3">
                 <div className="rounded-2xl bg-primary/5 p-4 ring-1 ring-primary-container/30">
@@ -143,7 +154,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
               </section>
             )}
 
-            {!todo && !waiting && !allDone && (
+            {!closed && !todo && !waiting && !allDone && (
               <section className="flex flex-col items-center gap-3 rounded-3xl bg-surface-container-low p-space-lg text-center">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
                   <Icon name="lock" size={28} />

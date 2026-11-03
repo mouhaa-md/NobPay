@@ -59,7 +59,7 @@ A one-click **"Essai rapide"** creates a 15 $ trial (three steps of 5 $) so a ju
 
 ## How we built it
 
-- **Next.js 16, React 19, TypeScript (strict), zod 4**; a single process with an append-only, hash-chained ledger; a file database for now (SQLite is planned). 846 automated tests; Docker and Caddy deployment files.
+- **Next.js 16, React 19, TypeScript (strict), zod 4**; a single process with an append-only, hash-chained ledger; a file database for now (SQLite is planned). 884 automated tests; Docker and Caddy deployment files.
 - **Lightning without an intermediary**: Nostr Wallet Connect (NIP-47) with two connections of different rights: one that can only make and look up invoices (it cannot spend), and one that pays and carries a budget. Our own BOLT11 decoder (the invoice libraries did not expose the description hash that LNURL-pay requires) and an SSRF-safe HTTPS client for Lightning addresses.
 - **Money safety under uncertainty**: a payment is only believed with a preimage that hashes to the invoice; a lost answer keeps the funds reserved and the payment is looked up by its hash, never repeated; "never sent" is concluded only after five minutes without a trace.
 - **Nostr**: one signing key per project derived from a master key, named in the first ledger event (so the Bitcoin anchor also commits to it), regular (non-replaceable) events so a forged second version appears next to the first, and NIP-03 proofs reduced to a single Bitcoin attestation.

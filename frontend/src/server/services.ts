@@ -29,6 +29,7 @@ import { readDb, withDb } from './db';
 import { activateSteps, applyFundingPaid, applyPayoutCompleted, applyPayoutFailed, findProject, findStep, simulatedMark } from './domain';
 import { HttpError } from './http';
 import { logger } from './logger';
+import { assertOpen } from './projectEdit';
 import { witnessGate } from './witness';
 import { appendLedger } from './ledger';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
@@ -183,6 +184,7 @@ export async function createFunding(
 ): Promise<Funding> {
   const db = await readDb();
   const project = ownedProject(db, owner, projectId);
+  assertOpen(project);
   const amountCents = Math.round(Number(input.amountCents));
   if (!Number.isFinite(amountCents) || amountCents < 500) throw new HttpError(400, 'Montant minimum : 5 $');
   const remainingBudget = project.budgetCents - (fundedCents(db, projectId) - refundedCents(db, projectId));
@@ -491,7 +493,8 @@ export async function assertProjectAccess(actor: Actor, projectId: string): Prom
 }
 
 /** The step must be waiting for a proof. Used before reading an upload AND again inside the transaction. */
-function assertStepAcceptsProof(step: Step): void {
+function assertStepAcceptsProof(step: Step, project: Project): void {
+  assertOpen(project);
   if (step.status !== 'active' && step.status !== 'rejected') {
     throw new HttpError(409, step.status === 'upcoming' ? "Cette étape n'est pas encore débloquée : le séquestre doit la couvrir." : 'Une preuve a déjà été envoyée pour cette étape');
   }
@@ -499,8 +502,9 @@ function assertStepAcceptsProof(step: Step): void {
 
 /** Access + step state, checked BEFORE any byte of the upload is read or written. */
 export async function assertCanSubmitProof(actor: Actor, projectId: string, stepId: string): Promise<Step> {
-  const step = stepOf(await assertProjectAccess(actor, projectId), stepId);
-  assertStepAcceptsProof(step);
+  const project = await assertProjectAccess(actor, projectId);
+  const step = stepOf(project, stepId);
+  assertStepAcceptsProof(step, project);
   return step;
 }
 
@@ -530,7 +534,7 @@ export async function submitProof(actor: Actor, projectId: string, stepId: strin
   return withDb((d) => {
     const p = findProject(d, projectId)!;
     const step = stepOf(p, stepId);
-    assertStepAcceptsProof(step); // two uploads racing for the same step: only the first one gets in
+    assertStepAcceptsProof(step, p); // two uploads racing for the same step: only the first one gets in
     step.proof = {
       photos: input.photos.map((f) => ({ ...f, takenAt: f.takenAt ?? submittedAt })),
       invoice: input.invoice,
@@ -586,6 +590,7 @@ export async function quoteRelease(owner: User, projectId: string, stepId: strin
   const db = await readDb();
   const project = ownedProject(db, owner, projectId);
   const step = stepOf(project, stepId);
+  assertOpen(project);
   if (step.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à valider pour cette étape');
   if (!step.proof?.supplier) throw new HttpError(409, 'Le fournisseur à payer est manquant');
   const gate = witnessGate(project, step);

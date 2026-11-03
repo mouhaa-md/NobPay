@@ -39,6 +39,10 @@ function describe(t: T, type: string, data: Record<string, unknown>): string {
       return t('Étape {step} · fournisseur payé', { step });
     case 'step_rejected':
       return `${t('Étape {step}', { step })}${data.note ? ` · « ${String(data.note)} »` : ''}`;
+    case 'project_updated':
+      return t('Plan modifié : {n} étapes, budget {amount}', { n: Array.isArray(data.steps) ? data.steps.length : 0, amount: usd(data.budgetCents) });
+    case 'project_closed':
+      return t('Projet clos · {amount} restaient en séquestre', { amount: usd(data.escrowLeftCents) });
     case 'ai_review':
       return t('Étape {step} · avis de l’IA demandé ({model})', { step, model: String(data.model ?? '') });
     case 'witness_response':
