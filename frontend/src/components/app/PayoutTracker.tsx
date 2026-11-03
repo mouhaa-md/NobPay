@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/Icon';
 import { Spinner } from '@/components/ui/primitives';
-import { formatDateTime, formatFcfa, formatRate, formatSats, formatUsd } from '@/lib/money';
+import { formatDateTime, formatFcfa, formatInt, formatRate, formatSats, formatUsd } from '@/lib/money';
 import { supplierRoute } from '@/lib/supplierLabel';
 import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import type { Step } from '@/lib/types';
@@ -18,11 +18,11 @@ export async function PayoutTracker({ step }: { step: Step }) {
   const failed = payout.status === 'failed';
 
   const phases: Phase[] = [
-    { label: t('Preuve validée'), detail: step.decision ? formatDateTime(step.decision.at) : undefined, state: 'done' },
-    { label: payout.lightning ? t('Paiement envoyé sur le réseau Lightning') : t('Paiement demandé à Bitnob'), detail: formatDateTime(payout.startedAt), state: 'done' },
+    { label: t('Preuve validée'), detail: step.decision ? formatDateTime(step.decision.at, t) : undefined, state: 'done' },
+    { label: payout.lightning ? t('Paiement envoyé sur le réseau Lightning') : t('Paiement demandé à Bitnob'), detail: formatDateTime(payout.startedAt, t), state: 'done' },
     {
       label: t('Reçu par le fournisseur'),
-      detail: done && payout.completedAt ? formatDateTime(payout.completedAt) : failed ? payout.error : `${SUPPLIER_NETWORKS[payout.supplier.network]} · ${t('en cours')}`,
+      detail: done && payout.completedAt ? formatDateTime(payout.completedAt, t) : failed ? payout.error : `${SUPPLIER_NETWORKS[payout.supplier.network]} · ${t('en cours')}`,
       state: done ? 'done' : failed ? 'failed' : 'doing',
     },
   ];
@@ -56,15 +56,15 @@ export async function PayoutTracker({ step }: { step: Step }) {
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 font-body-sm text-body-sm">
             <Item k={t('Bénéficiaire')} v={payout.supplier.name} />
             <Item k={payout.lightning ? t('Destination') : t('Opérateur')} v={supplierRoute(payout.supplier)} />
-            <Item k={t('Montant reçu')} v={payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)} strong />
-            <Item k={t('Débité')} v={formatUsd(payout.amountUsdCents)} />
+            <Item k={t('Montant reçu')} v={payout.lightning ? formatSats(payout.lightning.amountSats, t) : formatFcfa(payout.amountFcfa, t)} strong />
+            <Item k={t('Débité')} v={formatUsd(payout.amountUsdCents, t)} />
             {payout.lightning?.feesSats !== undefined && payout.lightning.amountSats > 0 && (
-              <Item k={t('Frais de routage Lightning')} v={`${formatSats(payout.lightning.feesSats)} (${(Math.round((payout.lightning.feesSats / payout.lightning.amountSats) * 10_000) / 100).toLocaleString('fr-FR')} %)`} />
+              <Item k={t('Frais de routage Lightning')} v={`${formatSats(payout.lightning.feesSats, t)} (${formatRate(Math.round((payout.lightning.feesSats / payout.lightning.amountSats) * 10_000) / 100, t)} %)`} />
             )}
             {payout.lightning ? (
-              <Item k={t('Prix du bitcoin')} v={`1 BTC = ${Math.round(payout.lightning.btcUsd).toLocaleString('fr-FR')} $`} />
+              <Item k={t('Prix du bitcoin')} v={`1 BTC = ${formatInt(Math.round(payout.lightning.btcUsd), t)} $`} />
             ) : (
-              <Item k={t('Taux')} v={`1 $ = ${formatRate(payout.rate)} FCFA`} />
+              <Item k={t('Taux')} v={`1 $ = ${formatRate(payout.rate, t)} FCFA`} />
             )}
             <Item k={t('Référence')} v={payout.reference} mono />
             {payout.lightning ? (

@@ -39,7 +39,7 @@ export async function ActivityList({ items, empty = 'Aucune activité pour le mo
                 {a.amountCents !== undefined && (
                   <span className={`shrink-0 font-title-md text-title-md font-semibold ${AMOUNT_TONE[a.tone]}`}>
                     {a.tone === 'positive' ? '+' : a.tone === 'negative' ? '−' : ''}
-                    {formatUsd(a.amountCents)}
+                    {formatUsd(a.amountCents, t)}
                     {a.badge ? <span className="ml-1 font-label-sm text-label-sm font-medium text-on-surface-variant">{a.badge}</span> : null}
                   </span>
                 )}
@@ -51,7 +51,7 @@ export async function ActivityList({ items, empty = 'Aucune activité pour le mo
                 <span className="truncate font-body-sm text-body-sm text-on-surface-variant">{a.subtitle}</span>
                 <span className="shrink-0 font-body-sm text-body-sm text-on-surface-variant">{relativeDay(a.at, t)}</span>
               </span>
-              {a.amountFcfa !== undefined && <span className="mt-1 font-label-sm text-label-sm text-on-surface-variant/80">−{formatFcfa(a.amountFcfa)}</span>}
+              {a.amountFcfa !== undefined && <span className="mt-1 font-label-sm text-label-sm text-on-surface-variant/80">−{formatFcfa(a.amountFcfa, t)}</span>}
             </span>
           </Link>
         </li>

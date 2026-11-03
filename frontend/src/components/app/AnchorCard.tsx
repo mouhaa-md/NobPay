@@ -43,11 +43,11 @@ export function AnchorCard({ initial, index }: { initial: AnchorView; index: num
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-title-md text-title-md"><Tc>Ancrage n°</Tc> {index}</p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant"><Tc>Couvre les événements 1 à</Tc> {anchor.upToSeq} · {formatDateTime(anchor.submittedAt)}</p>
+          <p className="font-label-sm text-label-sm text-on-surface-variant"><Tc>Couvre les événements 1 à</Tc> {anchor.upToSeq} · {formatDateTime(anchor.submittedAt, t)}</p>
         </div>
         {confirmed ? (
           <Chip tone="success" icon="verified">
-            <Tc>Bloc</Tc> {anchor.bitcoinBlock ? formatInt(anchor.bitcoinBlock) : ''}
+            <Tc>Bloc</Tc> {anchor.bitcoinBlock ? formatInt(anchor.bitcoinBlock, t) : ''}
           </Chip>
         ) : failed ? (
           <Chip tone="danger" icon="error">
@@ -67,7 +67,7 @@ export function AnchorCard({ initial, index }: { initial: AnchorView; index: num
 
       {confirmed && (
         <p className="rounded-xl bg-[#F0FDF4] px-3 py-2 font-body-sm text-body-sm text-[#166534]">
-          <Tc>Cette empreinte est inscrite dans la blockchain Bitcoin</Tc>{anchor.confirmedAt ? t(' (constaté le {formatDateTime})', { formatDateTime: formatDateTime(anchor.confirmedAt) }) : ''}<Tc>. Personne ne peut modifier ce dossier sans que l&apos;empreinte change.</Tc>
+          <Tc>Cette empreinte est inscrite dans la blockchain Bitcoin</Tc>{anchor.confirmedAt ? t(' (constaté le {formatDateTime})', { formatDateTime: formatDateTime(anchor.confirmedAt, t) }) : ''}<Tc>. Personne ne peut modifier ce dossier sans que l&apos;empreinte change.</Tc>
         </p>
       )}
       {!confirmed && !failed && (
@@ -79,7 +79,7 @@ export function AnchorCard({ initial, index }: { initial: AnchorView; index: num
 
       {anchor.blockCheck?.state === 'verified' && (
         <p className="flex items-start gap-2 font-label-md text-label-md text-[#15803D]">
-          <Icon name="task_alt" size={18} className="mt-px shrink-0" /> <Tc>Contrôle croisé : le bloc public contient bien cette empreinte</Tc>{anchor.blockCheck.time ? t(' (bloc du {formatDateTime})', { formatDateTime: formatDateTime(anchor.blockCheck.time) }) : ''}.
+          <Icon name="task_alt" size={18} className="mt-px shrink-0" /> <Tc>Contrôle croisé : le bloc public contient bien cette empreinte</Tc>{anchor.blockCheck.time ? t(' (bloc du {formatDateTime})', { formatDateTime: formatDateTime(anchor.blockCheck.time, t) }) : ''}.
         </p>
       )}
       {anchor.blockCheck?.state === 'mismatch' && (

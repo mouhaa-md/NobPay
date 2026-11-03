@@ -126,9 +126,9 @@ export function NewProjectWizard({
     if (steps.some((s) => s.proofKinds.length === 0)) return 'Choisissez au moins une preuve par étape';
     if (maxStepUsd > 0) {
       const big = steps.find((s) => dollars(s.amount) > maxStepUsd);
-      if (big) return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.' : 'En mode sandbox, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.', { cap: formatUsdShort(maxStepUsd * 100), title: big.title.trim() });
+      if (big) return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.' : 'En mode sandbox, un paiement est limité à {cap} : réduisez l’étape « {title} » ou ajoutez des étapes.', { cap: formatUsdShort(maxStepUsd * 100, t), title: big.title.trim() });
     }
-    if (remaining !== 0) return remaining > 0 ? `Il reste ${formatUsdShort(remaining * 100)} à répartir` : `Les étapes dépassent le budget de ${formatUsdShort(-remaining * 100)}`;
+    if (remaining !== 0) return remaining > 0 ? `Il reste ${formatUsdShort(remaining * 100, t)} à répartir` : `Les étapes dépassent le budget de ${formatUsdShort(-remaining * 100, t)}`;
     return '';
   }, [steps, remaining, maxStepUsd, real, t]);
 
@@ -137,9 +137,9 @@ export function NewProjectWizard({
     if (stage === 1) {
       if (name.trim().length < 2) return 'Donnez un nom au projet';
       if (!city.trim()) return 'Indiquez la ville';
-      if (budgetUsd < MIN_BUDGET || budgetUsd > MAX_BUDGET) return maxBudgetUsd > 0 && budgetUsd > MAX_BUDGET ? t('Pendant cette phase pilote, un projet est limité à {cap}.', { cap: formatUsdShort(MAX_BUDGET * 100) }) : `Le budget doit être compris entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`;
+      if (budgetUsd < MIN_BUDGET || budgetUsd > MAX_BUDGET) return maxBudgetUsd > 0 && budgetUsd > MAX_BUDGET ? t('Pendant cette phase pilote, un projet est limité à {cap}.', { cap: formatUsdShort(MAX_BUDGET * 100, t) }) : `Le budget doit être compris entre ${nf.format(MIN_BUDGET)} $ et ${nf.format(MAX_BUDGET)} $`;
       if (maxStepUsd > 0 && budgetUsd > MAX_STEPS * maxStepUsd) {
-        return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).' : 'En mode sandbox, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).', { cap: formatUsdShort(maxStepUsd * 100), max: formatUsdShort(MAX_STEPS * maxStepUsd * 100), steps: MAX_STEPS });
+        return t(real ? 'Pendant cette phase pilote, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).' : 'En mode sandbox, un paiement est limité à {cap} : un projet ne peut pas dépasser {max} ({steps} étapes au plus).', { cap: formatUsdShort(maxStepUsd * 100, t), max: formatUsdShort(MAX_STEPS * maxStepUsd * 100, t), steps: MAX_STEPS });
       }
     }
     if (stage === 2) return stepsProblem;
@@ -246,8 +246,8 @@ export function NewProjectWizard({
                     <span className="block font-title-lg text-title-lg"><Tc>Essai rapide</Tc></span>
                     <span className="mt-0.5 block font-body-sm text-body-sm text-on-surface-variant">
                       {real
-                        ? t('Un petit projet de {formatUsdShort} en {length} étapes, avec de vrais sats : tout le parcours en quelques minutes.', { formatUsdShort: formatUsdShort(QUICK_TRIAL_BUDGET_CENTS), length: QUICK_TRIAL.steps.length })
-                        : t('Un petit projet de {formatUsdShort} en {length} étapes pour voir tout le parcours en quelques minutes.', { formatUsdShort: formatUsdShort(QUICK_TRIAL_BUDGET_CENTS), length: QUICK_TRIAL.steps.length })}
+                        ? t('Un petit projet de {formatUsdShort} en {length} étapes, avec de vrais sats : tout le parcours en quelques minutes.', { formatUsdShort: formatUsdShort(QUICK_TRIAL_BUDGET_CENTS, t), length: QUICK_TRIAL.steps.length })
+                        : t('Un petit projet de {formatUsdShort} en {length} étapes pour voir tout le parcours en quelques minutes.', { formatUsdShort: formatUsdShort(QUICK_TRIAL_BUDGET_CENTS, t), length: QUICK_TRIAL.steps.length })}
                     </span>
                   </span>
                 </button>
@@ -316,7 +316,7 @@ export function NewProjectWizard({
                   <span className="font-headline-md text-headline-md font-bold text-on-surface-variant">$</span>
                 </span>
                 <span className="font-label-sm text-label-sm">
-                  {budgetUsd > 0 ? t('≈ {formatFcfa} (taux indicatif)', { formatFcfa: formatFcfa(budgetUsd * usdXof) }) : t('Entre {format} $ et {format2} $', { format: nf.format(MIN_BUDGET), format2: nf.format(MAX_BUDGET) })}
+                  {budgetUsd > 0 ? t('≈ {formatFcfa} (taux indicatif)', { formatFcfa: formatFcfa(budgetUsd * usdXof, t) }) : t('Entre {format} $ et {format2} $', { format: nf.format(MIN_BUDGET), format2: nf.format(MAX_BUDGET) })}
                 </span>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {(maxStepUsd > 0 ? SANDBOX_PRESETS.filter((b) => largestStep(sector, b) <= maxStepUsd) : PRESETS[sector]).map((p) => (
@@ -338,10 +338,10 @@ export function NewProjectWizard({
               <div className={`sticky top-[104px] z-30 flex items-center justify-between rounded-2xl px-4 py-2.5 font-label-md text-label-md shadow-sm ${remaining === 0 ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-[#FEF3C7] text-[#B45309]'}`} role="status">
                 <span className="flex items-center gap-1.5">
                   <Icon name={remaining === 0 ? 'check_circle' : 'balance'} size={18} filled />
-                  {remaining === 0 ? t('Le budget est réparti') : remaining > 0 ? t('Reste {formatUsdShort} à répartir', { formatUsdShort: formatUsdShort(remaining * 100) }) : t('Dépassement de {formatUsdShort}', { formatUsdShort: formatUsdShort(-remaining * 100) })}
+                  {remaining === 0 ? t('Le budget est réparti') : remaining > 0 ? t('Reste {formatUsdShort} à répartir', { formatUsdShort: formatUsdShort(remaining * 100, t) }) : t('Dépassement de {formatUsdShort}', { formatUsdShort: formatUsdShort(-remaining * 100, t) })}
                 </span>
                 <span>
-                  {formatUsdShort(sum * 100)} / {formatUsdShort(budgetUsd * 100)}
+                  {formatUsdShort(sum * 100, t)} / {formatUsdShort(budgetUsd * 100, t)}
                 </span>
               </div>
 
@@ -486,8 +486,8 @@ export function NewProjectWizard({
                   <p className="flex items-center gap-1.5 font-body-sm text-body-sm text-on-surface-variant">
                     <Flag code="SN" className="h-3 w-[18px]" /> {city}<Tc>, Sénégal · sur place :</Tc> {managerName}
                   </p>
-                  <p className="font-headline-md text-headline-md font-bold text-primary">{formatUsdShort(budgetUsd * 100)}</p>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(budgetUsd * usdXof)} <Tc>(taux indicatif)</Tc></p>
+                  <p className="font-headline-md text-headline-md font-bold text-primary">{formatUsdShort(budgetUsd * 100, t)}</p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(budgetUsd * usdXof, t)} <Tc>(taux indicatif)</Tc></p>
                 </div>
               </div>
               <ol className="flex flex-col divide-y divide-outline-variant/40 overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm">
@@ -498,7 +498,7 @@ export function NewProjectWizard({
                       <span className="truncate font-label-lg text-label-lg">{t(s.title)}</span>
                       <span className="truncate font-label-sm text-label-sm text-on-surface-variant">{s.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}</span>
                     </span>
-                    <span className="shrink-0 font-label-lg text-label-lg font-bold">{formatUsdShort(dollars(s.amount) * 100)}</span>
+                    <span className="shrink-0 font-label-lg text-label-lg font-bold">{formatUsdShort(dollars(s.amount) * 100, t)}</span>
                   </li>
                 ))}
               </ol>

@@ -185,5 +185,12 @@ Suite de l'audit du 3 novembre (`docs/AUDIT-2026-11-03.md`, N1 à N3 et A2, A5, 
 - Pas fait (voir l'audit) : modifier ou clore un projet (A1), euro à côté du dollar (A4), formats de date et de nombre selon la langue (A6), EXIF et empreinte perceptuelle (A3).
 - 846 tests verts sur 58 fichiers.
 
+## Un produit plus complet : formats, euros, photos (3 novembre 2026)
+
+- **A6, montants et dates dans la langue du lecteur.**  en français,  en anglais ;  /  ; « Hier, 18:30 » / « Yesterday, 6:30 PM ». La langue voyage avec le traducteur  () : pas de variable globale, donc pas de risque entre deux requêtes ni de décalage à l'hydratation. 131 appels adaptés. Restent en français : la page d'administration et les messages d'erreur du serveur à texte variable.
+- **A4, euros.** Pour un financeur qui vit dans la zone euro, le séquestre s'affiche aussi en euros à côté des FCFA. Le franc CFA étant arrimé à l'euro (1 € = 655,957 FCFA), l'euro se déduit exactement du taux dollar → FCFA : aucune seconde source de prix.
+- **A3, ce que la photo dit d'elle-même.** Avant réduction (qui efface ces données), le téléphone lit la **date et la position de prise de vue inscrites dans la photo (Exif)** et calcule une **empreinte perceptuelle** (hash de différence sur 64 bits). Conséquences : une vieille photo renvoyée (date du fichier récente, date de prise de vue ancienne) est repérée ; une photo dont la position est hors du Sénégal est signalée ; **la même image recadrée, réduite autrement ou réenregistrée** est repérée contre les autres étapes et projets, et deux photos presque identiques dans une même preuve sont signalées. Un message dit quand les photos ne portent rien (une messagerie les efface) : on ne s'appuie alors que sur la date du fichier et la position du téléphone. Limite assumée : c'est ce que **le téléphone dit** ; quelqu'un qui retouche le fichier peut écrire n'importe quoi. Cela rend visible la paresse et la réutilisation, pas la fraude technique.
+- 874 tests verts sur 61 fichiers.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

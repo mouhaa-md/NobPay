@@ -1,3 +1,4 @@
+import { XOF_PER_EUR } from '@/lib/money';
 import { getConfig } from '../config';
 import { HttpError } from '../http';
 
@@ -87,7 +88,6 @@ export async function getBtcUsd(): Promise<BtcPrice> {
  * (BTC in EUR) / (BTC in USD). Indicative only (display, comparisons); the payout of a quote keeps its own rate.
  * ------------------------------------------------------------------------- */
 
-export const XOF_PER_EUR = 655.957;
 /** A rate computed from live prices is used for this long, then the configured one comes back. */
 const FX_KEEP_MS = 6 * 3_600_000;
 /** Two sources must give the same rate within this (relative). */

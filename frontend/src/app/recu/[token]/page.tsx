@@ -67,8 +67,8 @@ export default async function Receipt(props: { params: Promise<{ token: string }
           {state === 'pending' ? <Spinner className="h-8 w-8" /> : <Icon name={look.icon} size={36} />}
         </span>
         <p className={`mt-4 font-title-lg text-title-lg ${look.tone}`}>{t(look.title)}</p>
-        <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{payout.lightning ? formatSats(payout.lightning.amountSats) : formatFcfa(payout.amountFcfa)}</p>
-        {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa)} <Tc>(taux indicatif)</Tc></p>}
+        <p className="mt-3 font-headline-xl-mobile text-[40px] font-bold leading-none tracking-tight text-on-surface">{payout.lightning ? formatSats(payout.lightning.amountSats, t) : formatFcfa(payout.amountFcfa, t)}</p>
+        {payout.lightning && <p className="mt-1 font-label-md text-label-md text-on-surface-variant">≈ {formatFcfa(payout.amountFcfa, t)} <Tc>(taux indicatif)</Tc></p>}
         <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
           <Tc>pour</Tc> <strong className="text-on-surface">{payout.supplier.name}</strong>
         </p>
@@ -101,7 +101,7 @@ export default async function Receipt(props: { params: Promise<{ token: string }
           </>
         )}
         <dt className="text-on-surface-variant"><Tc>Date</Tc></dt>
-        <dd className="text-right font-medium text-on-surface">{formatDateTime(payout.completedAt ?? payout.startedAt)}</dd>
+        <dd className="text-right font-medium text-on-surface">{formatDateTime(payout.completedAt ?? payout.startedAt, t)}</dd>
         <dt className="text-on-surface-variant"><Tc>Référence</Tc></dt>
         <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.reference}</dd>
       </dl>
@@ -119,7 +119,7 @@ export default async function Receipt(props: { params: Promise<{ token: string }
             </span>
             <span className="flex flex-col">
               <span className="font-label-lg text-label-lg text-on-surface">{p.label}</span>
-              {p.at && <span className="font-label-sm text-label-sm text-on-surface-variant">{formatDateTime(p.at)}</span>}
+              {p.at && <span className="font-label-sm text-label-sm text-on-surface-variant">{formatDateTime(p.at, t)}</span>}
             </span>
           </li>
         ))}

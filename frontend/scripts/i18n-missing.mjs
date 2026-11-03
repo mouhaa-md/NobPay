@@ -55,6 +55,10 @@ for (const file of walk('src')) {
       // t(cond ? 'a' : 'b')
       if (arg && ts.isConditionalExpression(arg)) for (const branch of [arg.whenTrue, arg.whenFalse]) if (ts.isStringLiteral(branch) || ts.isNoSubstitutionTemplateLiteral(branch)) add(branch.text, file);
     }
+    // one(n, 'singular', 'plural', vars): the two forms are sentences (proofChecks)
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'one' && node.arguments.length >= 3) {
+      for (const form of node.arguments.slice(1, 3)) if (ts.isStringLiteral(form) || ts.isNoSubstitutionTemplateLiteral(form)) add(form.text, file);
+    }
     ts.forEachChild(node, visit);
   };
   visit(source);

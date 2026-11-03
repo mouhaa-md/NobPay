@@ -76,7 +76,7 @@ export function ContributeFlow({ token, ownerFirstName, maxUsd, canSimulate }: {
         <span className="nob-pop flex h-20 w-20 items-center justify-center rounded-full bg-[#DCFCE7] text-[#15803D] shadow-lg">
           <Icon name="check" size={48} />
         </span>
-        <h2 className="font-headline-md text-headline-md font-bold">{t('{amount} reçus, merci !', { amount: formatUsd(invoice.amountCents) })}</h2>
+        <h2 className="font-headline-md text-headline-md font-bold">{t('{amount} reçus, merci !', { amount: formatUsd(invoice.amountCents, t) })}</h2>
         <p className="font-body-md text-body-md text-on-surface-variant">
           {t('Votre contribution est en séquestre dans le projet de {owner}. Elle ne sera libérée qu’étape par étape, sur preuve.', { owner: ownerFirstName })}
         </p>
@@ -90,8 +90,8 @@ export function ContributeFlow({ token, ownerFirstName, maxUsd, canSimulate }: {
       <div className="flex flex-col items-center gap-3 text-center">
         {invoice.mode === 'nwc' && <Chip tone="success" icon="bolt"><Tc>Bitcoin réel · phase pilote, montants plafonnés</Tc></Chip>}
         {invoice.mode !== 'nwc' && <Chip tone="warning" icon="science"><Tc>Facture de démonstration · non payable</Tc></Chip>}
-        <p className="font-headline-md text-headline-md font-bold">{formatUsd(invoice.amountCents)}</p>
-        <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(invoice.amountSats ?? 0)}</p>
+        <p className="font-headline-md text-headline-md font-bold">{formatUsd(invoice.amountCents, t)}</p>
+        <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(invoice.amountSats ?? 0, t)}</p>
         <div className="rounded-3xl bg-white p-4 shadow-md ring-1 ring-outline-variant/40">
           {bolt11 ? <QRCodeSVG value={`lightning:${bolt11}`} size={208} level="L" marginSize={0} title={t('Facture Lightning')} /> : <div className="h-52 w-52" />}
         </div>
@@ -151,7 +151,7 @@ export function ContributeFlow({ token, ownerFirstName, maxUsd, canSimulate }: {
           <span className="font-title-lg text-title-lg text-on-surface-variant">$</span>
         </label>
         {tooLow && <p className="mt-1 font-label-md text-label-md text-error"><Tc>Minimum : 5 $</Tc></p>}
-        {tooHigh && <p className="mt-1 font-label-md text-label-md text-error">{t('Pendant cette phase pilote, un versement est limité à {max} $.', { max: formatInt(maxUsd) })}</p>}
+        {tooHigh && <p className="mt-1 font-label-md text-label-md text-error">{t('Pendant cette phase pilote, un versement est limité à {max} $.', { max: formatInt(maxUsd, t) })}</p>}
       </div>
 
       <label className="flex flex-col gap-1.5">

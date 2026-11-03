@@ -108,7 +108,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
         <div className="flex items-start gap-3 rounded-2xl bg-[#FEF3C7] p-3.5 text-[#92400E]">
           <Icon name="account_balance_wallet" size={22} className="mt-0.5 shrink-0" />
           <div className="font-body-sm text-body-sm">
-            <Tc>Le séquestre (</Tc>{formatUsdShort(escrowCents)}<Tc>) ne couvre pas cette étape (</Tc>{formatUsdShort(amountCents)}).
+            <Tc>Le séquestre (</Tc>{formatUsdShort(escrowCents, t)}<Tc>) ne couvre pas cette étape (</Tc>{formatUsdShort(amountCents, t)}).
             <Link href={`/app/projets/${projectId}/financer`} className="ml-1 font-semibold underline">
               <Tc>Financer le projet</Tc>
             </Link>
@@ -129,7 +129,7 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
         onClick={() => getQuote(false)}
         className="flex h-12 w-full items-center justify-center gap-space-xs rounded-full bg-primary-container font-label-lg text-label-lg font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:bg-primary active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy === 'quote' ? <Spinner /> : <Icon name="verified" size={22} filled />} <Tc>Valider et payer</Tc> {formatUsdShort(amountCents)}
+        {busy === 'quote' ? <Spinner /> : <Icon name="verified" size={22} filled />} <Tc>Valider et payer</Tc> {formatUsdShort(amountCents, t)}
       </button>
       <button
         type="button"
@@ -161,21 +161,21 @@ export function ReleasePanel({ projectId, stepId, stepTitle, amountCents, escrow
             </div>
 
             <dl className="mb-space-md flex flex-col gap-2.5 font-body-md text-body-md">
-              <Row label={t('Débité de votre séquestre')} value={formatUsd(quote.amountUsdCents)} />
+              <Row label={t('Débité de votre séquestre')} value={formatUsd(quote.amountUsdCents, t)} />
               {quote.lightning ? (
                 <>
-                  <Row label={t('Prix du bitcoin')} value={`1 BTC = ${formatInt(Math.round(quote.lightning.btcUsd))} $`} />
+                  <Row label={t('Prix du bitcoin')} value={`1 BTC = ${formatInt(Math.round(quote.lightning.btcUsd), t)} $`} />
                   <Row label={t('Frais NobPay')} value="Aucun frais ajouté" />
                   <div className="my-1 h-px bg-outline-variant/50" />
-                  <Row label={t('Le fournisseur reçoit')} value={formatSats(quote.lightning.amountSats)} strong />
-                  <p className="-mt-1 text-right font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(quote.amountFcfa)} <Tc>(taux indicatif)</Tc></p>
+                  <Row label={t('Le fournisseur reçoit')} value={formatSats(quote.lightning.amountSats, t)} strong />
+                  <p className="-mt-1 text-right font-label-sm text-label-sm text-on-surface-variant">≈ {formatFcfa(quote.amountFcfa, t)} <Tc>(taux indicatif)</Tc></p>
                 </>
               ) : (
                 <>
-                  <Row label={t('Taux appliqué')} value={`1 $ = ${formatRate(quote.rate)} FCFA`} />
-                  <Row label={t('Frais')} value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents) : 'Aucun frais ajouté'} />
+                  <Row label={t('Taux appliqué')} value={`1 $ = ${formatRate(quote.rate, t)} FCFA`} />
+                  <Row label={t('Frais')} value={quote.feeUsdCents > 0 ? formatUsd(quote.feeUsdCents, t) : 'Aucun frais ajouté'} />
                   <div className="my-1 h-px bg-outline-variant/50" />
-                  <Row label={t('Le fournisseur reçoit')} value={formatFcfa(quote.amountFcfa)} strong />
+                  <Row label={t('Le fournisseur reçoit')} value={formatFcfa(quote.amountFcfa, t)} strong />
                 </>
               )}
             </dl>

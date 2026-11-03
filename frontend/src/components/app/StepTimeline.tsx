@@ -48,7 +48,7 @@ export async function StepTimeline({ projectId, steps }: { projectId: string; st
                   <span className="block font-label-sm text-label-sm text-on-surface-variant"><Tc>Étape</Tc> {step.index}</span>
                   <span className="block truncate font-title-md text-title-md text-on-surface"><Tc>{step.title}</Tc></span>
                 </span>
-                <span className="shrink-0 font-title-md text-title-md font-bold text-on-surface">{formatUsdShort(step.amountCents)}</span>
+                <span className="shrink-0 font-title-md text-title-md font-bold text-on-surface">{formatUsdShort(step.amountCents, t)}</span>
               </span>
               <span className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
                 <span className={`font-label-md text-label-md font-semibold ${look.labelTone}`}>{t(look.label)}</span>
@@ -61,7 +61,7 @@ export async function StepTimeline({ projectId, steps }: { projectId: string; st
               </span>
               {step.status === 'paid' && step.payout && (
                 <span className="mt-1.5 flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
-                  <Icon name="payments" size={14} /> {supplier?.name} · {supplier && SUPPLIER_NETWORKS[supplier.network]} · {step.payout.lightning ? formatSats(step.payout.lightning.amountSats) : formatFcfa(step.payout.amountFcfa)}
+                  <Icon name="payments" size={14} /> {supplier?.name} · {supplier && SUPPLIER_NETWORKS[supplier.network]} · {step.payout.lightning ? formatSats(step.payout.lightning.amountSats, t) : formatFcfa(step.payout.amountFcfa, t)}
                 </span>
               )}
               {step.status === 'rejected' && step.decision?.note && <span className="mt-1.5 block font-label-sm text-label-sm text-error">« {step.decision.note} »</span>}

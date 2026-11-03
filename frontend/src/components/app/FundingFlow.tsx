@@ -191,7 +191,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                   {nf.format(dollars)} <span className="text-on-surface-variant">$</span>
                 </p>
                 <p className="mt-2 min-h-5 font-label-md text-label-md text-on-surface-variant" aria-live="polite">
-                  {dollars > 0 && !tooHigh ? `≈ ${formatSats(sats)} · ${formatFcfa(dollars * usdXof)}` : ''}
+                  {dollars > 0 && !tooHigh ? `≈ ${formatSats(sats, t)} · ${formatFcfa(dollars * usdXof, t)}` : ''}
                 </p>
                 {tooLow && <p className="mt-1 font-label-md text-label-md text-error"><Tc>Minimum : 5 $</Tc></p>}
                 {tooHigh && <p className="mt-1 font-label-md text-label-md text-error"><Tc>Une facture Lightning est limitée à environ</Tc> {nf.format(maxUsd)} <Tc>$. Faites plusieurs versements.</Tc></p>}
@@ -201,7 +201,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                 <div className="mb-space-md flex flex-wrap justify-center gap-2">
                   {suggestions.map((s) => (
                     <button key={s.label} type="button" onClick={() => setDigits(String(Math.round(s.cents / 100)))} className="flex h-10 items-center gap-1.5 rounded-full bg-primary/10 px-4 font-label-md text-label-md font-semibold text-primary transition hover:bg-primary/15 active:scale-95">
-                      {s.label} · {formatUsdShort(s.cents)}
+                      {s.label} · {formatUsdShort(s.cents, t)}
                     </button>
                   ))}
                 </div>
@@ -226,7 +226,7 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
               <div className="py-space-md">
                 <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight"><Tc>Comment payer ?</Tc></h2>
                 <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-                  {formatUsd(cents)} · ≈ {formatSats(sats)}
+                  {formatUsd(cents, t)} · ≈ {formatSats(sats, t)}
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -268,8 +268,8 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
               <div className="flex flex-col items-center gap-3 py-space-sm text-center">
                 {mode === 'mock' && funding.mode === 'mock' && <Chip tone="warning" icon="science"><Tc>Facture de démonstration · non payable</Tc></Chip>}
                 {funding.mode === 'nwc' && <Chip tone="success" icon="bolt"><Tc>Bitcoin réel · phase pilote, montants plafonnés</Tc></Chip>}
-                <p className="font-headline-md text-headline-md font-bold">{formatUsd(funding.amountCents)}</p>
-                <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(funding.amountSats ?? 0)}</p>
+                <p className="font-headline-md text-headline-md font-bold">{formatUsd(funding.amountCents, t)}</p>
+                <p className="-mt-2 font-label-md text-label-md text-on-surface-variant">≈ {formatSats(funding.amountSats ?? 0, t)}</p>
               </div>
 
               <div className="mx-auto rounded-3xl bg-white p-4 shadow-md ring-1 ring-outline-variant/40">
@@ -342,14 +342,14 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                 <Icon name="check" size={56} />
               </span>
               <div>
-                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">{funding ? formatUsd(funding.amountCents) : ''} <Tc>reçus</Tc></h2>
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">{funding ? formatUsd(funding.amountCents, t) : ''} <Tc>reçus</Tc></h2>
                 <p className="mt-1 font-body-md text-body-md text-on-surface-variant"><Tc>Votre argent est en séquestre. Il ne bougera qu&apos;avec votre accord.</Tc></p>
               </div>
               {unlocked && (
                 <div className="w-full rounded-2xl bg-surface-container-low p-4 text-left">
                   <p className="flex items-center justify-between font-body-md text-body-md">
                     <span className="text-on-surface-variant"><Tc>Séquestre du projet</Tc></span>
-                    <strong>{formatUsd(unlocked.escrowCents)}</strong>
+                    <strong>{formatUsd(unlocked.escrowCents, t)}</strong>
                   </p>
                   {unlocked.activeIndex && (
                     <p className="mt-2 flex items-center gap-2 font-label-md text-label-md text-[#15803D]">

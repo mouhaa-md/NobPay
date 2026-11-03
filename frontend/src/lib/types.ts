@@ -56,8 +56,14 @@ export interface StoredFile {
 }
 
 export interface ProofPhoto extends StoredFile {
+  /** the file's own date, as the phone gave it */
   takenAt: string;
+  /** the phone's position when it SENT the proof (not necessarily where the photo was taken) */
   gps?: { lat: number; lng: number; accuracy?: number };
+  /** what the phone wrote inside the photo itself, read before it was shrunk: when it was taken, and where */
+  exif?: { takenAt?: string; gps?: { lat: number; lng: number } };
+  /** perceptual fingerprint (16 hexadecimal characters): finds the same picture again when the file is not the same */
+  dhash?: string;
 }
 
 export interface Proof {

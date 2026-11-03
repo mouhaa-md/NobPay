@@ -14,9 +14,23 @@ interface PhotoMeta {
   lat?: number;
   lng?: number;
   accuracy?: number;
+  exifTakenAt?: string;
+  exifLat?: number;
+  exifLng?: number;
+  dhash?: string;
 }
 
 const MAX_REQUEST_BYTES = 60 * 1024 * 1024;
+
+/** What the phone read inside the photo, when it read anything. */
+function exifOf(m: PhotoMeta): ProofPhoto['exif'] {
+  const hasGps = typeof m.exifLat === 'number' && typeof m.exifLng === 'number';
+  if (!m.exifTakenAt && !hasGps) return undefined;
+  return {
+    ...(m.exifTakenAt ? { takenAt: new Date(m.exifTakenAt).toISOString() } : {}),
+    ...(hasGps ? { gps: { lat: Number(m.exifLat!.toFixed(5)), lng: Number(m.exifLng!.toFixed(5)) } } : {}),
+  };
+}
 
 const isFile = (v: FormDataEntryValue | null): v is File => typeof v === 'object' && v !== null && 'arrayBuffer' in v && v.size > 0;
 
@@ -64,7 +78,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       note: String(form.get('note') ?? ''),
     });
 
-    const photos: (Awaited<ReturnType<typeof saveUpload>> & { takenAt?: string; gps?: ProofPhoto['gps'] })[] = [];
+    const photos: (Awaited<ReturnType<typeof saveUpload>> & { takenAt?: string; gps?: ProofPhoto['gps']; exif?: ProofPhoto['exif']; dhash?: string })[] = [];
     const files = form.getAll('photos').filter(isFile).slice(0, 6);
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
@@ -75,6 +89,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         ...stored,
         takenAt: m.takenAt ? new Date(m.takenAt).toISOString() : undefined,
         gps: hasGps ? { lat: Number(m.lat!.toFixed(5)), lng: Number(m.lng!.toFixed(5)), accuracy: m.accuracy ? Math.round(m.accuracy) : undefined } : undefined,
+        exif: exifOf(m),
+        dhash: m.dhash,
       });
     }
 

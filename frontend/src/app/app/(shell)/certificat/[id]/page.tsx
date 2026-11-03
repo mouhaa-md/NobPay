@@ -93,7 +93,7 @@ export default async function Certificate(props: { params: Promise<{ id: string 
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-label-lg text-label-lg"><Tc>{meta.label}</Tc></span>
                         <span className="block font-label-sm text-label-sm text-on-surface-variant">
-                          <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at)}
+                          <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at, t)}
                         </span>
                       </span>
                       {e.seq <= confirmedUpTo ? (

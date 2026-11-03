@@ -31,7 +31,7 @@ export default async function VerifyOne(props: { params: Promise<{ id: string }>
         </p>
         <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight md:text-[34px] md:leading-[40px]">{project?.name ?? t('Dossier NobPay')}</h1>
         <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-          <Tc>Ancrage du</Tc> {formatDateTime(anchor.submittedAt)} <Tc>· couvre les événements 1 à</Tc> {anchor.upToSeq}
+          <Tc>Ancrage du</Tc> {formatDateTime(anchor.submittedAt, t)} <Tc>· couvre les événements 1 à</Tc> {anchor.upToSeq}
         </p>
       </section>
       <VerifyAnchor initial={toView(anchor)} />

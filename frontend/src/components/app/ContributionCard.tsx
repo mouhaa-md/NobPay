@@ -73,8 +73,8 @@ export function ContributionCard({ projectId, projectName, path, expired, contri
           {contributions.slice(0, 6).map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-2 font-body-sm text-body-sm">
               <span className="min-w-0 truncate">{c.name || t('Un proche')}</span>
-              <span className="shrink-0 text-on-surface-variant">{formatDate(c.at)}</span>
-              <strong className="shrink-0 text-[#15803D]">+{formatUsdShort(c.amountCents)}</strong>
+              <span className="shrink-0 text-on-surface-variant">{formatDate(c.at, t)}</span>
+              <strong className="shrink-0 text-[#15803D]">+{formatUsdShort(c.amountCents, t)}</strong>
             </li>
           ))}
         </ul>
