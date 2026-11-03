@@ -24,13 +24,17 @@ const LOOK: Record<Step['status'], Look> = {
   upcoming: { circle: 'bg-surface-container-high text-on-surface-variant', icon: 'lock', label: fr('À venir'), labelTone: 'text-on-surface-variant' },
 };
 
+/** A step the project closed before it was done. */
+const NOT_DONE: Look = { circle: 'bg-surface-container-high text-on-surface-variant', icon: 'lock', label: fr('Non réalisée'), labelTone: 'text-on-surface-variant' };
+
 /** Vertical stepper of a project: one card per step, each linking to its own screen. */
-export async function StepTimeline({ projectId, steps }: { projectId: string; steps: Step[] }) {
+export async function StepTimeline({ projectId, steps, closed = false }: { projectId: string; steps: Step[]; closed?: boolean }) {
   const t = await getT();
   return (
     <ol className="relative flex flex-col">
       {steps.map((step, i) => {
-        const look = LOOK[step.status];
+        const unfinished = closed && step.status !== 'paid';
+        const look = unfinished ? NOT_DONE : LOOK[step.status];
         const last = i === steps.length - 1;
         const supplier = step.payout?.supplier ?? step.proof?.supplier;
         return (
@@ -54,8 +58,8 @@ export async function StepTimeline({ projectId, steps }: { projectId: string; st
                 <span className={`font-label-md text-label-md font-semibold ${look.labelTone}`}>{t(look.label)}</span>
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   {step.status === 'paid' && step.payout?.completedAt && relativeDay(step.payout.completedAt, t)}
-                  {step.status === 'upcoming' && step.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}
-                  {step.status === 'active' && t('Preuve attendue')}
+                  {!unfinished && step.status === 'upcoming' && step.proofKinds.map((k) => t(PROOF_LABEL[k])).join(' · ')}
+                  {!unfinished && step.status === 'active' && t('Preuve attendue')}
                   {step.status === 'proof_submitted' && step.proof && relativeDay(step.proof.submittedAt, t)}
                 </span>
               </span>

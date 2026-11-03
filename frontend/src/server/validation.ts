@@ -106,6 +106,24 @@ export const projectSchema = z
   })
   .strict();
 
+/** The steps still to come, as the funder now wants them (see projectEdit.ts). */
+export const projectPlanSchema = z
+  .object({
+    steps: z
+      .array(
+        z
+          .object({
+            id: z.string().max(80).optional(),
+            title: text(1, 200, 'Donnez un nom à chaque étape'),
+            amountCents: money(100, 50_000_000, "Montant d'étape invalide"),
+            proofKinds: z.array(z.enum(['titre', 'photos', 'facture'])).max(3).optional(),
+          })
+          .strict(),
+      )
+      .max(12, 'Prévoyez entre 1 et 12 étapes'),
+  })
+  .strict();
+
 export const fundingSchema = z
   .object({
     amountCents: z.number({ error: 'Montant invalide' }).min(1, 'Montant invalide').max(100_000_000, 'Montant trop élevé'),

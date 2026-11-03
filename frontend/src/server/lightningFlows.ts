@@ -12,6 +12,7 @@ import { decodeBolt11 } from './lightning/bolt11';
 import { LnurlError, normalizeLightningAddress, requestInvoice } from './lightning/lnurl';
 import { currentUsdXof, getBtcUsdForMoney } from './lightning/price';
 import { logger } from './logger';
+import { assertOpen } from './projectEdit';
 
 /**
  * Real Bitcoin, end to end: the funder pays a Lightning invoice made by NobPay's RECEIVE wallet, the supplier is paid
@@ -94,6 +95,7 @@ export async function createLightningFunding(owner: User, projectId: string, amo
   }
   const db = await readDb();
   const project = ownedProject(db, owner, projectId);
+  assertOpen(project);
   if (realLiabilityCents(db) + amountCents > cfg.lightning.maxEscrowUsd * 100) {
     throw new HttpError(409, `Le plafond de séquestre de la phase pilote (${formatUsdShort(cfg.lightning.maxEscrowUsd * 100)} en tout) est atteint. Réessayez plus tard.`, 'pilot_cap');
   }

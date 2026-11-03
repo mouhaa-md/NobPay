@@ -23,6 +23,7 @@ const BLOCKING: Step['status'][] = ['active', 'proof_submitted', 'rejected', 're
  * only when nothing else is in progress AND the escrow already covers its amount.
  */
 export function activateSteps(db: Db, project: Project): void {
+  if (project.closedAt) return; // a closed project opens nothing
   if (project.steps.some((s) => BLOCKING.includes(s.status))) return;
   const next = project.steps.find((s) => s.status === 'upcoming');
   if (!next) return;

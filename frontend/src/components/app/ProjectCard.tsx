@@ -10,6 +10,7 @@ import { getT } from '@/lib/i18n/server';
 /** Status shown at the top-right of a project card, already in the reader's language. */
 export function projectStatus(s: ProjectSummary, t: (fr: string, vars?: Record<string, string | number>) => string): { tone: 'accent' | 'success' | 'neutral' | 'warning'; label: string; ping?: boolean } {
   const { project, current } = s;
+  if (project.closedAt) return { tone: 'neutral', label: t('Clos') };
   if (s.waitingDecision > 0) return { tone: 'accent', label: t('Preuve à valider ({n})', { n: s.waitingDecision }), ping: true };
   if (project.steps.every((st) => st.status === 'paid')) return { tone: 'success', label: t('Terminé') };
   if (current?.status === 'releasing') return { tone: 'warning', label: t('Paiement en cours') };

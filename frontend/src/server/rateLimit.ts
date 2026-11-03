@@ -77,6 +77,7 @@ export const LIMITS = {
   fundingCreate: { max: 30, windowMs: HOUR },
   refund: { max: 10, windowMs: HOUR },
   push: { max: 20, windowMs: 10 * MIN },
+  projectEdit: { max: 40, windowMs: HOUR },
   contribute: { max: 12, windowMs: HOUR },
   witness: { max: 30, windowMs: 10 * MIN },
   // each Lightning quote calls the supplier's domain and asks our wallet for its balance

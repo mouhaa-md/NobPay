@@ -10,7 +10,7 @@ import { Flag } from '@/components/ui/Flag';
 import { RefundPanel } from '@/components/app/RefundPanel';
 import { Icon } from '@/components/ui/Icon';
 import { Avatar, Chip, ProgressBar, SectionTitle } from '@/components/ui/primitives';
-import { formatFcfa, formatUsd, formatUsdShort, formatEur, usdToEur, usesEuro } from '@/lib/money';
+import { formatDate, formatFcfa, formatUsd, formatUsdShort, formatEur, usdToEur, usesEuro } from '@/lib/money';
 import { SECTORS } from '@/lib/templates';
 import { getSessionUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
@@ -18,6 +18,7 @@ import { currentUsdXof } from '@/server/lightning/price';
 import { managerLinkToken } from '@/server/managerToken';
 import { witnessLinkExpired, witnessLinkToken } from '@/server/witness';
 import { WitnessCard } from '@/components/app/WitnessCard';
+import { ProjectManager } from '@/components/app/ProjectManager';
 import { ContributionCard } from '@/components/app/ContributionCard';
 import { contributionLinkExpired, contributionLinkToken, contributionsOf } from '@/server/contribution';
 import { readDb } from '@/server/db';
@@ -63,6 +64,10 @@ export default async function ProjectPage(
   const inFlight = project.steps.some((st) => st.status === 'releasing');
   const base = searchParams.cree ? 1 : 0;
   const done = project.steps.every((st) => st.status === 'paid');
+  const closed = !!project.closedAt;
+  const cfg = getConfig();
+  const upcoming = project.steps.filter((st) => st.status === 'upcoming');
+  const fixed = project.steps.filter((st) => st.status !== 'upcoming');
 
   return (
     <main id="contenu" className="min-h-screen pb-12 lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-8 lg:pb-16 lg:pt-8">
@@ -87,6 +92,17 @@ export default async function ProjectPage(
         </div>
       </div>
 
+      {closed && (
+        <div className="px-space-md pt-space-md lg:px-0 lg:pt-6">
+          <section className="flex items-start gap-3 rounded-2xl bg-surface-container p-4 ring-1 ring-outline-variant/40" role="status">
+            <Icon name="lock" size={22} className="mt-0.5 shrink-0 text-on-surface-variant" />
+            <p className="font-body-md text-body-md">
+              <strong>{t('Projet clos le {date}.', { date: formatDate(project.closedAt!, t) })}</strong>{' '}
+              {s.escrow > 0 ? t('Plus rien n’y entre ni n’en sort. Le séquestre qui reste ({amount}) est à vous : reprenez-le ci-dessous.', { amount: formatUsdShort(s.escrow, t) }) : t('Plus rien n’y entre ni n’en sort.')}
+            </p>
+          </section>
+        </div>
+      )}
       <div className={`flex flex-col gap-space-lg px-space-md pt-space-md lg:grid lg:grid-cols-[1.5fr_1fr] lg:items-start lg:gap-x-8 lg:gap-y-6 lg:px-0 lg:pt-6 ${base ? 'lg:grid-rows-[auto_auto_auto_auto_1fr]' : 'lg:grid-rows-[auto_auto_auto_1fr]'}`}>
         {searchParams.cree && (
           <section className="nob-pop flex flex-col gap-3 rounded-2xl bg-[#DCFCE7] p-4 text-[#14532D] lg:col-span-2 lg:row-start-1">
@@ -119,7 +135,7 @@ export default async function ProjectPage(
             <Figure label={t('Déposé')} value={formatUsdShort(s.funded, t)} />
             <Figure label={t('Libéré')} value={formatUsdShort(s.released, t)} tone="text-[#15803D]" />
           </div>
-          {!done && (
+          {!done && !closed && (
             <div className="mt-4 flex flex-col gap-2">
               {missingForNext > 0 && nextLocked && (
                 <p className="rounded-xl bg-[#FEF3C7] px-3 py-2 font-label-md text-label-md text-[#B45309]">
@@ -146,7 +162,7 @@ export default async function ProjectPage(
         {/* Steps */}
         <section className={`lg:col-start-1 lg:row-span-4 ${ROW[base]}`}>
           <SectionTitle action={<span className="font-label-sm text-label-sm text-on-surface-variant">{project.steps.filter((x) => x.status === 'paid').length} / {project.steps.length} <Tc>payées</Tc></span>}><Tc>Étapes</Tc></SectionTitle>
-          <StepTimeline projectId={project.id} steps={project.steps} />
+          <StepTimeline projectId={project.id} steps={project.steps} closed={closed} />
         </section>
 
         {/* Field manager */}
@@ -169,8 +185,24 @@ export default async function ProjectPage(
           </div>
         </section>
 
+        {!closed && (
+          <div className="lg:col-start-2">
+            <ProjectManager
+              projectId={project.id}
+              fixedCount={fixed.length}
+              fixedCents={fixed.reduce((n, st) => n + st.amountCents, 0)}
+              upcoming={upcoming.map((st) => ({ id: st.id, title: st.title, amountCents: st.amountCents }))}
+              maxStepUsd={cfg.lightning.rail === 'nwc' ? cfg.lightning.maxPayoutUsd : cfg.maxStepUsd}
+              maxBudgetUsd={cfg.lightning.rail === 'nwc' ? cfg.lightning.maxEscrowUsd : 0}
+              minBudgetUsd={cfg.minBudgetUsd}
+              escrowLeftCents={s.escrow}
+              closeBlocked={project.steps.some((st) => st.status === 'proof_submitted' || st.status === 'releasing')}
+            />
+          </div>
+        )}
+
         {/* Family link */}
-        <div className="lg:col-start-2">
+        {!closed && <div className="lg:col-start-2">
           <ContributionCard
             projectId={project.id}
             projectName={project.name}
@@ -178,16 +210,16 @@ export default async function ProjectPage(
             expired={!!project.contribution && contributionLinkExpired(project)}
             contributions={contributionsOf(db, project.id)}
           />
-        </div>
+        </div>}
 
         {/* Independent witness */}
-        <div className="lg:col-start-2">
+        {!closed && <div className="lg:col-start-2">
           <WitnessCard
             projectId={project.id}
             witness={project.witness ? { name: project.witness.name, required: project.witness.required, expired: witnessLinkExpired(project) } : null}
             path={project.witness && !witnessLinkExpired(project) ? `/temoin/${witnessLinkToken(project)}` : null}
           />
-        </div>
+        </div>}
 
         {/* Certificate */}
         <Link href={`/app/certificat/${project.id}`} className={`flex items-center gap-3 rounded-2xl bg-surface-container-lowest p-4 shadow-sm ring-1 ring-outline-variant/30 transition hover:shadow-md lg:col-start-2 ${ROW[base + 2]}`}>
