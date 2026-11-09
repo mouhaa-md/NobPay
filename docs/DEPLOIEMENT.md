@@ -79,7 +79,7 @@ sh deploy/bootstrap.sh demo    # tout simulé : jury et vote du public, données
 sh deploy/bootstrap.sh real    # vrais sats : demande les deux chaînes NWC (saisie masquée), plafonds bas, comptes invités
 ```
 
-Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **sur le serveur** (jamais affichés), écrit `deploy/.env` en `600`, lance `docker compose`, attend `/api/health` et rappelle quoi sauvegarder. Il refuse d'écraser un `deploy/.env` existant. **Essayé** avec de faux `docker` et `curl` (test automatique `frontend/tests/deploy-bootstrap.test.ts`) et pour de bon sous Docker avec `localhost` : le fichier est écrit en `600`, les conteneurs démarrent, puis il attend un HTTPS que `localhost` ne peut pas fournir. **Pas encore sur un vrai serveur avec un vrai domaine** : lisez sa dernière sortie et `/api/health`. Il exige un nom de domaine (`:80` est refusé) : pour un essai sans domaine, voir « Essai sans domaine » plus bas.
+Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **sur le serveur** (jamais affichés), écrit `deploy/.env` en `600`, lance `docker compose`, attend `/api/health` et rappelle quoi sauvegarder. Il refuse d'écraser un `deploy/.env` existant. **Essayé** avec de faux `docker` et `curl` (test automatique `frontend/tests/deploy-bootstrap.test.ts`) et pour de bon sous Docker avec `localhost` : le fichier est écrit en `600`, les conteneurs démarrent, puis il attend un HTTPS que `localhost` ne peut pas fournir. **Pas encore sur un vrai serveur avec un vrai domaine** : lisez sa dernière sortie et `/api/health`. L'adresse est un nom de domaine (HTTPS automatique) ou `:80` (HTTP simple, **profil démo seulement** : le profil `real` le refuse) ; voir « Essai sans domaine » plus bas.
 
 ## 2. Prérequis
 
@@ -110,7 +110,16 @@ Contrôles :
 
 ### Essai sans domaine : Codespace ou poste local (HTTP simple, profil démo)
 
-`bootstrap.sh` demande un nom de domaine et attend un HTTPS public : il ne sert pas ici. Écrire `deploy/.env` à la main, jamais dans Git, droits `600` :
+`bootstrap.sh` accepte `:80` pour le **profil démo seulement** (le profil « vrais sats » le refuse : de l'argent réel exige un domaine et HTTPS) :
+
+```bash
+sh deploy/bootstrap.sh demo                  # répondre « :80 » à la question de l'adresse
+SITE_ADDRESS=:80 sh deploy/bootstrap.sh demo # ou la donner dans l'environnement : aucune question d'adresse
+```
+
+Caddy sert alors en **HTTP simple, sans certificat**, et le script l'écrit : « HTTP simple : essai local uniquement ». L'adresse publique (`PUBLIC_BASE_URL`) est celle du port redirigé dans un Codespace, sinon `http://localhost` ; `PUBLIC_BASE_URL=http://192.168.1.20 SITE_ADDRESS=:80 sh deploy/bootstrap.sh demo` en impose une autre. Le script attend `http://localhost/api/health` ; s'il ne répond pas, il affiche l'état des conteneurs et les 40 dernières lignes du journal. Secrets générés sur place et jamais affichés, fichier en `600`, comme pour un domaine.
+
+À la main, c'est possible aussi (jamais dans Git, droits `600`) :
 
 ```bash
 cp deploy/.env.example deploy/.env && chmod 600 deploy/.env

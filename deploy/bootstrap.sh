@@ -4,6 +4,10 @@
 #   sh deploy/bootstrap.sh demo    # everything simulated: for judges and the public vote, fake data only
 #   sh deploy/bootstrap.sh real    # real sats over Lightning (needs two NWC connection strings), guest accounts, low ceilings
 #
+# The address is asked, or given as SITE_ADDRESS in the environment: a domain name (HTTPS by Caddy, the DNS must already point
+# here), or ":80" for plain HTTP without a domain (a Codespace, a laptop), for the demo profile ONLY (the real one refuses it).
+# With ":80" the public address is the forwarded one of a Codespace, else http://localhost; PUBLIC_BASE_URL overrides it.
+#
 # Run it ON THE SERVER, from the repository root, after installing Docker. It never prints a secret and writes deploy/.env
 # with mode 600. It refuses to touch an existing deploy/.env. Not tested against a real server yet: read the output of the
 # last step and /api/health, as docs/DEPLOIEMENT.md says.
@@ -68,14 +72,51 @@ setvar() {
   mv "$ENV_FILE.tmp" "$ENV_FILE"
 }
 
-SITE="$(ask "Nom de domaine de cette instance (le DNS doit déjà pointer vers ce serveur, ex. demo.exemple.org) :")"
-case "$SITE" in "" | *[!A-Za-z0-9.-]*) echo "Nom de domaine invalide." >&2; exit 1 ;; esac
+# The address comes from SITE_ADDRESS in the environment, or from the question. ":80" means Caddy over plain HTTP, no domain, no
+# certificate (a Codespace, a laptop): demo profile ONLY. A real-sats instance holds real money and needs a domain and HTTPS.
+SITE="${SITE_ADDRESS:-}"
+[ -n "$SITE" ] || SITE="$(ask "Nom de domaine de cette instance (le DNS doit déjà pointer vers ce serveur, ex. demo.exemple.org ; « :80 » : HTTP simple sans domaine, profil demo seulement) :")"
+PLAIN_HTTP=0
+case "$SITE" in
+  :80)
+    [ "$PROFILE" = "demo" ] || {
+      echo "SITE_ADDRESS=:80 (HTTP simple) est réservé au profil demo : une instance « $PROFILE » exige un nom de domaine et HTTPS." >&2
+      exit 1
+    }
+    PLAIN_HTTP=1
+    ;;
+  "" | *[!A-Za-z0-9.-]*)
+    echo "Nom de domaine invalide." >&2
+    exit 1
+    ;;
+esac
+
+if [ "$PLAIN_HTTP" = 1 ]; then
+  # the address visitors will use: the forwarded one in a Codespace, else this machine; PUBLIC_BASE_URL in the environment overrides
+  if [ -n "${PUBLIC_BASE_URL:-}" ]; then
+    PUBLIC="$PUBLIC_BASE_URL"
+  elif [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
+    PUBLIC="https://$CODESPACE_NAME-80.$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"
+  else
+    PUBLIC="http://localhost"
+  fi
+  case "$PUBLIC" in
+    http://* | https://*) ;;
+    *) echo "PUBLIC_BASE_URL invalide (http:// ou https:// puis un nom ou une adresse)." >&2; exit 1 ;;
+  esac
+  case "${PUBLIC#*://}" in "" | *[!A-Za-z0-9._:-]*) echo "PUBLIC_BASE_URL invalide (http:// ou https:// puis un nom ou une adresse)." >&2; exit 1 ;; esac
+  HEALTH_URL="http://localhost/api/health" # checked from this machine, on the port Caddy listens on
+  echo "ATTENTION - HTTP simple : essai local uniquement. Pas de certificat : n'y mettez que des données fictives, et ne rendez pas le port public." >&2
+else
+  PUBLIC="https://$SITE"
+  HEALTH_URL="https://$SITE/api/health"
+fi
 
 cp deploy/.env.example "$ENV_FILE"
 chmod 600 "$ENV_FILE"
 
 setvar SITE_ADDRESS "$SITE"
-setvar PUBLIC_BASE_URL "https://$SITE"
+setvar PUBLIC_BASE_URL "$PUBLIC"
 setvar SESSION_SECRET "$(openssl rand -hex 32)"
 setvar BITNOB_WEBHOOK_SECRET "$(openssl rand -hex 32)"
 setvar NOSTR_MASTER_KEY "$(openssl rand -hex 32)"
@@ -135,9 +176,13 @@ fail_with_log() {
 WAIT_TRIES="${BOOTSTRAP_WAIT_TRIES:-40}"
 WAIT_SLEEP="${BOOTSTRAP_WAIT_SLEEP:-5}"
 
-echo "Attente de https://$SITE/api/health (le certificat HTTPS peut prendre une minute)…" >&2
+if [ "$PLAIN_HTTP" = 1 ]; then
+  echo "Attente de $HEALTH_URL…" >&2
+else
+  echo "Attente de $HEALTH_URL (le certificat HTTPS peut prendre une minute)…" >&2
+fi
 i=0
-until curl -fsS "https://$SITE/api/health" >/dev/null 2>&1; do
+until curl -fsS "$HEALTH_URL" >/dev/null 2>&1; do
   i=$((i + 1))
   # shellcheck disable=SC2046
   set -- $(app_state)
@@ -150,13 +195,16 @@ until curl -fsS "https://$SITE/api/health" >/dev/null 2>&1; do
   sleep "$WAIT_SLEEP"
 done
 
+NOTE=""
+if [ "$PLAIN_HTTP" = 1 ]; then NOTE=" (HTTP simple : essai local uniquement)"; fi
+
 cat >&2 <<EOF
 
-Instance « $PROFILE » en ligne : https://$SITE
+Instance « $PROFILE » en ligne : $PUBLIC$NOTE
 À faire maintenant :
   1. Sauvegardez deploy/.env HORS de ce serveur (SESSION_SECRET, NOSTR_MASTER_KEY, chaînes NWC) : sans NOSTR_MASTER_KEY,
      l'instance ne peut plus signer pour les projets existants.
-  2. Ouvrez https://$SITE/api/health et https://$SITE/en.
+  2. Ouvrez $PUBLIC/api/health et $PUBLIC/en.
   3. Planifiez deploy/backup.sh (voir docs/DEPLOIEMENT.md), et essayez UNE FOIS la restauration.
   4. Avant d'ouvrir au jury : un essai complet de bout en bout avec 1 à 2 \$ (voir « Contrôle avant d'ouvrir au jury »).
 EOF

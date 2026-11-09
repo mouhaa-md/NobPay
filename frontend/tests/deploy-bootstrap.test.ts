@@ -189,10 +189,64 @@ describe.skipIf(!runnable)('deploy/bootstrap.sh', () => {
     expect(existsSync(path.join(root, 'calls.log'))).toBe(false);
   });
 
-  it.each([[':80'], ['demo.example.org/../x'], ['demo example.org'], ['']])('refuses the address %j and leaves nothing behind', (answer) => {
+  it.each([['demo.example.org/../x'], ['demo example.org'], [':8080'], ['http://demo.example.org'], ['']])('refuses the address %j and leaves nothing behind', (answer) => {
     const r = run(['demo'], `${answer}\nn\n`);
     expect(r.status).toBe(1);
     expect(existsSync(path.join(root, 'deploy', '.env'))).toBe(false);
+  });
+
+  describe('plain HTTP (":80"), for a local trial', () => {
+    const WARNING = 'HTTP simple : essai local uniquement';
+    const envFile = () => readEnv(path.join(root, 'deploy', '.env'));
+
+    it('is accepted for the demo profile, with the warning, over a public address of localhost', () => {
+      const r = run(['demo'], ':80\nn\n', { BOOTSTRAP_WAIT_SLEEP: '0' });
+      expect(r.status, r.stderr).toBe(0);
+      expect(r.stderr).toContain(WARNING);
+      expect(envFile()).toMatchObject({ SITE_ADDRESS: ':80', PUBLIC_BASE_URL: 'http://localhost', ALLOW_DEMO: '1', BITNOB_MODE: 'mock', LIGHTNING_RAIL: '' });
+      expect(mode(path.join(root, 'deploy', '.env'))).toBe(0o600);
+      // the health check is made on this machine over plain HTTP, not on a certificate that does not exist
+      expect(readFileSync(calls, 'utf8')).toMatch(/curl .*http:\/\/localhost\/api\/health/);
+      expect(readFileSync(calls, 'utf8')).not.toMatch(/curl .*https:/);
+    });
+
+    it('takes the forwarded address of a Codespace as the public address', () => {
+      const r = run(['demo'], ':80\nn\n', { BOOTSTRAP_WAIT_SLEEP: '0', CODESPACE_NAME: 'my-space-abc', GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: 'app.github.dev' });
+      expect(r.status, r.stderr).toBe(0);
+      expect(envFile().PUBLIC_BASE_URL).toBe('https://my-space-abc-80.app.github.dev');
+    });
+
+    it('can be given as SITE_ADDRESS in the environment, and PUBLIC_BASE_URL can be overridden', () => {
+      const r = run(['demo'], 'n\n', { BOOTSTRAP_WAIT_SLEEP: '0', SITE_ADDRESS: ':80', PUBLIC_BASE_URL: 'http://192.168.1.20' });
+      expect(r.status, r.stderr).toBe(0);
+      expect(envFile()).toMatchObject({ SITE_ADDRESS: ':80', PUBLIC_BASE_URL: 'http://192.168.1.20' });
+      expect(r.stderr).not.toMatch(/Nom de domaine de cette instance/); // it did not ask
+    });
+
+    it.each([['javascript:alert(1)'], ['http://localhost/path'], ['http://local host'], ['ftp://localhost']])('refuses the public address %j', (url) => {
+      const r = run(['demo'], ':80\nn\n', { SITE_ADDRESS: '', PUBLIC_BASE_URL: url });
+      expect(r.status).toBe(1);
+      expect(existsSync(path.join(root, 'deploy', '.env'))).toBe(false);
+    });
+
+    it('is refused for the real-sats profile, before any wallet string is asked for or anything is written', () => {
+      const environments: Record<string, string>[] = [{}, { SITE_ADDRESS: ':80' }];
+      for (const env of environments) {
+        const r = run(['real'], ':80\nnostr+walletconnect://x\n', env);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/réservé au profil demo/);
+        expect(r.stderr).not.toContain(WARNING);
+        expect(r.stderr).not.toMatch(/NWC_RECEIVE_URL/); // never reached the question
+        expect(existsSync(path.join(root, 'deploy', '.env'))).toBe(false);
+        expect(existsSync(calls) ? readFileSync(calls, 'utf8') : '').not.toMatch(/ up /); // nothing was started
+      }
+    });
+
+    it('does not warn about plain HTTP, and still uses https, for a domain name', () => {
+      const r = run(['demo'], 'demo.example.org\nn\n', { BOOTSTRAP_WAIT_SLEEP: '0' });
+      expect(r.stderr).not.toContain(WARNING);
+      expect(envFile().PUBLIC_BASE_URL).toBe('https://demo.example.org');
+    });
   });
 
   it('shows how to use it when the profile is missing or unknown', () => {
