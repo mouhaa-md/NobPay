@@ -5,7 +5,7 @@ L'argent de la diaspora reste en séquestre et n'est libéré qu'étape par éta
 
 > *English version: [README.en.md](README.en.md). In short:* NobPay lets the diaspora fund projects, school fees and merchants' restocks back home. The money stays in escrow and is released step by step, only against proof, in bitcoin over Lightning; every event goes into a hash-chained record anchored on Bitcoin (OpenTimestamps), copied to Nostr relays, and verifiable from anyone's browser. "Verify, don't trust."
 
-Prototype réalisé pendant le hackathon **Code & Chain Dakar** (Bitnob × Btrust). Licence MIT.
+NobPay est né au hackathon **Code & Chain Dakar** (17-18 octobre 2026) et se prolonge pour le **Dakar Bitcoin Hack #4**. Ce qui a été ajouté pour ce second hackathon est listé à part de la base dans [`docs/CHANGELOG-DBD4.md`](docs/CHANGELOG-DBD4.md) ; `git diff pre-dbd4..HEAD` montre tout. Licence MIT.
 
 ## Le problème
 

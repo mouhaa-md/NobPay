@@ -129,7 +129,7 @@ export default async function Profile() {
         <ProfileActions demo={!!user.demo && mode === 'mock' && getConfig().allowDemo} guest={!!user.guest} />
 
         <p className="text-center font-label-sm text-label-sm text-on-surface-variant/80 lg:col-span-2">
-          <Tc>NobPay · prototype Code &amp; Chain Dakar · code ouvert (licence MIT)</Tc>
+          <Tc>NobPay · prototype · code ouvert (licence MIT)</Tc>
         </p>
       </main>
     </>

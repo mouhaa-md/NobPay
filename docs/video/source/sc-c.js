@@ -197,7 +197,7 @@
     S.line(`Investir au pays. <span style="font-family:'Instrument Serif';font-style:italic;font-weight:400;font-size:1.16em;color:${ORANGE}">Avec preuve.</span>`, `left:0;top:${ly + lh + 60}px;width:${W}px;height:96px;text-align:center;font:700 62px/96px 'Bricolage Grotesque';letter-spacing:-.02em;color:${PAPER}`, o0.s + 0.2, { d: 0.9, parent: g.el }).el.style.textAlign = 'center';
     S.line('Merci.', `left:0;top:${ly + lh + 190}px;width:${W}px;height:150px;text-align:center;font:italic 400 140px/150px 'Instrument Serif',serif;color:${PAPER}`, o1.s + 0.05, { d: 1.0, parent: g.el }).el.style.textAlign = 'center';
     const row = S.g(`left:0;top:960px;width:${W}px;height:70px`);
-    row.el.innerHTML = `<div style="position:absolute;left:0;right:0;top:0;height:70px;display:flex;align-items:center;justify-content:center;gap:34px;color:#9AA6C4;font:600 24px Figtree"><span>Hackathon Code &amp; Chain Dakar</span><img src="assets/logos/bitnob-logo-white.svg" style="height:30px"><b style="color:${PAPER};font-size:28px">×</b><img src="assets/logos/btrust-logo.svg" style="height:38px"></div>`;
+    row.el.innerHTML = `<div style="position:absolute;left:0;right:0;top:0;height:70px;display:flex;align-items:center;justify-content:center;gap:34px;color:#9AA6C4;font:600 24px Figtree"><span>Dakar Bitcoin Hack #4</span><img src="assets/logos/btrust-logo.svg" style="height:38px"></div>`;
     row.set({ o: 0 }).k('o', [o1.s + 0.6, 0], [o1.s + 1.2, 1]);
     g.k('o', [sc.end - 1.2, 1], [sc.end - 0.1, 0, 'in']);
     row.k('o', [sc.end - 1.2, 1], [sc.end - 0.1, 0, 'in']);

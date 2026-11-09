@@ -1,7 +1,7 @@
 # NobPay : feuille de route backend
 
 > **Pour qui :** le développeur qui reprend le backend (et son Claude). À lire après `docs/CONTEXTE-PROJET.md`.
-> **Rédigé le :** 17 octobre 2026. **Demo Day :** probablement le 18 octobre 2026 (à confirmer par le chef de projet).
+> **Rédigé le :** 17 octobre 2026. Ce qui a été fait depuis est dans `docs/CHANGELOG-DBD4.md`.
 
 ## 0. En trois phrases
 
@@ -26,7 +26,7 @@
 
 **Sécurité de l'argent pendant les tests :** la sandbox Bitnob est censée ne manipuler que de l'argent de test, mais le tableau de bord propose une bascule « Live mode » et une facture `lnbc…` (mainnet) a été vue au workshop. **Ne basculez jamais en live. Si une facture générée commence par `lnbc`, ne la payez pas et demandez à un mentor.**
 
-## 2. Plan des prochaines 24 heures (si le Demo Day est demain)
+## 2. Plan des prochaines 24 heures (historique : première échéance du projet)
 
 | Ordre | Quoi | Tâches | Durée indicative |
 |---|---|---|---|
@@ -39,7 +39,7 @@
 | 7 | Fiabilité minimale de l'argent (conversion, montant, reprise) | B2.2, B2.3, B2.4 | 2 à 3 h |
 | 8 | **Répétition générale** du parcours en sandbox + plan B `mock` | B0.11 | 1 h |
 
-Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le Demo Day. Pour la démonstration, la solution la plus sûre est **de lancer l'application sur une machine locale** avec un tunnel HTTPS (voir B0.2) : la base JSON et le stockage disque y fonctionnent tels quels.
+Tout le reste (vraie base de données, nouvelles fonctions) vient **après** cette première échéance. Pour la démonstration, la solution la plus sûre est **de lancer l'application sur une machine locale** avec un tunnel HTTPS (voir B0.2) : la base JSON et le stockage disque y fonctionnent tels quels.
 
 ---
 
@@ -200,7 +200,7 @@ Tout le reste (vraie base de données, nouvelles fonctions) vient **après** le 
 
 ---
 
-## Phase 3 : persistance et hébergement  `P1 (après le Demo Day)`
+## Phase 3 : persistance et hébergement  `P1 (après la première échéance)`
 
 **Objectif :** sortir du fichier JSON (D4) sans toucher au frontend.
 

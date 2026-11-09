@@ -136,7 +136,7 @@ const fr: LandingCopy = {
       },
       {
         q: "Est-ce que cela fonctionne vraiment aujourd'hui ?",
-        a: "C'est un prototype réalisé pour des hackathons (Code & Chain Dakar, puis Dakar Bitcoin Hack #4). Selon l'instance, les paiements sont simulés (démonstration), faits sur l'API de test de Bitnob, ou faits avec de vrais sats sous plafond. Le mode est écrit en haut de chaque écran.",
+        a: "C'est un prototype open source, réalisé pour le Dakar Bitcoin Hack #4. Selon l'instance, les paiements sont simulés (démonstration), faits sur l'API de test de Bitnob, ou faits avec de vrais sats sous plafond. Le mode est écrit en haut de chaque écran.",
       },
       {
         q: 'Pourquoi Bitcoin et Lightning ?',
@@ -260,7 +260,7 @@ const en: LandingCopy = {
       },
       {
         q: 'Does it really work today?',
-        a: 'It is a prototype built for hackathons (Code & Chain Dakar, then Dakar Bitcoin Hack #4). Depending on the instance, payments are simulated (demonstration), made on Bitnob’s test API, or made with real sats under a ceiling. The mode is written at the top of every screen.',
+        a: 'It is an open-source prototype, built for Dakar Bitcoin Hack #4. Depending on the instance, payments are simulated (demonstration), made on Bitnob’s test API, or made with real sats under a ceiling. The mode is written at the top of every screen.',
       },
       {
         q: 'Why Bitcoin and Lightning?',

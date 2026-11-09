@@ -119,7 +119,7 @@ Gravité : **S1** bloque toute URL publique ; **S2** peut perdre de l'argent ou 
 | E2 | **S2** | **Aucune version anglaise** alors que Devpost et Btrust sont internationaux | ouvert |
 | E3 | S3 | La personne sur place doit avoir un smartphone avec appareil photo ; aucun canal USSD ou messagerie, alors que « USSD » figure dans les outils du hackathon | idée (§ 9) |
 | E4 | S3 | La démo simulée affiche 760 FCFA/$ ; le taux réel observé est ≈ 593 : un jury qui compare verra l'écart | ouvert |
-| E5 | S3 | Textes et documents encore centrés sur « Code & Chain » (« Demo Day 18 oct. », 281 tests, kit Bitnob annoncé mais non livré) | ouvert |
+| E5 | S3 | Textes et documents encore centrés sur « Code & Chain » (« Demo Day 18 oct. », 281 tests, kit Bitnob annoncé mais non livré) | corrigé le 9 nov. (voir le journal) |
 
 ### 4.6 Qualité du dépôt et open source
 

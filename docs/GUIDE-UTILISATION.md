@@ -1,7 +1,7 @@
 # NobPay : guide d'utilisation
 
 > **Pour qui :** toute personne qui utilise NobPay (financeur, personne de confiance sur place, fournisseur, administrateur, vérificateur) et le jury qui veut le tester seul.
-> **Version décrite :** prototype du hackathon Code & Chain Dakar (Bitnob × Btrust), en **mode démonstration**. Ce que le mode démonstration simule et ce qui est réel est expliqué au chapitre 9.
+> **Version décrite :** prototype open source, en **mode démonstration**. Ce que le mode démonstration simule et ce qui est réel est expliqué au chapitre 9.
 
 ---
 

@@ -123,7 +123,7 @@ Correction : agrandir la zone cliquable (marge intérieure ou pseudo-élément) 
 |---|---|---|
 | **Avant la démonstration** (1 à 2 h) | points 2, 3, 4 (lien d'évitement, `h1`, `main`, 404), 11 ; soulignement des liens | S |
 | **Cette semaine** (une demi-journée) | point 1 (icônes), 5 (11 → 12 px), 7 (zones tactiles), 8, 10, 12 | M |
-| **Après le Demo Day** | point 6 (tablette), 15 (jetons de couleur), 13, 14, 16 | L |
+| **Plus tard** | point 6 (tablette), 15 (jetons de couleur), 13, 14, 16 | L |
 
 Après les corrections : relancer le même audit (le script d'audit est reproductible, voir § 7) et viser **0 violation « critical » ou « serious » d'axe-core**, **CLS < 0,1 partout**, **chargement complet < 4 s sur Slow 4G**.
 
