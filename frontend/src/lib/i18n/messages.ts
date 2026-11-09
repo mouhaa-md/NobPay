@@ -10,6 +10,8 @@ import { EN } from './en';
 export type Lang = 'fr' | 'en';
 export const LANGS: readonly Lang[] = ['fr', 'en'];
 export const LANG_COOKIE = 'nobpay-lang';
+/** Request header set by proxy.ts for an address that has one fixed language (/en): getLang() reads it before the cookie. */
+export const LANG_HEADER = 'x-nobpay-lang';
 
 export const isLang = (v: unknown): v is Lang => v === 'fr' || v === 'en';
 

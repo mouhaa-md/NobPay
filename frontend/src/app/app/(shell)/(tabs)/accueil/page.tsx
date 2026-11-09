@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ActivityList } from '@/components/app/ActivityList';
 import { DesktopTopbar } from '@/components/app/DesktopTopbar';
 import { BalanceCard } from '@/components/app/BalanceCard';
@@ -27,7 +28,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const t = await getT();
-  const user = (await getSessionUser())!;
+  const user = await getSessionUser();
+  if (!user) redirect('/app/bienvenue'); // the layout redirects too, but it renders beside this page, not before it
   const db = await readDb();
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);
