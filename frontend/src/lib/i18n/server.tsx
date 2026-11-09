@@ -1,9 +1,14 @@
 import { cookies, headers } from 'next/headers';
-import { LANG_COOKIE, pickLang, translate, translatorFor, type Lang, type Translator, type Vars } from './messages';
+import { isLang, LANG_COOKIE, LANG_HEADER, pickLang, translate, translatorFor, type Lang, type Translator, type Vars } from './messages';
 
-/** The language of the current request (server components and route handlers). */
+/**
+ * The language of the current request (server components and route handlers): the language of the address when it has
+ * one (/en, stated by proxy.ts), else the visitor's cookie, else the browser's.
+ */
 export async function getLang(): Promise<Lang> {
   const [jar, h] = await Promise.all([cookies(), headers()]);
+  const ofAddress = h.get(LANG_HEADER);
+  if (isLang(ofAddress)) return ofAddress;
   return pickLang(jar.get(LANG_COOKIE)?.value, h.get('accept-language'));
 }
 
