@@ -60,6 +60,10 @@ ask_number() { # ask_number "question" default -> a positive whole number, or th
 setvar() {
   key="$1"
   value="$2"
+  # The file is rebuilt and renamed over deploy/.env, so the mode of the old file is lost: the new one must be private from
+  # its creation, before any secret goes into it. Neither the umask nor a folder's default ACL can be relied on for that.
+  : >"$ENV_FILE.tmp"
+  chmod 600 "$ENV_FILE.tmp"
   awk -v k="$key" -v v="$value" 'BEGIN{done=0} $0 ~ "^" k "=" {print k "=" v; done=1; next} {print} END{if(!done) print k "=" v}' "$ENV_FILE" >"$ENV_FILE.tmp"
   mv "$ENV_FILE.tmp" "$ENV_FILE"
 }
