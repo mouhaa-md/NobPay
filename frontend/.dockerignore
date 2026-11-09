@@ -5,6 +5,13 @@ node_modules
 .env
 .env.*
 !.env.example
+# written by a build or a type check on the developer's machine: a clean clone has none, and each one changes the build
+# context, so the layer cache is lost and stale host output could be picked up
+*.tsbuildinfo
+next-env.d.ts
+out
+npm-debug.log*
+.DS_Store
 tests
 design-reference
 *.log
