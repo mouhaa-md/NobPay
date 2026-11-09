@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { Icon } from '@/components/ui/Icon';
 import { Chip, SectionTitle } from '@/components/ui/primitives';
@@ -41,7 +42,8 @@ const OUTCOME: Record<string, string> = {
 
 export default async function Wallet() {
   const t = await getT();
-  const user = (await getSessionUser())!;
+  const user = await getSessionUser();
+  if (!user) redirect('/app/bienvenue'); // the layout redirects too, but it renders beside this page, not before it
   const db = await readDb();
   const summaries = userProjects(db, user.id);
   const totals = totalsOf(db, summaries);
