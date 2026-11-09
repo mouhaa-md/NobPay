@@ -1,7 +1,7 @@
 # Règles de texte et de mise en page (à appliquer à tous les écrans)
 
 Stitch invente des affirmations fausses ou invérifiables. Chaque texte affiché doit
-être vrai pour NobPay : le jury technique de Bitnob et Btrust relira.
+être vrai pour NobPay : le jury technique (Btrust, Dakar Bitcoin Days) relira.
 
 ## Textes
 

@@ -334,7 +334,7 @@ export const EN: Record<string, string> = {
   'Contrôlez un dossier sans faire confiance à NobPay.': 'Check a file without trusting NobPay.',
   'Tableau de bord administrateur': 'Administrator dashboard',
   'Paiements, versements, ancrages et alertes. Lecture seule.': 'Payments, deposits, anchors and alerts. Read-only.',
-  'NobPay · prototype Code & Chain Dakar · code ouvert (licence MIT)': 'NobPay · Code & Chain Dakar prototype · open source (MIT licence)',
+  'NobPay · prototype · code ouvert (licence MIT)': 'NobPay · prototype · open source (MIT licence)',
   'Journal des événements': 'Event log',
   'Chaque événement reçu de Bitnob est vérifié (signature HMAC) puis appliqué une seule fois. Les doublons sont ignorés.': 'Every event received from Bitnob is verified (HMAC signature) then applied only once. Duplicates are ignored.',
   'Aucun événement reçu.': 'No event received.',

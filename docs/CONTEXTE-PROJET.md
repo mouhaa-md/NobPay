@@ -2,7 +2,7 @@
 
 > **Pour qui :** le développeur qui reprend le backend, et son assistant Claude.
 > **But :** que vous puissiez travailler sans poser de question sur le « pourquoi », le « quoi » et l'état réel du code.
-> **Date de rédaction :** 17 octobre 2026 (nuit du jour 1 du hackathon).
+> **Date de rédaction :** 17 octobre 2026. Ce document décrit le projet à cette date ; ce qui a changé depuis est dans [`docs/CHANGELOG-DBD4.md`](CHANGELOG-DBD4.md).
 > Les chiffres, noms de fichiers et comportements décrits ici ont été relus dans le code avant d'être écrits. Quand une chose n'est **pas vérifiée**, c'est écrit.
 
 **À compléter par le chef de projet avant l'envoi :**
@@ -12,8 +12,6 @@
 | Dépôt GitHub | https://github.com/mouhaa-md/NobPay (public ; branche `main` ; collaborateurs : `mouhaa-md`, `Pouye15`) |
 | Chef de projet / contact | `<nom, téléphone ou WhatsApp>` |
 | Responsable du frontend | `<nom>` (le chef de projet, avec l'aide de Claude) |
-| Mentor Bitnob joignable | `<nom ou canal>` |
-| Demo Day | probablement **18 octobre 2026** (non confirmé : à vérifier) |
 
 ---
 
@@ -42,15 +40,12 @@ Il n'y a toujours pas de rôles en base (niveau 2, non fait) : un compte est un 
 
 **Portée.** Pan-africaine dans le discours, mais le **prototype ne paie qu'au Sénégal** (XOF, rails Wave / Orange Money / Free Money). **Trois secteurs uniquement** : immobilier, agricole, commerce. Le nom est **NobPay** (pas « Tabax », nom provisoire rejeté).
 
-## 2. Le hackathon
+## 2. Origine et relecteurs
 
-**Code & Chain Dakar**, organisé par **Bitnob** et **Btrust**, 2 jours (17-18 octobre 2026). Cagnotte annoncée : 5 000 $ (d'après le site du hackathon).
+NobPay est né en octobre 2026 comme prototype ; il se prolonge aujourd'hui pour le **Dakar Bitcoin Hack #4**. L'étiquette Git `pre-dbd4` marque le point de départ, et `docs/CHANGELOG-DBD4.md` liste tout ce qui a été ajouté depuis.
 
-- **Règles :** projet développé pendant le hackathon, **usage significatif de l'API Bitnob** + au moins une fonctionnalité Bitcoin, **dépôt GitHub public**, projet original.
-- **Critères du jury :** innovation, réalisation technique, usage Bitcoin / API Bitnob, impact concret, UX / design, présentation, **qualité open source**.
-- **Ce que cherche le jury technique de Bitnob (workshop du 17 oct.) :** les 5 briques Lightning, Payouts, Stablecoins, Webhooks, Sécurité (authentification + vérification des évènements). Architecture de référence : Utilisateur → Frontend → **Backend (garde les secrets)** → API Bitnob → rail de paiement, avec un **webhook** qui revient au backend pour synchroniser l'état réel. Un bon paiement est fiable, rapide, **traçable**, simple. Conseil donné : « ne commencez pas par l'API, partez d'un vrai problème de paiement ».
 - **Ce que cherche Btrust :** open source, « verify, don't trust ».
-- **Les mentors rejouent des attaques** sur les projets : « rejouer un webhook » et « forger un faux webhook ». Notre récepteur les gère (§ 8.3) : à ne jamais régresser.
+- **Les relecteurs techniques rejouent des attaques** sur les projets : « rejouer un webhook » et « forger un faux webhook ». Notre récepteur les gère (§ 8.3) : à ne jamais régresser.
 
 ## 3. Décisions de produit (figées, ne pas rouvrir sans le chef de projet)
 
@@ -60,12 +55,12 @@ Il n'y a toujours pas de rôles en base (niveau 2, non fait) : un compte est un 
 - **Approbation :** « Moi seul » (le financeur). « 2 personnes sur 3 » est affiché « Bientôt ».
 - **Étapes :** séquentielles, **une seule ouverte à la fois**, et seulement si le séquestre couvre son montant.
 - **Preuves ancrées sur Bitcoin** via OpenTimestamps (pas de transaction Bitcoin faite par NobPay : seules des **empreintes** sont publiées).
-- **Contribution open source prévue :** un « kit Bitnob » (client typé, signature HMAC, vérificateur de webhooks, repli par polling). **Pas** un « ln-watcher » : on ne prétend pas combler un manque non confirmé.
+- **Contribution open source :** aucune bibliothèque n'est annoncée tant qu'elle n'est pas publiée. Le « kit Bitnob » prévu au départ n'a pas été livré ; pas non plus de « ln-watcher » : on ne prétend pas combler un manque non confirmé.
 - **Vocabulaire de l'interface (français) :** Projet, **Étape** (jamais « Jalon »), En séquestre, Preuve, Libérer le paiement, Certificat de preuve, « personne de confiance sur place ».
 
-### Décisions validées pendant le hackathon (18 oct. 2026)
+### Décisions validées le 18 oct. 2026
 
-1. **Limite d'un paiement mobile money (≈ 336 $, 200 000 FCFA, observée en sandbox).** En `sandbox`, une étape de plus de **330 $** est refusée **à la création du projet** (`step_over_payout_limit`, message qui nomme l'étape) ; l'assistant n'offre que des budgets compatibles, signale l'étape trop grande à l'écran des étapes, et refuse un budget supérieur à 12 × 330 $. En `mock`, pas de limite : la démonstration de secours garde ses montants réalistes. Réglable par `MAX_STEP_USD` (`0` = aucune limite). Le découpage automatique d'un paiement en plusieurs payouts n'est **pas** fait (chantier à part, après le Demo Day).
+1. **Limite d'un paiement mobile money (≈ 336 $, 200 000 FCFA, observée en sandbox).** En `sandbox`, une étape de plus de **330 $** est refusée **à la création du projet** (`step_over_payout_limit`, message qui nomme l'étape) ; l'assistant n'offre que des budgets compatibles, signale l'étape trop grande à l'écran des étapes, et refuse un budget supérieur à 12 × 330 $. En `mock`, pas de limite : la démonstration de secours garde ses montants réalistes. Réglable par `MAX_STEP_USD` (`0` = aucune limite). Le découpage automatique d'un paiement en plusieurs payouts n'est **pas** fait (chantier à part, pour plus tard).
 2. **Moment du crédit du séquestre : à la réception des BTC** (comportement actuel), avec les garde-fous au paiement (le portefeuille de l'actif de paiement doit couvrir l'étape ; paiements suspendus si les livres ne s'additionnent pas). Pas de crédit « après conversion ».
 3. **Connexion en démonstration : `ALLOW_DEMO=1`** (code partagé, personnes de confiance seulement). Fournisseur SMS définitif : à choisir plus tard ; Twilio est codé et testé avec un faux `fetch`.
 

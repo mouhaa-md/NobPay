@@ -1,6 +1,6 @@
 # Sécurité
 
-NobPay est un **prototype de hackathon** (Code & Chain Dakar). Il n'a pas été audité et ne gère aucun argent réel : ne l'utilisez pas en production sans les travaux listés dans `docs/ROADMAP-BACKEND.md` (Phase 3 : vraie base de données, stockage des fichiers, hébergement durable).
+NobPay est un **prototype open source**. Il n'a pas été audité et ne gère aucun argent réel : ne l'utilisez pas en production sans les travaux listés dans `docs/ROADMAP-BACKEND.md` (Phase 3 : vraie base de données, stockage des fichiers, hébergement durable).
 
 ## Signaler une faille
 

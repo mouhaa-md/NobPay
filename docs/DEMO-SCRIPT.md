@@ -12,7 +12,7 @@
 
 | Durée | Écran | Ce qu'on fait | Ce qu'on dit |
 |---|---|---|---|
-| 0:00 | Vitrine `/` | Faire défiler le héros, les chiffres, « Comment ça marche » | « La diaspora envoie des sommes énormes ; un transfert déplace l'argent mais n'en contrôle pas l'usage. Ces chiffres décrivent le marché, pas des résultats de NobPay. C'est un prototype du hackathon. » |
+| 0:00 | Vitrine `/` | Faire défiler le héros, les chiffres, « Comment ça marche » | « La diaspora envoie des sommes énormes ; un transfert déplace l'argent mais n'en contrôle pas l'usage. Ces chiffres décrivent le marché, pas des résultats de NobPay. C'est un prototype open source. » |
 | 0:30 | Entrée | « Essayer la démo », puis « Essayer avec le compte démo » | « Aucun argent réel : Lightning et mobile money sont simulés. » |
 | 0:40 | Accueil | Montrer le total en séquestre, les projets, « 1 preuve attend votre décision » | « Rien n'est payé sans l'accord du financeur. » |
 | 0:50 | Projet → étape 3 | « Gérer le projet », cliquer « Élévation des murs » | « Chaque étape ne se paie que sur preuve : photos géolocalisées, facture, fournisseur à payer. » |
@@ -49,7 +49,7 @@ Le script `docs/demo/record-demo.mjs` rejoue ce parcours dans Chromium et l'enre
 
 ## Vidéo avec voix (MP4, lisible sur WhatsApp)
 
-`demo-video/nobpay-demo-voix.mp4` : 5 min 03, 1280 × 720, H.264 + AAC, **environ 11 Mo** (WhatsApp accepte les vidéos jusqu'à environ 16 Mo). Voix d'homme français de synthèse, **sans sous-titres** ; le curseur visible montre ce dont la voix parle. Le texte du commentaire est dans `docs/demo/narration-fr.json` (19 phrases, ton parlé ; « WhatsApp » y est écrit « Ouatsappe » et « Code and Chain » « Code ande Tchaïne » pour que la voix les prononce correctement).
+`demo-video/nobpay-demo-voix.mp4` : 5 min 03, 1280 × 720, H.264 + AAC, **environ 11 Mo** (WhatsApp accepte les vidéos jusqu'à environ 16 Mo). Voix d'homme français de synthèse, **sans sous-titres** ; le curseur visible montre ce dont la voix parle. Le texte du commentaire est dans `docs/demo/narration-fr.json` (19 phrases, ton parlé ; « WhatsApp » y est écrit « Ouatsappe » pour que la voix le prononce correctement).
 
 - **Fabrication :** `docs/demo/voice/synth.py` (voix locale Piper, aucun service en ligne), `docs/demo/record-demo-voix.mjs` (enregistrement synchronisé sur la durée de chaque phrase), `docs/demo/voice/assemble.py` (recalage son/image sur un éclair de calibration : écart mesuré de 0,04 s), puis `ffmpeg`.
 - **Contrôles faits :** la piste son finale a été retranscrite par un modèle de reconnaissance vocale (Whisper) : **93 % de correspondance** avec le texte ; images extraites aux moments clés pour vérifier que l'écran correspond à la phrase. **La voix n'a pas été écoutée par un humain : écoutez-la en entier avant de la diffuser.**

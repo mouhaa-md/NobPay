@@ -198,5 +198,12 @@ Suite de l'audit du 3 novembre (`docs/AUDIT-2026-11-03.md`, N1 à N3 et A2, A5, 
 - **Clore le projet.** Refusé tant qu'une preuve attend une décision ou qu'un paiement est en route. Une fois clos : plus de versement (y compris par le lien famille, qui est fermé), plus de preuve, plus de changement, aucune étape ne s'ouvre, même si une facture faite avant la clôture est payée après : cet argent reste au financeur et se reprend avec le remboursement habituel. Événement `project_closed` (séquestre restant, étapes payées). L'équipe sur place voit « Projet clos », la liste des projets l'indique, les étapes non faites sont marquées « Non réalisée ».
 - 884 tests verts sur 62 fichiers.
 
+## Nettoyage des mentions du premier hackathon (9 novembre 2026)
+
+- **Retiré du produit et des textes courants :** la FAQ de la page d'accueil (français et anglais), le bas de la page « Profil », `SECURITY.md`, le guide d'utilisation, le script de démonstration, la narration de la vidéo, la scène de fin de la vidéo (nom et logos du premier hackathon), les règles de rédaction. Le produit se présente comme un prototype open source.
+- **Réécrit sans ces mentions :** la section « Le hackathon » de `docs/CONTEXTE-PROJET.md` (règles et critères du premier concours), les repères « Demo Day » de la feuille de route et de l'audit du design, le prompt de reprise du backend.
+- **Gardé volontairement :** une phrase d'origine dans `README.md`, `README.en.md`, `docs/DEVPOST-EN.md` et ce journal, l'étiquette `pre-dbd4` et l'historique Git. Ils permettent au jury de voir ce qui est nouveau depuis le 26 octobre.
+- **Pas encore fait :** les fichiers déjà produits (vidéo et voix, `docs/GUIDE-UTILISATION.pdf`, `docs/presentation/Nobpay-Canva.pdf`) citent encore le premier hackathon ; ils seront refaits avec le nouveau nom.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

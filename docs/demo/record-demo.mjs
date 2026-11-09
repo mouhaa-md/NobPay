@@ -74,7 +74,7 @@ await say('Chiffres de marché sourcés (IFAD, 2026) : ils décrivent le marché
 await scrollBy(1500, 2000);
 await say('Le principe : financer, prouver, libérer, vérifier.', 3200);
 await scrollBy(-2200, 1500);
-await say('C’est un prototype du hackathon Code & Chain Dakar. Voici le parcours, en mode démonstration.', 3600);
+await say('C’est un prototype open source. Voici le parcours, en mode démonstration.', 3600);
 
 // ---------- 2. Entrée dans l'app ----------
 await click(page.getByRole('link', { name: /Essayer la démo/ }));
