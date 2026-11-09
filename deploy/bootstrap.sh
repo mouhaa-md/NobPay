@@ -107,15 +107,47 @@ esac
 echo "deploy/.env écrit (droits 600). Construction et démarrage…" >&2
 $COMPOSE up -d --build
 
+# "status restarts health" of the app container ("restarting 3 starting", "running 0 healthy"…), empty when it does not exist
+app_state() {
+  cid="$($COMPOSE ps -q app 2>/dev/null | head -n 1)"
+  [ -n "$cid" ] || return 0
+  docker inspect -f '{{.State.Status}} {{.RestartCount}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$cid" 2>/dev/null || true
+}
+
+# Says what is wrong instead of leaving the reader with a timeout: the state of the containers and the last lines of the app's log
+# (the app's own log never holds a secret: it masks them). A refused configuration shows up here as "Démarrage refusé : …".
+fail_with_log() {
+  {
+    echo ""
+    echo "L'application ne devient pas saine ($1)."
+    echo "État des conteneurs :"
+    $COMPOSE ps || true
+    echo ""
+    echo "Dernières lignes du journal de l'application :"
+    $COMPOSE logs --no-color --tail 40 app || true
+    echo ""
+    echo "Pour suivre le journal : $COMPOSE logs -f app"
+  } >&2
+  exit 1
+}
+
+# BOOTSTRAP_WAIT_TRIES x BOOTSTRAP_WAIT_SLEEP seconds: 200 s by default (the certificate can take a minute); the tests shorten it
+WAIT_TRIES="${BOOTSTRAP_WAIT_TRIES:-40}"
+WAIT_SLEEP="${BOOTSTRAP_WAIT_SLEEP:-5}"
+
 echo "Attente de https://$SITE/api/health (le certificat HTTPS peut prendre une minute)…" >&2
 i=0
 until curl -fsS "https://$SITE/api/health" >/dev/null 2>&1; do
   i=$((i + 1))
-  [ "$i" -gt 40 ] && {
-    echo "Pas de réponse. Lisez les journaux : $COMPOSE logs --tail 100 app" >&2
-    exit 1
-  }
-  sleep 5
+  # shellcheck disable=SC2046
+  set -- $(app_state)
+  case "${1:-}" in
+    restarting | exited | dead) fail_with_log "le conteneur est « $1 »" ;;
+  esac
+  if [ "${2:-0}" -gt 0 ] 2>/dev/null; then fail_with_log "le conteneur a redémarré $2 fois"; fi
+  if [ "${3:-}" = "unhealthy" ]; then fail_with_log "Docker le juge « unhealthy »"; fi
+  if [ "$i" -gt "$WAIT_TRIES" ]; then fail_with_log "pas de réponse après $((WAIT_TRIES * WAIT_SLEEP)) secondes"; fi
+  sleep "$WAIT_SLEEP"
 done
 
 cat >&2 <<EOF
