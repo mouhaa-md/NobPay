@@ -1,7 +1,9 @@
 # Déploiement : mettre NobPay en ligne sur un petit serveur
 
 > **But :** une URL publique en HTTPS, reproductible, avec sauvegardes. Le règlement du hackathon demande « un MVP accessible par Internet ». Compter 30 à 45 minutes la première fois.
-> **Limite connue :** je n'ai pas pu construire l'image Docker sur la machine de développement (Docker n'y est pas installé). Ce qui a été **vérifié** : le mode « standalone » de Next.js (le même que dans l'image) démarre, répond sur `/api/health`, sert la page d'accueil, la page 404 en français et les fichiers publics. **Le premier `docker compose up` sur le serveur est donc le vrai test** : lisez ses journaux.
+> **Limite connue (mise à jour le 9 novembre 2026, après le premier test sous Docker, dans un Codespace) :** le détail, avec les sorties, est dans [`RAPPORT-TEST-DOCKER-2026-11-09.md`](RAPPORT-TEST-DOCKER-2026-11-09.md).
+> **Vérifié sous Docker 29 et Compose 5.6, profil démo, Caddy en HTTP simple (`SITE_ADDRESS=:80`) :** la construction de l'image (utilisateur `nobpay`, `HEALTHCHECK`, `public/` et `.next/static` présents, aucun fichier `.env`) ; le démarrage, `/api/health`, les pages `/` et `/en`, la 404 en français, les en-têtes de sécurité et la compression ; le parcours de démonstration jusqu'au paiement simulé et à l'ancrage, **piloté par l'API** ; les plafonds d'envoi à travers Caddy (65 Mo refusés par l'application, 75 Mo par Caddy) ; le garde-fou contre les requêtes d'un autre site ; une limitation de débit que l'adresse forgée dans `X-Forwarded-For` ne contourne pas ; la persistance (`restart`, `down` puis `up`, recréation du conteneur) ; la sauvegarde et la **restauration dans un volume neuf** ; `docker compose config`, `caddy validate`, `sh -n`.
+> **Toujours pas vérifié :** le HTTPS réel (certificat Let's Encrypt, DNS, ports 443) ; un vrai navigateur (aucun n'était installé : les pages ont été lues avec `curl`) ; l'adresse du port redirigé de Codespaces depuis l'extérieur ; les profils « bac à sable » et « vrais sats » ; `bootstrap.sh real` ; `bootstrap.sh demo` jusqu'à son message final (il attend un HTTPS public) ; le passage d'un conteneur refusé à « unhealthy » (les sondes échouent, le changement d'état n'a pas été attendu) ; la tenue en charge. **Le premier `docker compose up` sur le vrai serveur reste donc le dernier test** : lisez ses journaux.
 
 ## 1. Deux instances, deux profils
 
@@ -77,7 +79,7 @@ sh deploy/bootstrap.sh demo    # tout simulé : jury et vote du public, données
 sh deploy/bootstrap.sh real    # vrais sats : demande les deux chaînes NWC (saisie masquée), plafonds bas, comptes invités
 ```
 
-Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **sur le serveur** (jamais affichés), écrit `deploy/.env` en `600`, lance `docker compose`, attend `/api/health` et rappelle quoi sauvegarder. Il refuse d'écraser un `deploy/.env` existant. **Il a été essayé avec de faux `docker` et `curl`, pas sur un vrai serveur** : lisez sa dernière sortie et `/api/health`.
+Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **sur le serveur** (jamais affichés), écrit `deploy/.env` en `600`, lance `docker compose`, attend `/api/health` et rappelle quoi sauvegarder. Il refuse d'écraser un `deploy/.env` existant. **Essayé** avec de faux `docker` et `curl` (test automatique `frontend/tests/deploy-bootstrap.test.ts`) et pour de bon sous Docker avec `localhost` : le fichier est écrit en `600`, les conteneurs démarrent, puis il attend un HTTPS que `localhost` ne peut pas fournir. **Pas encore sur un vrai serveur avec un vrai domaine** : lisez sa dernière sortie et `/api/health`. Il exige un nom de domaine (`:80` est refusé) : pour un essai sans domaine, voir « Essai sans domaine » plus bas.
 
 ## 2. Prérequis
 
@@ -103,8 +105,23 @@ Contrôles :
 1. `https://<domaine>/api/health` répond `{"mode":…,"demo":…}`.
 2. La page d'accueil s'affiche en HTTPS, `/n-existe-pas` montre la page 404 **en français**.
 3. Sur l'instance démo : « Essayer avec le compte démo » ouvre le tableau de bord.
-4. Le serveur **refuse de démarrer** avec un `SESSION_SECRET` faible en mode sandbox ou si `ALLOW_DEMO=0` : c'est voulu.
+4. Le serveur **refuse de démarrer** avec un `SESSION_SECRET` faible en mode sandbox ou si `ALLOW_DEMO=0` : c'est voulu. **Comment ce refus se voit sous Docker** (contrôlé avec une clé de notification invalide) : le processus reste lancé mais répond **HTTP 500 à toutes les requêtes**, `/api/health` compris ; les journaux disent `Démarrage refusé` et pourquoi ; les sondes du `HEALTHCHECK` échouent, donc le conteneur finit « unhealthy ». Docker **ne le relance pas** (la politique `restart` ne joue qu'à la sortie du processus) : après un `up`, lisez `docker compose … ps` et `logs app`, ne vous fiez pas à « Up ».
 5. Webhook Bitnob (sandbox) : créer dans le tableau de bord Bitnob un webhook vers `https://<domaine>/api/webhooks/bitnob` avec le secret choisi.
+
+### Essai sans domaine : Codespace ou poste local (HTTP simple, profil démo)
+
+`bootstrap.sh` demande un nom de domaine et attend un HTTPS public : il ne sert pas ici. Écrire `deploy/.env` à la main, jamais dans Git, droits `600` :
+
+```bash
+cp deploy/.env.example deploy/.env && chmod 600 deploy/.env
+#   SITE_ADDRESS=:80                       Caddy en HTTP simple, sans certificat
+#   PUBLIC_BASE_URL=https://<CODESPACE_NAME>-80.<GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN>   (poste local : http://localhost)
+#   SESSION_SECRET, BITNOB_WEBHOOK_SECRET, NOSTR_MASTER_KEY : un `openssl rand -hex 32` chacun
+#   NOSTR_PUBLISH=                         VIDE : l'exemple l'active (=1) et publierait sur des relais publics
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
+```
+
+Le port 80 est redirigé en **privé** par Codespaces : ne le rendez pas public sans l'avoir décidé. `AUTO_ANCHOR=1` (l'exemple) envoie les empreintes (SHA-256) du registre aux calendriers OpenTimestamps publics **même en démonstration** : la base en contenait 5 à la fin du test, dont un seul demandé à la main, et le calendrier les a acceptés (le conteneur sort bien sur Internet). Videz la variable pour l'éviter.
 
 ## 4. Mettre à jour
 
@@ -135,6 +152,10 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 ```
 
 Puis vérifier `/api/health` et ouvrir un projet.
+
+**Essayé le 9 novembre 2026, dans un volume neuf** (le volume de données avait été supprimé avant) : la commande ci-dessus suffit. `tar` rétablit le propriétaire (`nobpay`) de `/data`, l'application redémarre en bonne santé et peut écrire, l'état des projets, la photo de preuve et le dossier ancré sont identiques à l'original, et le vérificateur de l'application valide la chaîne du registre.
+
+**Protégez le dossier de sauvegarde.** L'archive est créée par `root` et lisible par tous les utilisateurs du serveur (droits `644`) ; elle contient des données personnelles (téléphones, noms, fournisseurs, positions des photos). `chmod 700` sur le dossier de destination, et chiffrez la copie qui sort du serveur.
 
 ## 6. Pendant le jury (21 au 26 novembre)
 
