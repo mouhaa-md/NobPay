@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { AppHeader } from '@/components/app/AppHeader';
 import { ProjectCard } from '@/components/app/ProjectCard';
 import { ProjectCardWide } from '@/components/app/ProjectCardWide';
@@ -37,7 +38,8 @@ const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerC
 export default async function Projects(props: { searchParams: Promise<{ secteur?: string; q?: string }> }) {
   const t = await getT();
   const searchParams = await props.searchParams;
-  const user = (await getSessionUser())!;
+  const user = await getSessionUser();
+  if (!user) redirect('/app/bienvenue'); // the layout redirects too, but it renders beside this page, not before it
   const db = await readDb();
   const all = userProjects(db, user.id);
   const totals = totalsOf(db, all);

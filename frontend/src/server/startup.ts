@@ -8,6 +8,30 @@ export interface StartupCheck {
   warnings: string[];
 }
 
+/** What a refusal needs from the process, so that a test can watch it instead of dying with it. */
+export interface StartupIo {
+  error(message: string): void;
+  exit(code: number): never;
+}
+
+/**
+ * A refused start must STOP the process, with a failure code and the reasons in the log. Throwing from the instrumentation hook
+ * is not enough: Next.js prints "Failed to prepare server", keeps running and answers HTTP 500 to everything, so a container stays
+ * "Up" with a bad configuration and the restart policy never sees a failure. Exiting makes the failure visible to whoever runs it
+ * (docker compose ps shows the restarts, the log says why) and keeps a half-configured instance from holding anything.
+ */
+export function refuseIfUnsafe(
+  check: StartupCheck,
+  io: StartupIo = { error: (m) => console.error(m), exit: (code) => process.exit(code) },
+): void {
+  if (check.fatal.length === 0) return;
+  io.error(
+    `[nobpay] Démarrage refusé :\n- ${check.fatal.join('\n- ')}\n` +
+      "[nobpay] Corrigez la configuration (deploy/.env, ou les variables d'environnement) puis relancez : le processus s'arrête avec le code 1.",
+  );
+  io.exit(1);
+}
+
 /** Pure function of the environment, so it can be tested. */
 export function checkStartupConfig(): StartupCheck {
   const fatal: string[] = [];
