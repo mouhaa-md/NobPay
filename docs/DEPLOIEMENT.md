@@ -86,6 +86,7 @@ Il génère `SESSION_SECRET`, `BITNOB_WEBHOOK_SECRET` et `NOSTR_MASTER_KEY` **su
 - Un serveur Linux avec Docker et Docker Compose (un VPS de 1 à 2 Go de mémoire suffit).
 - Un nom de domaine dont l'enregistrement `A` pointe vers le serveur (Caddy obtient le certificat HTTPS tout seul ; ports 80 et 443 ouverts).
 - Le dépôt cloné sur le serveur.
+- **Sans carte bancaire** (paiement en Bitcoin, domaine gratuit) : suivez `docs/GUIDE-SERVEUR-SANS-CARTE.md`.
 
 ## 3. Première mise en ligne
 
