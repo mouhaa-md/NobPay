@@ -105,7 +105,7 @@ Contrôles :
 1. `https://<domaine>/api/health` répond `{"mode":…,"demo":…}`.
 2. La page d'accueil s'affiche en HTTPS, `/n-existe-pas` montre la page 404 **en français**.
 3. Sur l'instance démo : « Essayer avec le compte démo » ouvre le tableau de bord.
-4. Le serveur **refuse de démarrer** avec un `SESSION_SECRET` faible en mode sandbox ou si `ALLOW_DEMO=0` : c'est voulu. **Comment ce refus se voit sous Docker** (contrôlé avec une clé de notification invalide) : le processus reste lancé mais répond **HTTP 500 à toutes les requêtes**, `/api/health` compris ; les journaux disent `Démarrage refusé` et pourquoi ; les sondes du `HEALTHCHECK` échouent, donc le conteneur finit « unhealthy ». Docker **ne le relance pas** (la politique `restart` ne joue qu'à la sortie du processus) : après un `up`, lisez `docker compose … ps` et `logs app`, ne vous fiez pas à « Up ».
+4. Le serveur **refuse de démarrer** avec un `SESSION_SECRET` faible en mode sandbox ou si `ALLOW_DEMO=0` : c'est voulu. **Comment ce refus se voit** : le processus **s'arrête avec le code 1** après avoir écrit dans le journal `Démarrage refusé` et chaque raison (il ne reste pas lancé à répondre 500 : c'était le comportement avant le 9 novembre). Avec `restart: unless-stopped`, Docker le relance en boucle : `docker compose … ps` montre `Restarting`, `docker compose … logs app` donne la raison. `bootstrap.sh` affiche lui-même l'état des conteneurs et les 40 dernières lignes du journal si l'application ne devient pas saine.
 5. Webhook Bitnob (sandbox) : créer dans le tableau de bord Bitnob un webhook vers `https://<domaine>/api/webhooks/bitnob` avec le secret choisi.
 
 ### Essai sans domaine : Codespace ou poste local (HTTP simple, profil démo)
