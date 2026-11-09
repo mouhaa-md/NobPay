@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { LANG_HEADER } from '@/lib/i18n/messages';
 
 /**
  * Cross-site request protection for the API. A browser tells us where a request comes from (Sec-Fetch-Site, Origin):
@@ -22,6 +23,14 @@ function allowedHosts(req: NextRequest): Set<string> {
 }
 
 export function proxy(req: NextRequest) {
+  // The English landing page is English whatever the browser says: its address, not the visitor, names the language, so the
+  // root layout writes <html lang="en"> (a French browser used to get an English page declared as French). Any value the
+  // visitor sent in that header is replaced.
+  if (req.nextUrl.pathname === '/en' && SAFE.has(req.method)) {
+    const headers = new Headers(req.headers);
+    headers.set(LANG_HEADER, 'en');
+    return NextResponse.next({ request: { headers } });
+  }
   if (SAFE.has(req.method)) return NextResponse.next();
 
   const site = req.headers.get('sec-fetch-site');
@@ -43,4 +52,4 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: '/api/:path*' };
+export const config = { matcher: ['/api/:path*', '/en'] };
