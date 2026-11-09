@@ -203,7 +203,8 @@ Suite de l'audit du 3 novembre (`docs/AUDIT-2026-11-03.md`, N1 à N3 et A2, A5, 
 - **Retiré du produit et des textes courants :** la FAQ de la page d'accueil (français et anglais), le bas de la page « Profil », `SECURITY.md`, le guide d'utilisation, le script de démonstration, la narration de la vidéo, la scène de fin de la vidéo (nom et logos du premier hackathon), les règles de rédaction. Le produit se présente comme un prototype open source.
 - **Réécrit sans ces mentions :** la section « Le hackathon » de `docs/CONTEXTE-PROJET.md` (règles et critères du premier concours), les repères « Demo Day » de la feuille de route et de l'audit du design, le prompt de reprise du backend.
 - **Gardé volontairement :** une phrase d'origine dans `README.md`, `README.en.md`, `docs/DEVPOST-EN.md` et ce journal, l'étiquette `pre-dbd4` et l'historique Git. Ils permettent au jury de voir ce qui est nouveau depuis le 26 octobre.
-- **Pas encore fait :** les fichiers déjà produits (vidéo et voix, `docs/GUIDE-UTILISATION.pdf`, `docs/presentation/Nobpay-Canva.pdf`) citent encore le premier hackathon ; ils seront refaits avec le nouveau nom.
+- **Retirés du dépôt** (ils restent dans l'historique Git) : la présentation du premier concours (`docs/presentation/Nobpay-Canva.pdf`) et l'ancienne version PDF du guide d'utilisation.
+- **Pas encore fait :** la vidéo de démonstration et sa voix déjà enregistrées citent encore le premier hackathon ; elles seront refaites avec le nouveau nom.
 
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.
