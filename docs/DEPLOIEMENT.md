@@ -155,7 +155,7 @@ Puis vérifier `/api/health` et ouvrir un projet.
 
 **Essayé le 9 novembre 2026, dans un volume neuf** (le volume de données avait été supprimé avant) : la commande ci-dessus suffit. `tar` rétablit le propriétaire (`nobpay`) de `/data`, l'application redémarre en bonne santé et peut écrire, l'état des projets, la photo de preuve et le dossier ancré sont identiques à l'original, et le vérificateur de l'application valide la chaîne du registre.
 
-**Protégez le dossier de sauvegarde.** L'archive est créée par `root` et lisible par tous les utilisateurs du serveur (droits `644`) ; elle contient des données personnelles (téléphones, noms, fournisseurs, positions des photos). `chmod 700` sur le dossier de destination, et chiffrez la copie qui sort du serveur.
+**Les sauvegardes contiennent des données personnelles** : numéros de téléphone, noms, fournisseurs, positions des photos, et toutes les preuves envoyées. Traitez-les comme la base elle-même. `backup.sh` les écrit **lisibles par leur seul propriétaire** (fichiers `600`, dossier de destination `700`, propriétaire = l'utilisateur qui lance le script) ; avant le 9 novembre 2026 elles étaient créées par `root` en `644`, lisibles par tous les utilisateurs du serveur : si vous en avez, le dossier en `700` les met déjà à l'abri, et `chmod 600` les resserre. **Chiffrez la copie qui sort du serveur** (par exemple `restic`, ou `rclone` avec `crypt`).
 
 ## 6. Pendant le jury (21 au 26 novembre)
 
