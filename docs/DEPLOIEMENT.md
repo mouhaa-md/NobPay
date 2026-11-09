@@ -151,7 +151,9 @@ deploy/backup.sh /var/backups/nobpay        # garde les 14 dernières copies
 
 Automatique chaque nuit : `0 3 * * * /chemin/vers/NobPay/deploy/backup.sh /var/backups/nobpay`. **Gardez aussi une copie hors du serveur** (rsync, rclone, restic).
 
-**Restaurer** (à essayer une fois **avant** le jour J : une sauvegarde jamais restaurée n'est pas une sauvegarde) :
+**Restaurer** (à essayer une fois **avant** le jour J : une sauvegarde jamais restaurée n'est pas une sauvegarde).
+
+**Attention : la deuxième commande efface d'abord tout le contenu actuel du volume.** Si l'instance contient des données que vous voulez garder, faites avant une sauvegarde de l'état actuel (`deploy/backup.sh`, qui fonctionne aussi application arrêtée), et vérifiez le nom de l'archive à restaurer. Pour un essai, restaurez dans un volume neuf (`-v essai_restauration:/data`) plutôt que dans le volume de l'instance.
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
