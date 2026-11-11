@@ -1,13 +1,37 @@
 # Mettre NobPay en ligne sans carte bancaire
 
-> **Pour qui :** vous, qui n'avez pas de carte qui paie à l'étranger. On paie le serveur en Bitcoin (Lightning), le nom de domaine est gratuit ou payé en Bitcoin aussi.
-> **Compter :** environ 1 heure, et de l'ordre de 5 à 15 $ en sats.
+> **Pour qui :** vous, qui n'avez pas de carte bancaire. Deux façons de payer le serveur : **(A) une personne de confiance qui a une carte le paie pour vous** (la plus simple, recommandée), ou **(B) vous le payez en Bitcoin (Lightning)**. Le nom de domaine est gratuit.
+> **Compter :** environ 1 heure, et de l'ordre de 5 € par mois pour le serveur.
 > **Limite connue :** les prix et l'acceptation de Lightning viennent de pages d'autres sites, pas des hébergeurs eux-mêmes, et certaines ont plusieurs mois. **Confirmez au moment de payer.** Je ne peux ni créer un compte ni payer à votre place.
 
-## 1. Avoir des sats
-Si vous avez déjà un portefeuille Lightning avec quelques dollars, passez à l'étape 2. Sinon, Banxaas (qui transforme le mobile money en Lightning, et qui sponsorise la conférence) est une piste : je n'ai pas vérifié son fonctionnement actuel, regardez ce que l'application propose pour votre pays.
+## 1. Avoir des sats (option B seulement)
+Si vous choisissez l'option A, passez à l'étape 2. Si vous avez déjà un portefeuille Lightning avec quelques dollars, passez à l'étape 2. Sinon, Banxaas (qui transforme le mobile money en Lightning, et qui sponsorise la conférence) est une piste : je n'ai pas vérifié son fonctionnement actuel, regardez ce que l'application propose pour votre pays.
 
 ## 2. Louer le serveur
+
+### Option A (recommandée) : une personne de confiance avec une carte paie
+Le moins cher que j'aie trouvé au 11 novembre 2026 pour un serveur avec assez de mémoire (prix relevés sur les pages des hébergeurs) :
+
+| Offre | Mémoire | Prix par mois | Remarque |
+|---|---|---|---|
+| **OVHcloud VPS-1** | **4 Go** (2 cœurs, 40 Go NVMe) | environ 4,5 à 5,5 € hors taxe, **sans engagement** | « à partir de 3,81 € » suppose 12 mois payés d'avance : à éviter |
+| Contabo Cloud VPS 4 | 8 Go | 5,50 € **avec 24 mois d'engagement** | au mois : plus cher, avec des frais d'installation |
+| DigitalOcean | 2 Go | 12 $, facturé à l'heure | simple, mais plus cher |
+| Hostinger KVM 1 | 4 Go | 6,49 $ mais **24 mois payés d'avance** | à éviter pour un essai |
+| Netcup VPS 500 | 4 Go | environ 8,3 € hors taxe | plus cher |
+| Hetzner | 4 Go | à partir de 5,99 € hors taxe | « actuellement indisponible » le 11 novembre |
+
+Le prix mensuel d'OVH vient de sites de comparaison, pas de sa page de commande : **confirmez-le au moment de commander**.
+
+Ce que la personne fait (15 minutes) :
+1. Crée un compte sur ovhcloud.com (une pièce d'identité peut être demandée).
+2. Dans son espace client, ajoute **votre clé SSH publique** (voir plus bas), puis commande un **VPS-1** sous **Ubuntu 24.04**, emplacement en Europe, **facturation mensuelle sans engagement** (pas l'offre « 12 mois »), et choisit votre clé à l'installation.
+3. Vous envoie l'**adresse IP** et le **nom d'utilisateur** (`ubuntu` chez OVH). **Elle ne vous envoie jamais son mot de passe OVH** : vous n'en avez pas besoin.
+4. Met un rappel pour résilier après les résultats (28 novembre) si le projet s'arrête là.
+
+Cette personne reste propriétaire du serveur : choisissez quelqu'un en qui vous avez confiance, et n'y mettez que des données fictives.
+
+### Option B : vous payez en Lightning
 Hébergeurs trouvés qui disent accepter Lightning : [LunaNode](https://www.lunanode.com), [Cloudzy](https://cloudzy.com/lightning-vps/), VPS4Crypto. Mon ordre de préférence : LunaNode (paiement par BTCPay, Bitcoin ou Lightning), puis Cloudzy.
 
 À choisir au moment de la commande :
@@ -33,10 +57,11 @@ Acceptez les questions par Entrée. La deuxième commande affiche la **clé publ
 Le nom doit déjà pointer vers le serveur **avant** l'étape 5 : c'est ce qui permet à Caddy d'obtenir le certificat HTTPS tout seul.
 
 ## 4. Préparer le serveur
-Connectez-vous (l'adresse IP et l'utilisateur sont donnés par l'hébergeur, souvent `root` ou `ubuntu`) :
+Connectez-vous (l'adresse IP et l'utilisateur sont donnés par l'hébergeur : `ubuntu` chez OVH, souvent `root` ailleurs) :
 
 ```bash
-ssh root@ADRESSE_IP
+ssh ubuntu@ADRESSE_IP
+sudo -i        # seulement si l'utilisateur n'est pas root : tout ce qui suit se fait en root
 ```
 
 Puis, sur le serveur :
