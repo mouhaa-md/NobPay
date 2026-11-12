@@ -6,8 +6,9 @@
 > - Le service **s'endort après 15 minutes sans visite** et met **environ 1 minute** à se réveiller. Le jury verra une page d'attente.
 > - Le disque est **effacé à chaque réveil, redémarrage ou nouveau déploiement** : les projets créés par un visiteur disparaissent, et les données de démonstration reviennent à zéro. Ce n'est pas un défaut de NobPay : l'offre gratuite n'a pas de disque permanent.
 > - Le serveur gratuit est petit : **0,1 cœur et 512 Mo de mémoire**. Les pages peuvent être lentes.
-> - Aucune erreur de ma part n'est exclue ici : **je n'ai pas pu ouvrir le tableau de bord de Render**. Les noms des champs viennent de leur documentation et peuvent différer un peu à l'écran.
-> - **Je ne sais pas si la construction de l'image passera** sur les machines gratuites de Render (leurs limites de mémoire de construction ne sont pas publiées). Le même Dockerfile a été construit et testé dans un Codespace GitHub de 8 Go.
+> - **Essai réel du 12 novembre 2026 :** la construction a duré **1 min 57 s** sur l'offre gratuite, **aucune carte n'a été demandée**, et `https://nobpay.onrender.com` a répondu : page d'accueil, `/en`, connexion démo (cookie sécurisé), tableau de bord, refus d'une requête venue d'un autre site. Le premier chargement après le déploiement a pris 16 s, les suivants 1 à 2 s.
+> - Les noms des champs de Render ont été corrigés d'après les captures d'écran de ce premier essai.
+> - Render a annoncé une **maintenance de son infrastructure le 18 novembre à 2 h (GMT)** : le service peut redémarrer ce jour-là. Vérifiez le site après.
 
 Pour un lien plus solide (données conservées, pas d'attente), voir [GUIDE-OVH-VPS1.md](GUIDE-OVH-VPS1.md). Vous pouvez faire les deux : Render gratuit tout de suite, un vrai serveur ensuite.
 
