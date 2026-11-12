@@ -55,10 +55,11 @@ Cliquez sur **Connect**.
 
 | Champ | Valeur |
 |---|---|
-| **Dockerfile Path** | laissez la valeur par défaut : `./Dockerfile` (elle se lit à partir du Root Directory, donc `frontend/Dockerfile`) |
-| **Docker Build Context Directory** | si vous voyez ce champ, laissez `.` ; **si vous ne le voyez pas, ce n'est pas grave** (il prend le Root Directory) |
-| **Health Check Path** | facultatif. **Si vous ne le voyez pas, passez** : vous pourrez l'ajouter après la création (page du service, **Settings**, section **Health Checks**, **Edit**, valeur `/api/health`) |
-| **Auto-Deploy** | sans objet pour un dépôt public (les mises à jour se font à la main) |
+| **Dockerfile Path** | laissez `./Dockerfile`. Render affiche `frontend/` en gris devant le champ : c'est votre Root Directory, donc le fichier lu est bien `frontend/Dockerfile` |
+| **Docker Build Context Directory** | laissez tel quel (même préfixe `frontend/` devant : le dossier de construction est `frontend`) |
+| **Health Check Path** | **laissez vide** pour ce premier essai (sur un serveur à 0,1 cœur, un contrôle trop pressé peut faire redémarrer le service). Une fois le site en ligne, vous pourrez ajouter `/api/health` (page du service, **Settings**, section **Health Checks**, **Edit**) |
+| **Auto-Deploy** | choisissez **Off** : ainsi un envoi de code sur GitHub ne redémarre pas (et n'efface pas) la démonstration pendant que le jury teste. Les mises à jour se font alors à la main (**Manual Deploy**) |
+| **Secret Files, Registry Credential, Docker Command, Pre-Deploy Command, Build Filters** | ne touchez à rien |
 
 **Ne mettez pas `./frontend/Dockerfile` si le Root Directory vaut déjà `frontend`** : Render chercherait `frontend/frontend/Dockerfile`.
 
