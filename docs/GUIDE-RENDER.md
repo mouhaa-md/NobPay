@@ -48,17 +48,19 @@ Cliquez sur **Connect**.
 | **Language** | **Docker** |
 | **Branch** | **`dbd4/m1-real-bitcoin`** (par défaut Render propose `main`, qui est l'ancienne version, **sans** Dockerfile : choisissez bien la bonne branche) |
 | **Region** | **Frankfurt (EU Central)**, la plus proche de Dakar |
-| **Root Directory** | laissez **vide** |
+| **Root Directory** | **`frontend`** (le dossier qui contient le Dockerfile : Render s'en sert comme dossier de construction) |
 | **Compute** (le type d'instance) | La ligne **« $0 / month, 0.1 CPU, 512 MB RAM, Free »**. **Attention : Render présélectionne la ligne à 7 $ par mois** (0.5 CPU). Cliquez sur la ligne gratuite, et vérifiez que « Selected » affiche bien **$0 / month** avant de continuer |
 
 4. Ouvrez la section **Advanced** et réglez :
 
 | Champ | Valeur |
 |---|---|
-| **Dockerfile Path** | `./frontend/Dockerfile` |
-| **Docker Build Context Directory** | `./frontend` |
-| **Health Check Path** | `/api/health` |
+| **Dockerfile Path** | laissez la valeur par défaut : `./Dockerfile` (elle se lit à partir du Root Directory, donc `frontend/Dockerfile`) |
+| **Docker Build Context Directory** | si vous voyez ce champ, laissez `.` ; **si vous ne le voyez pas, ce n'est pas grave** (il prend le Root Directory) |
+| **Health Check Path** | facultatif. **Si vous ne le voyez pas, passez** : vous pourrez l'ajouter après la création (page du service, **Settings**, section **Health Checks**, **Edit**, valeur `/api/health`) |
 | **Auto-Deploy** | sans objet pour un dépôt public (les mises à jour se font à la main) |
+
+**Ne mettez pas `./frontend/Dockerfile` si le Root Directory vaut déjà `frontend`** : Render chercherait `frontend/frontend/Dockerfile`.
 
 ## 4. Les variables d'environnement
 Toujours dans **Advanced**, section **Environment Variables**. Le plus simple : le bouton **Add from .env**, puis collez ces lignes **en remplaçant la première** par votre secret de l'étape 1 :
@@ -122,7 +124,8 @@ Page du service, bouton **Manual Deploy**, **Deploy latest commit** (Render repr
 
 | Ce que vous voyez | Cause probable | Que faire |
 |---|---|---|
-| « Failed to read dockerfile » ou fichier introuvable | Les chemins du Dockerfile | Vérifiez `./frontend/Dockerfile` et `./frontend`. Sinon essayez : Root Directory `frontend`, Dockerfile Path `./Dockerfile`, Build Context `.` |
+| « Failed to read dockerfile » ou fichier introuvable | Les chemins du Dockerfile | Vérifiez : Root Directory `frontend`, Dockerfile Path `./Dockerfile`, Build Context `.` (ou absent). Autre combinaison possible : Root Directory vide, Dockerfile Path `./frontend/Dockerfile` **et** Build Context `./frontend` (il faut alors les deux) |
+| La construction échoue sur `COPY package.json` : fichier introuvable | Le dossier de construction est la racine du dépôt et non `frontend` | Mettez Root Directory = `frontend` |
 | Erreur sur `docker/dockerfile` ou `syntax` dès les premières lignes | La première ligne du Dockerfile (`# syntax=…`) n'est pas acceptée par leur constructeur | Écrivez-moi : je retire cette ligne, qui n'est pas nécessaire |
 | La construction s'arrête avec « Killed », « out of memory » ou « exit code 137 » | Le constructeur gratuit manque de mémoire pour construire l'application | Écrivez-moi : plan B = construire l'image ailleurs (GitHub) et la faire télécharger par Render, ou prendre un petit serveur payant (guide OVH) |
 | « No open ports detected » ou le service reste « Deploying » | Port ou adresse d'écoute | Vérifiez `PORT=3000` et `HOSTNAME=0.0.0.0` dans Environment |
