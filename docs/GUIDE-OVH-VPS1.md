@@ -81,6 +81,7 @@ Faites vous-même 2.1 à 2.5 : votre clé est déjà prête, et vous n'envoyez l
 ### 2.1 Choisir l'offre
 1. Allez sur le site d'OVHcloud (ovhcloud.com), rubrique **VPS** (serveurs privés virtuels).
 2. Choisissez l'offre **VPS-1**.
+   **Le 12 novembre, le VPS-1 et le VPS-2 étaient affichés « actuellement indisponibles » sur le site du Sénégal.** Dans ce cas, prenez la **moins chère des offres encore disponibles** : ce jour-là, le VPS-3 (6 cœurs, 12 Go, 100 Go), « à partir de 8 053 FCFA taxes incluses par mois ». Elle est plus grosse que nécessaire, mais elle marche sans swap. Le prix sans engagement s'affiche à l'étape suivante : lisez-le avant de continuer.
 3. Réglez les options comme ceci :
    - **Localisation :** en Europe (France ou Allemagne, peu importe).
    - **Système :** **Ubuntu 24.04** (pas Windows, pas une version avec panneau de contrôle payant comme cPanel ou Plesk).
