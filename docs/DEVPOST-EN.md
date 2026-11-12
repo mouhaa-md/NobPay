@@ -12,7 +12,7 @@
 
 Pay on proof: money sent home is released step by step, in sats, only when the work is shown.
 
-Short version, in case the Devpost field is limited to about 60 characters (56 here): *Pay on proof: escrow for money sent home, over Lightning*
+For Devpost's "Elevator pitch" field (200 characters at most; this one has 192): *Pay on proof: money sent home sits in escrow and is released step by step, over Lightning, only when the work is shown. Every event goes in a ledger anchored on Bitcoin that anyone can verify.*
 
 ## Elevator pitch (about 50 words)
 
