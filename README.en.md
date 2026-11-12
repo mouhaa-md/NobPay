@@ -26,14 +26,15 @@ A **"Quick trial"** button creates a 15 $ project in three steps so a visitor ca
 
 ## What is real, and what is not
 
-| Piece | Status (2 Nov. 2026) |
+| Piece | Status (12 Nov. 2026) |
 |---|---|
 | Lightning funding over Nostr Wallet Connect (NIP-47); supplier payout to a Lightning address; refunds | Tested end to end against a **scripted wallet**, and the adapter against a **real NIP-47 wallet service** (Alby's SDK) on a simulated relay. **Not yet run with a real wallet and real sats.** |
-| Mobile money payout (Bitnob) | Ran end to end in the **Bitnob sandbox**; not on the real-sats instance |
+| Mobile money payout (Bitnob) | Ran end to end in the **Bitnob sandbox**; not part of the live demo, which simulates payments |
 | Hash-chained record, browser-side verification, OpenTimestamps anchoring | **Real** (public calendars, downloadable `.ots` proof) |
 | Nostr commitments (kind 8421), NIP-03 timestamps | Tested against fake relays; the verification page was checked in a browser against real relays in read-only. **Publishing to real relays not tried yet** (`frontend/scripts/nostr-smoke.mjs`) |
 | AI advice on proofs | Tested with a fake client. **Never run against the real API yet** |
 | Custody | The escrow is held by **the instance's own wallet** (a custodial design, bounded by pilot ceilings and a solvency check that pauses payments if what is owed exceeds what the wallets hold). It is not a licensed financial service |
+| Live demo ([nobpay.onrender.com](https://nobpay.onrender.com)) | A Docker image on Render's free plan: payments **simulated**, no real-sats instance yet; asleep after 15 minutes without a visit (first load about a minute), data reset at each restart; automatic anchoring and Nostr publishing off. The deployment script was run in a clean GitHub Codespace |
 
 Each instance says its mode at the top of every screen: **demonstration** (everything simulated), **Bitnob sandbox**, or **real bitcoin** (pilot ceilings).
 
