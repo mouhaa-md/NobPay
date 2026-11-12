@@ -1,7 +1,7 @@
 # Nouveau depuis l'ouverture du hackathon (26 octobre 2026)
 
 > NobPay est né au hackathon **Code & Chain Dakar** (17-18 octobre 2026). Ce journal liste **uniquement** ce qui a été ajouté ou corrigé pour le **Dakar Bitcoin Hack #4**, pour que le jury puisse le distinguer de la base.
-> Point de départ : l'étiquette Git **`pre-dbd4`** (commit `63fcaed`). Voir tout ce qui a changé : `git diff pre-dbd4..HEAD`.
+> Point de départ : l'étiquette Git **`pre-dbd4`** (commit `a008811`). Voir tout ce qui a changé : `git diff pre-dbd4..HEAD`.
 > Les identifiants (A1, B2…) renvoient aux constats de [`AUDIT-HACKATHON-4.md`](AUDIT-HACKATHON-4.md).
 
 ## Jalon M0 : fondations (1er novembre 2026)

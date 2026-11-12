@@ -1,7 +1,7 @@
 # Audit complet et plan d'adaptation : Dakar Bitcoin Hack #4
 
 > **Date :** 1er novembre 2026. Dépôt des projets jusqu'au **20 novembre 2026, 20 h GMT**.
-> **Portée :** dépôt `mouhaa-md/NobPay` au commit `63fcaed` (42 commits, 454 fichiers suivis, 13 668 lignes de code d'application) ; règles et ressources publiques du hackathon ; recherche sur Bitcoin, Lightning, Nostr, IA et le contexte sénégalais.
+> **Portée :** dépôt `mouhaa-md/NobPay` au commit `a008811` (42 commits, 454 fichiers suivis, 13 668 lignes de code d'application) ; règles et ressources publiques du hackathon ; recherche sur Bitcoin, Lightning, Nostr, IA et le contexte sénégalais.
 > **Pour qui :** le chef de projet et les développeurs qui reprennent NobPay pour ce hackathon.
 > **Comment lire les affirmations.** Chaque constat dit d'où il vient : **mesuré** (commande lancée pour cet audit), **code** (lu dans le dépôt, avec `fichier:ligne`), **source officielle** (page lue en direct), **source secondaire** (presse, blog, moteur de recherche : à confirmer avant de s'appuyer dessus), **non vérifié**. Les jugements (gravité, priorité, recommandations) sont les miens.
 
