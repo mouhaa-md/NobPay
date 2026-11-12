@@ -47,6 +47,12 @@ Règle proposée : l'orange est réservé à la preuve (clé de voûte du logo ;
 
 Dessiné sur une hauteur d'x de 100 unités : trait de 17 u, anneau des lettres rondes R 51,5 / r 34,5, arche R 48 / r 31, clé de voûte de 44° séparée par des fentes de 3,5 u. Les lettres rondes dépassent de 1,5 u la ligne de base et la hauteur d'x (correction optique).
 
+## Où il est branché (vérifié le 12 novembre 2026)
+
+- Le composant `Logo` (`frontend/src/components/ui/Logo.tsx`) dessine le logo de `nobpay-logo.svg` ; il est utilisé dans l'application, la page d'accueil, la vérification publique, le reçu, les pages « terrain », « témoin » et « contribuer », et la page 404.
+- Les icônes de `frontend/public/icons` (PWA, apple-touch-icon), `frontend/public/favicon.ico` et `frontend/public/brand/nobpay-logo.png` sont identiques aux fichiers de ce dossier.
+- Les deux captures de la page d'accueil qui montraient encore l'ancien éclair (`frontend/public/site/phone-preuve.webp` et `phone-verifier.webp`) ont été refaites avec le nouveau logo.
+
 ## Ce qui reste à faire
 
-Ces fichiers ne sont **pas encore branchés** dans l'application ni dans le site : le composant `Logo` (`frontend/src/components/ui/Logo.tsx`) affiche toujours l'ancien éclair, et les icônes de `frontend/public/icons` (PWA, apple-touch-icon) ainsi que `frontend/public/brand/nobpay-logo.png` sont les anciennes.
+La vidéo de démonstration (`docs/video`) et son affiche ont été faites avant : elles seront refaites (voir `docs/CHANGELOG-DBD4.md`).
