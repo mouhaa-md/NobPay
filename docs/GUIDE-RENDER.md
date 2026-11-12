@@ -49,7 +49,7 @@ Cliquez sur **Connect**.
 | **Branch** | **`dbd4/m1-real-bitcoin`** (par défaut Render propose `main`, qui est l'ancienne version, **sans** Dockerfile : choisissez bien la bonne branche) |
 | **Region** | **Frankfurt (EU Central)**, la plus proche de Dakar |
 | **Root Directory** | laissez **vide** |
-| **Instance Type** | **Free** |
+| **Compute** (le type d'instance) | La ligne **« $0 / month, 0.1 CPU, 512 MB RAM, Free »**. **Attention : Render présélectionne la ligne à 7 $ par mois** (0.5 CPU). Cliquez sur la ligne gratuite, et vérifiez que « Selected » affiche bien **$0 / month** avant de continuer |
 
 4. Ouvrez la section **Advanced** et réglez :
 
