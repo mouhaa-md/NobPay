@@ -215,7 +215,8 @@ Rapport complet : [`AUDIT-SECURITE-2026-11-12.md`](AUDIT-SECURITE-2026-11-12.md)
 - **Réinitialisation de la démo :** 10 par heure et par adresse.
 - **Limiteur de débit :** clés longues hachées, balayage au plus toutes les 30 s, plafond de 20 000 clés (jamais un plafond journalier).
 - **Montant de financement :** entier exigé.
-- 911 tests verts sur 69 fichiers (31 ignorés).
+- **Matrice d'autorisation** (`tests/authorization.test.ts`, 75 vérifications) : propriétaire, inconnu connecté, personne, lien de terrain, sur 19 appels ; un refus ne change pas la base.
+- 986 tests verts sur 70 fichiers (31 ignorés).
 
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

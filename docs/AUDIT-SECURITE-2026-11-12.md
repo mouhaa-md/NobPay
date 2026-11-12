@@ -24,7 +24,8 @@
 | Recherche de motifs de secrets (clé Anthropic, chaîne NWC avec secret, clé privée, `nsec`, clé Bitnob « live », jetons GitHub et AWS) dans les 114 commits | une seule correspondance : `tests/logger.test.ts`, des valeurs factices (`'ab'.repeat(32)`…) qui vérifient le masquage des journaux |
 | Recherche de zones dangereuses dans `src/` (`dangerouslySetInnerHTML`, `eval`, `new Function`, `child_process`, redirections, chemins de fichiers) | un seul `dangerouslySetInnerHTML`, sur une constante du code ; aucun appel système ; redirections internes seulement ; chemins de fichiers nettoyés (`[^a-zA-Z0-9_-]` retiré) |
 | `tsc --noEmit` | aucune erreur |
-| Tests (vitest) | 911 réussis, 31 ignorés (avant : 898 réussis) |
+| Tests (vitest) | 986 réussis, 31 ignorés (avant : 898 réussis) |
+| Matrice d'autorisation, nouvelle (`tests/authorization.test.ts`) : 19 appels sur les routes qui touchent un projet, une étape, un versement ou un fichier de preuve, faits par le propriétaire, par un inconnu connecté, par personne et par un détenteur de lien de terrain | 75 vérifications passées : l'inconnu reçoit 403/404 et **la base ne change pas d'un octet** ; personne reçoit 401 ; un lien de terrain n'ouvre pas les routes du financeur ni un autre projet. Contrôle par mutation : en retirant la vérification de propriétaire dans `services.ts`, 6 vérifications échouent, puis le fichier a été remis à l'identique |
 | Mesure mémoire d'un envoi de preuves (Node 22.20) | 56 Mo envoyés → le processus grossit de 215 à 270 Mo (environ 4 fois) |
 
 **Pas fait :** test d'intrusion sur le site en ligne, fuzzing, analyse du code des dépendances au-delà de `npm audit`, revue de la configuration Render, relecture par une autre personne.
@@ -106,7 +107,7 @@
 - **Webhooks :** signature HMAC-SHA512 sur le corps brut, rejeu refusé par identifiant d'événement, corps limité à 256 Ko, limite de débit.
 - **Entrées :** schémas zod stricts (champs inconnus refusés), corps JSON limités à 100 Ko, lecture comptée à l'arrivée des octets.
 - **Navigateur :** `Content-Security-Policy` (pas d'encadrement, pas d'objets), `X-Frame-Options: DENY`, HSTS, `Referrer-Policy: same-origin`, pas d'en-tête `X-Powered-By`, contrôle d'origine contre les requêtes inter-sites ([`proxy.ts`](../frontend/src/proxy.ts)).
-- **Droits :** chaque service vérifie que le projet appartient à l'utilisateur ; aucun chemin de fichier ne vient d'une entrée brute (tout passe par un enregistrement de la base).
+- **Droits :** chaque service vérifie que le projet appartient à l'utilisateur, et c'est maintenant **vérifié route par route** par un test qui échoue si une vérification disparaît (`tests/authorization.test.ts`) ; aucun chemin de fichier ne vient d'une entrée brute (tout passe par un enregistrement de la base).
 - **Argent :** crédit du séquestre seulement au montant exact confirmé, une seule sortie par étape (tests de course), plafonds d'une instance en vrais sats, démarrage refusé pour les combinaisons dangereuses (vrais sats avec `ALLOW_DEMO`, clés Bitnob « live », secret de session faible).
 - **Chaîne de livraison :** l'intégration continue lance l'audit des dépendances, les types, les tests, la construction et la recherche de secrets.
 
