@@ -12,6 +12,8 @@
 
 Pay on proof: money sent home is released step by step, in sats, only when the work is shown.
 
+Short version, in case the Devpost field is limited to about 60 characters (56 here): *Pay on proof: escrow for money sent home, over Lightning*
+
 ## Elevator pitch (about 50 words)
 
 The African diaspora sends hundreds of billions of dollars home, and much of it funds a house, a field, a school year or a shop run from afar, on someone's word. NobPay holds the money in escrow and pays the supplier directly, over Lightning, only when the proof arrives. Anyone can verify the record.
