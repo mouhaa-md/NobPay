@@ -11,7 +11,7 @@
 | Offre | **VPS-1** (la plus petite offre d'OVHcloud). D'après un site de comparaison : 2 cœurs, 4 Go de mémoire, 40 Go de disque |
 | Prix par mois, sans engagement | **de 5 à 6,5 € hors taxe** selon les sources (une source donne 5,35 $, une autre 6,49 €), **plus la TVA** du pays de la personne qui paie |
 | À éviter | Le prix « à partir de 3,81 € » ou « 4,54 $ » : il demande 12 mois payés d'avance |
-| Durée utile | Du 13 novembre au 28 novembre, soit **environ 1 mois et demi** : comptez **10 à 12 € au total** |
+| Durée utile | Du 13 novembre au 28 novembre, soit **environ 2 semaines**. L'abonnement se paie par mois : **un seul mois** suffit, soit **6 à 8 € au total, TVA comprise** (estimation), à condition de résilier avant le renouvellement (vers le 13 décembre) |
 
 **Si l'offre affichée a moins de 2 Go de mémoire, ne la prenez pas.** Entre 2 et 4 Go, ça marche (ajoutez le swap de la partie 3). À partir de 4 Go, c'est confortable.
 
@@ -59,7 +59,7 @@ Si `nobpay` est pris, prenez `nobpay-dakar` ou autre : il faudra utiliser ce nom
 ### 1.3 Envoyer la demande à la personne qui paie
 Copiez ce message et adaptez-le :
 
-> Bonjour, j'ai besoin de ton aide pour mon projet NobPay (hackathon Dakar Bitcoin Hack). Il me faut un petit serveur en ligne pour le montrer au jury, et je n'ai pas de carte bancaire. Peux-tu commander pour moi un serveur « VPS-1 » chez OVHcloud (environ 6 € par mois, sans engagement, pour 1 mois et demi) puis le résilier après le 28 novembre ? Tu n'as rien à installer. Je ne te demande jamais ton mot de passe OVH, seulement l'adresse IP du serveur à la fin. Le serveur ne contiendra que des données de démonstration. Les étapes sont dans le fichier joint (partie 2), et voici ma clé publique : `ssh-ed25519 AAAA…` [collez votre ligne]
+> Bonjour, j'ai besoin de ton aide pour mon projet NobPay (hackathon Dakar Bitcoin Hack). Il me faut un petit serveur en ligne pour le montrer au jury, et je n'ai pas de carte bancaire. Peux-tu commander pour moi un serveur « VPS-1 » chez OVHcloud (environ 6 € pour un seul mois, sans engagement) puis le résilier après le 28 novembre ? Tu n'as rien à installer. Je ne te demande jamais ton mot de passe OVH, seulement l'adresse IP du serveur à la fin. Le serveur ne contiendra que des données de démonstration. Les étapes sont dans le fichier joint (partie 2), et voici ma clé publique : `ssh-ed25519 AAAA…` [collez votre ligne]
 
 ---
 
