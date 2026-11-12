@@ -5,6 +5,7 @@ import { requireUser } from '@/server/auth';
 import { saveUpload } from '@/server/files';
 import { HttpError, readBodyLimited, respond } from '@/server/http';
 import { assertCanSubmitProof, submitProof, type Actor } from '@/server/services';
+import { reserveUpload } from '@/server/uploadBudget';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -50,67 +51,74 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     enforce(`proof:${actor.kind === 'manager' ? `token:${actor.token}` : `user:${actor.user.id}`}`, LIMITS.proof.max, LIMITS.proof.windowMs);
     await assertCanSubmitProof(actor, params.id, params.stepId); // access and step state, BEFORE reading or writing anything
 
-    // up to 6 photos + 1 invoice of 8 MB each, plus form fields
-    const bytes = await readBodyLimited(request, MAX_REQUEST_BYTES);
-    let form: FormData;
+    // The body is held in memory while it is handled: reserve its share of the instance's upload budget (a 503 when others fill it).
+    const declared = Number(request.headers.get('content-length'));
+    const release = reserveUpload(Number.isFinite(declared) && declared > 0 ? Math.min(declared, MAX_REQUEST_BYTES) : MAX_REQUEST_BYTES);
     try {
-      form = await new Response(bytes as unknown as BodyInit, { headers: { 'content-type': request.headers.get('content-type') ?? '' } }).formData();
-    } catch {
-      throw new HttpError(400, 'Envoi illisible : le formulaire est incomplet.', 'invalid_input');
-    }
+      // up to 6 photos + 1 invoice of 8 MB each, plus form fields
+      const bytes = await readBodyLimited(request, MAX_REQUEST_BYTES);
+      let form: FormData;
+      try {
+        form = await new Response(bytes as unknown as BodyInit, { headers: { 'content-type': request.headers.get('content-type') ?? '' } }).formData();
+      } catch {
+        throw new HttpError(400, 'Envoi illisible : le formulaire est incomplet.', 'invalid_input');
+      }
 
-    // validated BEFORE any file is written
-    const rawMeta = String(form.get('photoMeta') ?? '[]');
-    let metaJson: unknown;
-    try {
-      metaJson = JSON.parse(rawMeta);
-    } catch {
-      throw new HttpError(400, 'Métadonnées des photos illisibles.', 'invalid_input');
-    }
-    const meta: PhotoMeta[] = validate(photoMetaSchema, metaJson);
-    const amountRaw = form.get('invoiceAmountFcfa');
-    const fields = validate(proofFieldsSchema, {
-      supplierName: String(form.get('supplierName') ?? ''),
-      supplierPhone: String(form.get('supplierPhone') ?? ''),
-      supplierNetwork: String(form.get('supplierNetwork') ?? ''),
-      supplierLightningAddress: String(form.get('supplierLightningAddress') ?? '') || undefined,
-      invoiceAmountFcfa: amountRaw === null || amountRaw === '' ? undefined : Number(amountRaw),
-      note: String(form.get('note') ?? ''),
-    });
-
-    const photos: (Awaited<ReturnType<typeof saveUpload>> & { takenAt?: string; gps?: ProofPhoto['gps']; exif?: ProofPhoto['exif']; dhash?: string })[] = [];
-    const files = form.getAll('photos').filter(isFile).slice(0, 6);
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      const stored = await saveUpload(params.id, Buffer.from(await f.arrayBuffer()), f.name, f.type || 'image/jpeg');
-      const m = meta[i] ?? {};
-      const hasGps = typeof m.lat === 'number' && typeof m.lng === 'number';
-      photos.push({
-        ...stored,
-        takenAt: m.takenAt ? new Date(m.takenAt).toISOString() : undefined,
-        gps: hasGps ? { lat: Number(m.lat!.toFixed(5)), lng: Number(m.lng!.toFixed(5)), accuracy: m.accuracy ? Math.round(m.accuracy) : undefined } : undefined,
-        exif: exifOf(m),
-        dhash: m.dhash,
+      // validated BEFORE any file is written
+      const rawMeta = String(form.get('photoMeta') ?? '[]');
+      let metaJson: unknown;
+      try {
+        metaJson = JSON.parse(rawMeta);
+      } catch {
+        throw new HttpError(400, 'Métadonnées des photos illisibles.', 'invalid_input');
+      }
+      const meta: PhotoMeta[] = validate(photoMetaSchema, metaJson);
+      const amountRaw = form.get('invoiceAmountFcfa');
+      const fields = validate(proofFieldsSchema, {
+        supplierName: String(form.get('supplierName') ?? ''),
+        supplierPhone: String(form.get('supplierPhone') ?? ''),
+        supplierNetwork: String(form.get('supplierNetwork') ?? ''),
+        supplierLightningAddress: String(form.get('supplierLightningAddress') ?? '') || undefined,
+        invoiceAmountFcfa: amountRaw === null || amountRaw === '' ? undefined : Number(amountRaw),
+        note: String(form.get('note') ?? ''),
       });
+
+      const photos: (Awaited<ReturnType<typeof saveUpload>> & { takenAt?: string; gps?: ProofPhoto['gps']; exif?: ProofPhoto['exif']; dhash?: string })[] = [];
+      const files = form.getAll('photos').filter(isFile).slice(0, 6);
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const stored = await saveUpload(params.id, Buffer.from(await f.arrayBuffer()), f.name, f.type || 'image/jpeg');
+        const m = meta[i] ?? {};
+        const hasGps = typeof m.lat === 'number' && typeof m.lng === 'number';
+        photos.push({
+          ...stored,
+          takenAt: m.takenAt ? new Date(m.takenAt).toISOString() : undefined,
+          gps: hasGps ? { lat: Number(m.lat!.toFixed(5)), lng: Number(m.lng!.toFixed(5)), accuracy: m.accuracy ? Math.round(m.accuracy) : undefined } : undefined,
+          exif: exifOf(m),
+          dhash: m.dhash,
+        });
+      }
+
+      const invoiceEntry = form.get('invoice');
+      const invoice = isFile(invoiceEntry)
+        ? await saveUpload(params.id, Buffer.from(await invoiceEntry.arrayBuffer()), invoiceEntry.name, invoiceEntry.type || 'image/jpeg')
+        : undefined;
+
+      const step = await submitProof(actor, params.id, params.stepId, {
+        photos,
+        invoice,
+        invoiceAmountFcfa: fields.invoiceAmountFcfa || undefined,
+        note: fields.note,
+        supplier: {
+          name: fields.supplierName,
+          phone: fields.supplierPhone,
+          network: fields.supplierNetwork,
+          ...(fields.supplierNetwork === 'lightning' ? { lightningAddress: fields.supplierLightningAddress } : {}),
+        },
+      });
+      return { step: { id: step.id, status: step.status } };
+    } finally {
+      release();
     }
-
-    const invoiceEntry = form.get('invoice');
-    const invoice = isFile(invoiceEntry)
-      ? await saveUpload(params.id, Buffer.from(await invoiceEntry.arrayBuffer()), invoiceEntry.name, invoiceEntry.type || 'image/jpeg')
-      : undefined;
-
-    const step = await submitProof(actor, params.id, params.stepId, {
-      photos,
-      invoice,
-      invoiceAmountFcfa: fields.invoiceAmountFcfa || undefined,
-      note: fields.note,
-      supplier: {
-        name: fields.supplierName,
-        phone: fields.supplierPhone,
-        network: fields.supplierNetwork,
-        ...(fields.supplierNetwork === 'lightning' ? { lightningAddress: fields.supplierLightningAddress } : {}),
-      },
-    });
-    return { step: { id: step.id, status: step.status } };
   });
 }

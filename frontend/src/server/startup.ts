@@ -1,5 +1,6 @@
-import { isDemoAllowed, isRealBitcoin, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
+import { getConfig, isDemoAllowed, isRealBitcoin, sessionSecretMustBeStrong, sessionSecretProblem } from './config';
 import { masterKeyProblem } from './nostr/keys';
+import { getSmsProvider } from './sms';
 
 export interface StartupCheck {
   /** the server must not start */
@@ -47,6 +48,13 @@ export function checkStartupConfig(): StartupCheck {
     warnings.push(
       'ALLOW_DEMO=1 avec le mode sandbox : le code SMS est le même pour tout le monde (DEMO_OTP). ' +
         "N'importe qui qui connaît un numéro peut ouvrir ce compte. À réserver à une démonstration devant des personnes de confiance.",
+    );
+  }
+  if (isDemoAllowed() && getSmsProvider() === null && getConfig().adminPhones.length > 0) {
+    warnings.push(
+      'ADMIN_PHONES est défini alors que le code de connexion est le code de démonstration partagé (ALLOW_DEMO sans fournisseur SMS) : ' +
+        "n'importe qui connaissant un de ces numéros pourrait ouvrir son compte. Ces numéros n'ouvrent donc pas la vue complète de la page admin tant que ce code est public ; " +
+        'configurez un fournisseur SMS (SMS_PROVIDER) ou retirez ADMIN_PHONES.',
     );
   }
   const pushProblem = vapidProblem();

@@ -29,7 +29,7 @@ beforeAll(async () => {
     otp: withRequest((await import('@/app/api/auth/otp/route')).POST),
     login: (await import('@/app/api/auth/login/route')).POST as never,
     register: (await import('@/app/api/auth/register/route')).POST as never,
-    reset: (await import('@/app/api/dev/reset/route')).POST as never,
+    reset: withRequest((await import('@/app/api/dev/reset/route')).POST),
     health: ((get) => (req?: Request) => get(req ?? new Request('http://localhost/api/health')))((await import('@/app/api/health/route')).GET as (r: Request) => Promise<Response>),
   };
   services = await import('@/server/services');

@@ -1,6 +1,6 @@
 # Sécurité
 
-NobPay est un **prototype open source**. Il n'a pas été audité et ne gère aucun argent réel : ne l'utilisez pas en production sans les travaux listés dans `docs/ROADMAP-BACKEND.md` (Phase 3 : vraie base de données, stockage des fichiers, hébergement durable).
+NobPay est un **prototype open source**. Il n'a pas été audité par une personne extérieure (une revue du code par l'équipe est dans [`docs/AUDIT-SECURITE-2026-11-12.md`](docs/AUDIT-SECURITE-2026-11-12.md)) et ne gère aucun argent réel : ne l'utilisez pas en production sans les travaux listés dans `docs/ROADMAP-BACKEND.md` (Phase 3 : vraie base de données, stockage des fichiers, hébergement durable).
 
 ## Signaler une faille
 

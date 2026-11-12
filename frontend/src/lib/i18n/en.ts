@@ -907,6 +907,7 @@ export const EN: Record<string, string> = {
   'Le portefeuille Bitcoin ne répond pas comme prévu. Réessayez dans un instant.': 'The Bitcoin wallet is not answering as expected. Try again in a moment.',
   'Le portefeuille de paiement de NobPay ne couvre pas encore ce paiement. Réessayez dans quelques minutes.': 'NobPay’s payment wallet does not cover this payment yet. Try again in a few minutes.',
   'Le remboursement minimum est de 1 $.': 'The minimum refund is $1.',
+  'Le serveur reçoit déjà d’autres photos. Réessayez dans quelques secondes.': 'The server is already receiving other photos. Try again in a few seconds.',
   'Les comptes invités sont désactivés sur cette instance.': 'Guest accounts are turned off on this instance.',
   'Les paiements en Bitcoin Lightning ne sont pas activés sur cette instance.': 'Payments in Bitcoin Lightning are not turned on for this instance.',
   'Les paiements sont suspendus : les soldes Bitnob ne couvrent pas les séquestres. Contactez le support.': 'Payments are paused: the Bitnob balances do not cover the escrows. Contact support.',

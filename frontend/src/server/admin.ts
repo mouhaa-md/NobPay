@@ -1,11 +1,13 @@
 import type { AnchorStatus, Db, FundingStatus, PayoutStatus, User, WebhookRecord } from '@/lib/types';
 import { getConfig } from './config';
 import { maskPhone } from './receipt';
+import { getSmsProvider } from './sms';
 
 /**
  * Back-office. There are no roles in the database on purpose: an administrator is someone whose phone number is
- * listed in ADMIN_PHONES. In demo mode (mock, or ALLOW_DEMO=1) the demonstration account also gets the page, so the
- * jury can see it. Everything here is READ-ONLY: it shows what is stuck, it never moves money.
+ * listed in ADMIN_PHONES, as long as the sign-in code reaches that phone (an SMS provider is configured). In demo mode (mock,
+ * or ALLOW_DEMO=1) the demonstration account also gets the page, so the jury can see it. Everything here is READ-ONLY: it
+ * shows what is stuck, it never moves money.
  */
 
 const digitsOnly = (phone: string) => phone.replace(/[^0-9+]/g, '');
@@ -16,7 +18,10 @@ export type AdminScope = 'all' | 'demo';
 export function adminScope(user: Pick<User, 'phone' | 'demo'> | null | undefined): AdminScope | null {
   if (!user) return null;
   const cfg = getConfig();
-  if (cfg.adminPhones.includes(digitsOnly(user.phone))) return 'all';
+  // Where the sign-in code is the shared demo code (demo allowed, no SMS provider), knowing a phone number is enough to open
+  // its account, an administrator's included: the whole-database view is only given when a code reaches the phone itself.
+  const publicSignInCode = cfg.allowDemo && getSmsProvider() === null;
+  if (!publicSignInCode && cfg.adminPhones.includes(digitsOnly(user.phone))) return 'all';
   return cfg.allowDemo && !!user.demo ? 'demo' : null;
 }
 

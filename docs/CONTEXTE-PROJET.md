@@ -334,7 +334,7 @@ Les pages serveur (`accueil`, `projets`, etc.) lisent la base directement via `r
 | `ALLOW_DEMO` | `1` / `0` / absent : facilités de démonstration (§ 10) | absent = autorisé en `mock` seulement |
 | `SMS_PROVIDER` | `log` (codes écrits dans la console serveur, développement), `twilio`, ou vide | vide |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | identifiants Twilio (si `SMS_PROVIDER=twilio`) | vide |
-| `ADMIN_PHONES` | numéros (séparés par des virgules) autorisés à ouvrir `/app/admin` ; en démo (`ALLOW_DEMO`), le compte démo y a aussi accès | vide |
+| `ADMIN_PHONES` | numéros (séparés par des virgules) autorisés à ouvrir `/app/admin` (vue complète seulement si le code de connexion est envoyé par SMS) ; en démo (`ALLOW_DEMO`), le compte démo y a aussi accès | vide |
 | `DEMO_OTP` | code SMS unique de démonstration (utilisé seulement sans fournisseur SMS et si `ALLOW_DEMO` autorise) | `123456` |
 | `USD_XOF_RATE`, `BTC_USD_RATE` | taux indicatifs (mock + repli) | 593 ; 81500 |
 | `DATA_DIR` | dossier de la base et des dépôts | `./.data` |

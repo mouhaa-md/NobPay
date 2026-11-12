@@ -126,7 +126,7 @@ export const projectPlanSchema = z
 
 export const fundingSchema = z
   .object({
-    amountCents: z.number({ error: 'Montant invalide' }).min(1, 'Montant invalide').max(100_000_000, 'Montant trop élevé'),
+    amountCents: z.number({ error: 'Montant invalide' }).int('Montant invalide').min(1, 'Montant invalide').max(100_000_000, 'Montant trop élevé'),
     method: z.enum(['lightning', 'usdt', 'usdc']).optional(),
   })
   .strict();

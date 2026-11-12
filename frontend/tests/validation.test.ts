@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { reserveUpload, uploadsInFlight } from '@/server/uploadBudget';
 
 const jar = vi.hoisted(() => new Map<string, { value: string }>());
 vi.mock('next/headers', () => ({
@@ -128,7 +129,8 @@ describe('fundings, quotes and rejections', () => {
     await signIn();
     const ctx = { params: { id: 'p_champ', stepId: 'p_champ_s1' } };
     expect((await routes.fundings(json({ amountCents: 5000, method: 'lightning' }), ctx)).status).toBe(200);
-    for (const body of [{ amountCents: '5000' }, { amountCents: -1 }, { amountCents: 1e12 }, { amountCents: 500, method: 'cash' }, { amountCents: 500, x: 1 }, {}]) {
+    // 5000.5 and 0.5 are not amounts of cents: refused rather than quietly rounded
+    for (const body of [{ amountCents: '5000' }, { amountCents: -1 }, { amountCents: 1e12 }, { amountCents: 5000.5 }, { amountCents: 0.5 }, { amountCents: 500, method: 'cash' }, { amountCents: 500, x: 1 }, {}]) {
       await expect400(await routes.fundings(json(body), ctx));
     }
     await expect400(await routes.fundings(json('{"amountCents":1e999}'), ctx));
@@ -257,6 +259,35 @@ describe('proof upload (multipart)', () => {
     const { token, ctx } = await setup();
     expect((await routes.proof(form(token), ctx)).status).toBe(200);
     expect((await routes.proof(form(token), ctx)).status).toBe(409);
+  });
+
+  describe('memory budget (a free instance has 512 MB)', () => {
+    it('turns an upload away with a 503 and a short wait while others fill the budget, without reading its body', async () => {
+      const { token, ctx } = await setup();
+      const releaseOther = reserveUpload(90 * 1024 * 1024); // another upload is being handled right now
+      try {
+        const { request, pulled } = watchedBody(5_000_000, { 'x-manager-token': token });
+        const res = await routes.proof(request, ctx);
+        expect(res.status).toBe(503);
+        expect((await res.json()).code).toBe('busy');
+        expect(res.headers.get('retry-after')).toBe('5');
+        expect(pulled()).toBe(0);
+      } finally {
+        releaseOther();
+      }
+      expect(uploadsInFlight()).toBe(0);
+      expect((await routes.proof(form(token), ctx)).status).toBe(200); // the room is back
+    });
+
+    it('gives its share back whatever the outcome: accepted, refused as unreadable, or cut at the size ceiling', async () => {
+      const { token, ctx } = await setup();
+      await expect400(await routes.proof(form(token, { supplierNetwork: 'paypal' }), ctx));
+      expect(uploadsInFlight()).toBe(0);
+      expect((await routes.proof(watchedBody(200_000_000, { 'x-manager-token': token }).request, ctx)).status).toBe(413);
+      expect(uploadsInFlight()).toBe(0);
+      expect((await routes.proof(form(token), ctx)).status).toBe(200);
+      expect(uploadsInFlight()).toBe(0);
+    });
   });
 });
 

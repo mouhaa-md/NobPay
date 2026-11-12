@@ -1,8 +1,13 @@
+import { createHash } from 'node:crypto';
 import { HttpError } from './http';
 
 /**
  * In-memory fixed-window rate limiter. One process only (like the JSON database): swap `store` for Redis
  * when the app runs on several instances. Disabled with RATE_LIMIT=0 (tests, local debugging).
+ *
+ * The table has to stay small even when somebody tries to fill it: some keys contain what a caller sent (a path segment,
+ * a token header), so long keys are shortened, expired buckets are dropped regularly (not on every request), and the table
+ * has a ceiling.
  */
 
 interface Bucket {
@@ -13,21 +18,53 @@ interface Bucket {
 const g = globalThis as unknown as { __nobpayRate?: Map<string, Bucket> };
 const store: Map<string, Bucket> = (g.__nobpayRate ??= new Map());
 
+/** Longest key kept as it is; a longer one is replaced by its SHA-256 (a caller-chosen key cannot weigh kilobytes in the table). */
+const MAX_KEY_CHARS = 96;
+/** Expired buckets are looked for at most this often, and only once the table has this many entries. */
+const SWEEP_EVERY_MS = 30_000;
+const SWEEP_FROM = 1_000;
+/** Ceiling of the table. When it is full of live buckets, the oldest short-lived ones go first (never a daily cap such as the SMS budget). */
+export const MAX_RATE_KEYS = 20_000;
+const SHORT_WINDOW_MS = 60 * 60_000;
+let lastSweep = 0;
+
 export interface Verdict {
   ok: boolean;
   retryAfterSec: number;
 }
 
+const compact = (key: string): string => (key.length <= MAX_KEY_CHARS ? key : `h:${createHash('sha256').update(key).digest('hex')}`);
+
+function dropExpired(now: number): void {
+  lastSweep = now;
+  for (const [k, b] of store) if (b.resetAt <= now) store.delete(k);
+}
+
+/** Room for one more key: expired buckets first, then a tenth of the table (oldest first, short windows only). */
+function makeRoom(now: number): void {
+  dropExpired(now);
+  if (store.size < MAX_RATE_KEYS) return;
+  let toDrop = Math.ceil(MAX_RATE_KEYS / 10);
+  for (const [k, b] of store) {
+    if (toDrop <= 0) break;
+    if (b.resetAt - now <= SHORT_WINDOW_MS) {
+      store.delete(k);
+      toDrop -= 1;
+    }
+  }
+}
+
 /** Counts one hit for `key`. Returns ok=false once more than `max` hits happened inside `windowMs`. */
 export function hit(key: string, max: number, windowMs: number, now = Date.now()): Verdict {
   if (process.env.RATE_LIMIT === '0') return { ok: true, retryAfterSec: 0 };
-  if (store.size > 10_000) {
-    for (const [k, b] of store) if (b.resetAt <= now) store.delete(k);
-  }
-  let b = store.get(key);
+  const id = compact(key);
+  if (store.size >= SWEEP_FROM && now - lastSweep >= SWEEP_EVERY_MS) dropExpired(now);
+  let b = store.get(id);
   if (!b || b.resetAt <= now) {
+    if (!b && store.size >= MAX_RATE_KEYS) makeRoom(now);
     b = { count: 0, resetAt: now + windowMs };
-    store.set(key, b);
+    store.delete(id); // a renewed window goes to the back of the table: the front holds the oldest
+    store.set(id, b);
   }
   b.count += 1;
   return { ok: b.count <= max, retryAfterSec: Math.max(1, Math.ceil((b.resetAt - now) / 1000)) };
@@ -35,6 +72,12 @@ export function hit(key: string, max: number, windowMs: number, now = Date.now()
 
 export function resetRateLimits(): void {
   store.clear();
+  lastSweep = 0;
+}
+
+/** How many keys are tracked (tests and diagnostics). */
+export function rateLimitSize(): number {
+  return store.size;
 }
 
 const humanWait = (sec: number) => (sec < 90 ? `${sec} secondes` : `${Math.ceil(sec / 60)} minutes`);
@@ -84,6 +127,8 @@ export const LIMITS = {
   quote: { max: 20, windowMs: 10 * MIN },
   aiReview: { max: 10, windowMs: HOUR },
   guestIp: { max: 10, windowMs: HOUR },
+  // wipes the whole demo instance: a judge may reset a few times, a script must not do it in a loop
+  devReset: { max: 10, windowMs: HOUR },
   publicRead: { max: 120, windowMs: MIN },
   fileRead: { max: 300, windowMs: MIN },
   webhook: { max: 600, windowMs: MIN },

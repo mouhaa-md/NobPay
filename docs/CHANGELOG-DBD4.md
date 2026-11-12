@@ -206,5 +206,16 @@ Suite de l'audit du 3 novembre (`docs/AUDIT-2026-11-03.md`, N1 à N3 et A2, A5, 
 - **Retirés du dépôt** (ils restent dans l'historique Git) : la présentation du premier concours (`docs/presentation/Nobpay-Canva.pdf`) et l'ancienne version PDF du guide d'utilisation.
 - **Pas encore fait :** la vidéo de démonstration et sa voix déjà enregistrées citent encore le premier hackathon ; elles seront refaites avec le nouveau nom.
 
+## Revue de sécurité du code (12 novembre 2026)
+
+Rapport complet : [`AUDIT-SECURITE-2026-11-12.md`](AUDIT-SECURITE-2026-11-12.md). Aucune faille critique ; six constats, cinq corrigés, un à décider (position GPS dans le dossier public).
+
+- **Envoi de preuves :** budget de mémoire pour toute l'instance (`UPLOAD_MEMORY_MB`, 48 Mo par défaut) ; un envoi en trop reçoit un 503 « réessayez dans quelques secondes » avant lecture de son corps (un envoi de 56 Mo coûte 215 à 270 Mo de mémoire, mesuré).
+- **Administration :** les numéros de `ADMIN_PHONES` n'ouvrent plus la vue complète tant que le code de connexion est le code de démonstration public ; avertissement au démarrage.
+- **Réinitialisation de la démo :** 10 par heure et par adresse.
+- **Limiteur de débit :** clés longues hachées, balayage au plus toutes les 30 s, plafond de 20 000 clés (jamais un plafond journalier).
+- **Montant de financement :** entier exigé.
+- 911 tests verts sur 69 fichiers (31 ignorés).
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

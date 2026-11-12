@@ -45,6 +45,20 @@ describe('startup configuration check', () => {
     expect(r.warnings.join(' ')).toMatch(/DEMO_OTP/);
   });
 
+  it('warns when administrator numbers are listed while the sign-in code is the shared demo code', () => {
+    vi.stubEnv('BITNOB_MODE', 'mock');
+    vi.stubEnv('SESSION_SECRET', STRONG);
+    vi.stubEnv('ALLOW_DEMO', '1');
+    vi.stubEnv('ADMIN_PHONES', '');
+    expect(checkStartupConfig().warnings).toEqual([]);
+    vi.stubEnv('ADMIN_PHONES', '+221770000009');
+    const r = checkStartupConfig();
+    expect(r.fatal).toEqual([]);
+    expect(r.warnings.join(' ')).toMatch(/ADMIN_PHONES/);
+    vi.stubEnv('SMS_PROVIDER', 'log'); // a code reaches the phone: the numbers can be trusted again
+    expect(checkStartupConfig().warnings.join(' ')).not.toMatch(/ADMIN_PHONES/);
+  });
+
   describe('real bitcoin (LIGHTNING_RAIL=nwc)', () => {
     const KEY = 'ab'.repeat(32);
     const SECRET = 'cd'.repeat(32);

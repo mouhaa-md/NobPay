@@ -1,15 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Db } from '@/lib/types';
 import { adminOverview, adminScope, isAdmin } from '@/server/admin';
+import { setSmsProviderForTests } from '@/server/sms';
 
 beforeEach(() => {
+  setSmsProviderForTests(null);
   vi.stubEnv('SESSION_SECRET', 'a-long-random-secret-of-more-than-32-characters');
   vi.stubEnv('BITNOB_MODE', 'sandbox');
   vi.stubEnv('BITNOB_WEBHOOK_SECRET', 'whsec_x');
   vi.stubEnv('ALLOW_DEMO', '');
   vi.stubEnv('ADMIN_PHONES', '');
 });
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  setSmsProviderForTests(null);
+});
 
 describe('isAdmin', () => {
   it('is nobody by default, signed out or signed in', () => {
@@ -114,12 +119,29 @@ describe('the shared demo account only sees demonstration data', () => {
     webhooks: [{ eventId: 'e1', type: 'payouts.x', at: ago(MIN), outcome: 'payout_completed' }],
   } as unknown as Db;
 
-  it('scope: ADMIN_PHONES see everything, the demo account only the demo', () => {
+  it('scope: ADMIN_PHONES see everything when the sign-in code reaches the phone, the demo account only the demo', () => {
     vi.stubEnv('ALLOW_DEMO', '1');
     vi.stubEnv('ADMIN_PHONES', '+221770000009');
+    setSmsProviderForTests({ name: 'fake', send: async () => undefined }); // a code is sent to the phone: knowing a number is not enough
     expect(adminScope({ phone: '+221 77 000 00 09', demo: false })).toBe('all');
     expect(adminScope({ phone: '+33600000000', demo: true })).toBe('demo');
     expect(adminScope({ phone: '+33611111111', demo: false })).toBeNull();
+  });
+
+  it('scope: an administrator number is NOT trusted while the sign-in code is the shared demo code', () => {
+    // demo allowed and no SMS provider: anybody who knows the number can sign in to that account with the public code
+    vi.stubEnv('ALLOW_DEMO', '1');
+    vi.stubEnv('ADMIN_PHONES', '+221770000009');
+    expect(adminScope({ phone: '+221 77 000 00 09', demo: false })).toBeNull();
+    expect(isAdmin({ phone: '+221770000009', demo: false })).toBe(false);
+    expect(adminScope({ phone: '+33600000000', demo: true })).toBe('demo'); // the demo account keeps its demo view
+  });
+
+  it('scope: with demo switched off the numbers of ADMIN_PHONES keep the whole view (the code is private there)', () => {
+    vi.stubEnv('ALLOW_DEMO', '0');
+    vi.stubEnv('ADMIN_PHONES', '+221770000009');
+    vi.stubEnv('SMS_PROVIDER', 'log');
+    expect(adminScope({ phone: '+221770000009', demo: false })).toBe('all');
   });
 
   it('hides real users, their payouts, suppliers, anchors and the webhook log from the demo view', () => {

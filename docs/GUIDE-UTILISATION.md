@@ -185,7 +185,7 @@ Le fournisseur ne voit rien d'autre : ni le dossier du projet, ni les soldes.
 
 Page **Administration** (`/app/admin`), en **lecture seule** : elle montre ce qui est bloqué, elle ne déplace jamais d'argent.
 
-- **Qui y a accès :** les numéros listés dans la variable `ADMIN_PHONES` du serveur. En démonstration, le compte démo y a aussi accès. Pour tous les autres, la page n'existe pas.
+- **Qui y a accès :** les numéros listés dans la variable `ADMIN_PHONES` du serveur, à condition que le code de connexion soit envoyé par SMS (tant que le code est le code de démonstration public, ces numéros n'ouvrent pas la vue complète). En démonstration, le compte démo y a aussi accès. Pour tous les autres, la page n'existe pas.
 - **Chiffres clés** : comptes, projets, versements reçus, paiements terminés, ancrages confirmés, évènements Bitnob reçus.
 - **À surveiller** : paiement en cours depuis plus de 5 minutes, paiement incertain ou refusé, conversion en stablecoin abandonnée, versement non crédité, ancrage Bitcoin en attente depuis plus de 24 h, évènements Bitnob non appliqués.
 - **Tableaux** : paiements aux fournisseurs, versements des financeurs, ancrages Bitcoin, et le journal des 25 derniers évènements Bitnob.

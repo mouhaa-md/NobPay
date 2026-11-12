@@ -2,7 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clientIp, enforce, hit, LIMITS, resetRateLimits } from '@/server/rateLimit';
+import { clientIp, enforce, hit, LIMITS, MAX_RATE_KEYS, rateLimitSize, resetRateLimits } from '@/server/rateLimit';
 
 const jar = vi.hoisted(() => new Map<string, { value: string }>());
 vi.mock('next/headers', () => ({
@@ -61,6 +61,39 @@ describe('limiter', () => {
   });
 });
 
+describe('limiter table (it must stay small even when somebody tries to fill it)', () => {
+  const T = 9_000_000;
+
+  it('shortens a long key, without ever mixing two different keys', () => {
+    const base = 'anchor-refresh:' + 'x'.repeat(5_000);
+    expect(hit(base + 'A', 1, 60_000, T).ok).toBe(true);
+    expect(hit(base + 'B', 1, 60_000, T).ok).toBe(true); // same first 5 000 characters, another key
+    expect(hit(base + 'A', 1, 60_000, T + 1).ok).toBe(false); // the same key is still counted
+    expect(rateLimitSize()).toBe(2);
+  });
+
+  it('drops expired buckets from time to time, not on every request', () => {
+    for (let i = 0; i < 1_200; i++) hit(`k${i}`, 5, 1_000, T);
+    expect(rateLimitSize()).toBe(1_200);
+    hit('later', 5, 1_000, T + 5_000); // expired, but the last look was less than 30 s ago
+    expect(rateLimitSize()).toBe(1_201);
+    hit('much-later', 5, 1_000, T + 40_000); // time for a look
+    expect(rateLimitSize()).toBe(1);
+  });
+
+  it('never holds more than its ceiling, and keeps a daily cap while it makes room', () => {
+    const DAY = 24 * 3_600_000;
+    expect(hit('sms:day', 2, DAY, T).ok).toBe(true);
+    for (let i = 0; i < MAX_RATE_KEYS + 500; i++) hit(`flood:${i}`, 5, 10 * 60_000, T);
+    expect(rateLimitSize()).toBeLessThanOrEqual(MAX_RATE_KEYS);
+    // the daily cap was not forgotten: its count goes on from 1
+    expect(hit('sms:day', 2, DAY, T + 1).ok).toBe(true);
+    expect(hit('sms:day', 2, DAY, T + 2).ok).toBe(false);
+    // a client that is still inside its window keeps being counted after the clean-up
+    expect(hit('flood:' + (MAX_RATE_KEYS + 499), 1, 10 * 60_000, T + 3).ok).toBe(false);
+  });
+});
+
 describe('client address behind proxies', () => {
   it('takes the entry added by our own proxy (right-most by default), not what the client wrote', () => {
     expect(clientIp(req({ 'x-forwarded-for': '6.6.6.6, 203.0.113.9' }))).toBe('203.0.113.9');
@@ -104,6 +137,18 @@ describe('routes', () => {
     const second = await POST(req(), ctx);
     expect(second.status).toBe(429);
     expect((await second.json()).error).toContain('vient d\'être vérifié');
+  });
+
+  it('demo data reset: a few per hour and per address, then 429 (it wipes what other visitors are looking at)', async () => {
+    const { POST: demo } = await import('@/app/api/auth/demo/route');
+    const { POST: reset } = await import('@/app/api/dev/reset/route');
+    expect((await demo(req())).status).toBe(200);
+    for (let i = 0; i < LIMITS.devReset.max; i++) expect((await reset(req())).status).toBe(200);
+    const blocked = await reset(req());
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThan(0);
+    // another address is not affected
+    expect((await reset(req({ 'x-forwarded-for': '198.51.100.99' }))).status).toBe(200);
   });
 
   it('webhook receiver: a very large burst from one address is slowed down with a 429 (Bitnob retries)', async () => {
