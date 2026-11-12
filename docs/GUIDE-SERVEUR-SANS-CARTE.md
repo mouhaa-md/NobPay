@@ -14,14 +14,14 @@ Le moins cher que j'aie trouvé au 11 novembre 2026 pour un serveur avec assez d
 
 | Offre | Mémoire | Prix par mois | Remarque |
 |---|---|---|---|
-| **OVHcloud VPS-1** | **4 Go** (2 cœurs, 40 Go NVMe) | environ 4,5 à 5,5 € hors taxe, **sans engagement** | « à partir de 3,81 € » suppose 12 mois payés d'avance : à éviter |
+| **OVHcloud VPS-1** | **4 Go** (2 cœurs, 40 Go NVMe) | de 5 à 6,5 € hors taxe selon les sources, **sans engagement** | « à partir de 3,81 € » suppose 12 mois payés d'avance : à éviter. Étapes détaillées : [GUIDE-OVH-VPS1.md](GUIDE-OVH-VPS1.md) |
 | Contabo Cloud VPS 4 | 8 Go | 5,50 € **avec 24 mois d'engagement** | au mois : plus cher, avec des frais d'installation |
 | DigitalOcean | 2 Go | 12 $, facturé à l'heure | simple, mais plus cher |
 | Hostinger KVM 1 | 4 Go | 6,49 $ mais **24 mois payés d'avance** | à éviter pour un essai |
 | Netcup VPS 500 | 4 Go | environ 8,3 € hors taxe | plus cher |
 | Hetzner | 4 Go | à partir de 5,99 € hors taxe | « actuellement indisponible » le 11 novembre |
 
-Le prix mensuel d'OVH vient de sites de comparaison, pas de sa page de commande : **confirmez-le au moment de commander**.
+Le prix mensuel d'OVH vient de sites de comparaison, pas de sa page de commande, et ils ne sont pas d'accord entre eux (5,35 $ pour un modèle, 6,49 € pour un autre) : **confirmez-le au moment de commander**. Les étapes complètes, pour vous et pour la personne qui paie, sont dans [GUIDE-OVH-VPS1.md](GUIDE-OVH-VPS1.md).
 
 Ce que la personne fait (15 minutes) :
 1. Crée un compte sur ovhcloud.com (une pièce d'identité peut être demandée).
