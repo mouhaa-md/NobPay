@@ -1,6 +1,7 @@
 # Parcours de démonstration (5 minutes)
 
 > **Pour qui :** la personne qui présente NobPay au jury (en direct ou en vidéo). La vidéo de secours (4 min 20, sans voix, sous-titres en français) suit exactement ce parcours : `demo-video/nobpay-demo.webm` (non versionnée, voir « Régénérer la vidéo »).
+> **Vidéo à sous-titres anglais (12 novembre 2026) :** `demo-video/nobpay-demo-en.webm` (4 min 28, sans voix, interface en français), enregistrée sur la démo en ligne avec `CAPS=en RECORD=1 RESET=1 node docs/demo/record-demo.mjs https://nobpay.onrender.com` (variables décrites en tête du script). `RESET=1` remet les données de démonstration à la fin.
 > **Mode :** simulé (`BITNOB_MODE=mock`), compte de démonstration. Rien n'y est réel, et la présentation le dit à voix haute dès le début.
 
 ## Avant de commencer

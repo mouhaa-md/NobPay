@@ -8,13 +8,64 @@
 // La vidéo est écrite dans /tmp/nobpay-run/video (voir OUTDIR). Mode simulé : aucun argent réel, aucune clé.
 // TAIL=1 ne rejoue que la seconde moitié (financement, certificat, vérification) pour la mettre au point.
 // Les chemins ASSETS pointent vers frontend/public/demo : adaptez-les si le dépôt est ailleurs.
-import { chromium } from 'playwright';
-import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
+//
+// Variables d'environnement (toutes facultatives) :
+//   PLAYWRIGHT  chemin du fichier index.mjs de playwright-core, si le paquet « playwright » n'est pas installé ici
+//   OUTDIR      dossier de sortie (vidéo, et captures si SHOTS=1)
+//   ASSETS      dossier des fichiers de preuve (défaut : frontend/public/demo du dépôt)
+//   CAPS=en     sous-titres en anglais (l'interface reste en français) ; sans cette variable, sous-titres français
+//   FAST=1      attentes divisées par quatre, pour mettre le parcours au point sans enregistrer
+//   SHOTS=1     une capture d'écran par sous-titre (dans OUTDIR/shots), pour relire le parcours sans lire la vidéo
+//   RESET=1     à la fin, remet les données de démonstration (instance en ligne : efface ce que le parcours a créé)
+import { mkdirSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+const { chromium } = await import(process.env.PLAYWRIGHT ? pathToFileURL(process.env.PLAYWRIGHT).href : 'playwright');
 const BASE = process.argv[2];
 const RECORD = process.env.RECORD === '1';
-const OUTDIR = '/tmp/nobpay-run/video';
-const ASSETS = '/workspaces/NobPay/frontend/public/demo';
+const OUTDIR = process.env.OUTDIR || '/tmp/nobpay-run/video';
+const ASSETS = process.env.ASSETS || fileURLToPath(new URL('../../frontend/public/demo', import.meta.url));
+const CAPS = process.env.CAPS || 'fr';
+const K = process.env.FAST === '1' ? 0.25 : 1;
 mkdirSync(OUTDIR, { recursive: true });
+if (process.env.SHOTS === '1') mkdirSync(`${OUTDIR}/shots`, { recursive: true });
+// English captions: the French sentence of the script is the key, so the French version stays readable in the code below.
+const EN = {
+  'NobPay : investir au pays, avec preuve.': 'NobPay: investing back home, with proof.',
+  'La diaspora envoie des sommes énormes. Un transfert déplace l’argent, il n’en contrôle pas l’usage.': 'The diaspora sends huge sums home. A transfer moves the money; it does not control what it is used for.',
+  'Chiffres de marché sourcés (IFAD, 2026) : ils décrivent le marché, pas des résultats de NobPay.': 'Sourced market figures (IFAD, 2026): they describe the market, not results of NobPay.',
+  'Le principe : financer, prouver, libérer, vérifier.': 'The principle: fund, prove, release, verify.',
+  'C’est un prototype open source. Voici le parcours, en mode démonstration.': 'This is an open-source prototype. Here is the journey, in demo mode.',
+  'On entre avec le compte de démonstration : aucun argent réel, Lightning et mobile money sont simulés.': 'We sign in with the demo account: no real money, and Lightning and mobile money are simulated.',
+  'Le tableau de bord : total en séquestre, projets, étapes payées.': 'The dashboard: total in escrow, projects, paid steps.',
+  'Une preuve attend la décision du financeur : « Rien n’est payé sans votre accord ».': 'A proof waits for the funder’s decision: "Nothing is paid without your approval".',
+  'Résidence à Thiès : 24 000 $, six étapes. Chaque étape ne se paie que sur preuve.': 'A residence in Thiès: 24,000 USD, six steps. Each step is paid only against proof.',
+  'La personne de confiance sur place a envoyé sa preuve : photos géolocalisées, facture, fournisseur à payer.': 'The trusted person on site has sent proof: geotagged photos, an invoice, and who is to be paid.',
+  'Le financeur regarde, puis décide. Il peut refuser la preuve, ou libérer le paiement.': 'The funder looks, then decides. They can reject the proof or release the payment.',
+  'Avant de payer : le devis. Débit, taux, frais, et ce que reçoit le fournisseur. Le devis expire.': 'Before paying: the quote. Amount debited, rate, fees, and what the supplier receives. The quote expires.',
+  'Le paiement part directement au fournisseur, en mobile money.': 'The payment goes straight to the supplier, by mobile money.',
+  'Confirmation reçue par webhook signé : l’étape est payée, l’étape suivante s’ouvre.': 'Confirmation arrives as a signed webhook: the step is paid and the next one opens.',
+  'Côté terrain : la personne de confiance ouvre un lien privé. Pas de compte, pas de mot de passe.': 'On site: the trusted person opens a private link. No account, no password.',
+  'Étape 4 : Dalle. Elle envoie ses photos, la facture, et qui doit être payé.': 'Step 4: Slab. They send photos, the invoice, and who is to be paid.',
+  'La photo est datée et localisée par le téléphone.': 'The phone dates and locates the photo.',
+  'Le fournisseur à payer : nom, numéro et opérateur mobile money.': 'The supplier to pay: name, number and mobile money operator.',
+  'Preuve envoyée. Le financeur est prévenu, et décide.': 'Proof sent. The funder is notified, and decides.',
+  'Créer un projet : cinq écrans. Trois secteurs, des étapes proposées qu’on peut modifier.': 'Creating a project: five screens. Three sectors, with suggested steps that can be edited.',
+  'Un nom, une ville, un budget : ici 3 000 $.': 'A name, a city, a budget: here 3,000 USD.',
+  'Chaque étape : un nom, un montant, les preuves demandées. La somme doit égaler le budget.': 'Each step: a name, an amount, the proofs required. The sum must equal the budget.',
+  'La personne de confiance sur place recevra un lien privé.': 'The trusted person on site will receive a private link.',
+  'Récapitulatif, puis création du projet.': 'A summary, then the project is created.',
+  'Le projet est créé avec son lien terrain, à envoyer par WhatsApp ou à copier.': 'The project is created with its field link, to send by WhatsApp or copy.',
+  'Financer : le versement se fait en Bitcoin Lightning. Les fonds restent en séquestre.': 'Funding: the deposit is made in Bitcoin over Lightning. The funds stay in escrow.',
+  'On choisit Bitcoin Lightning. Le dépôt en USDT ou USDC viendra plus tard.': 'We choose Bitcoin Lightning. Deposits in USDT or USDC will come later.',
+  'Une facture Lightning et son code QR. En mode démonstration, elle n’est pas payable.': 'A Lightning invoice and its QR code. In demo mode it cannot be paid.',
+  'Paiement reçu par un événement signé : le séquestre est crédité, la première étape s’ouvre.': 'Payment received as a signed event: the escrow is credited and the first step opens.',
+  'Chaque événement s’ajoute à un registre enchaîné par hachage : changer une ligne casse toute la suite.': 'Every event joins a hash-chained ledger: changing one line breaks everything after it.',
+  'On ancre l’empreinte du registre sur Bitcoin avec OpenTimestamps. Seule l’empreinte quitte l’application.': 'We anchor the ledger’s fingerprint on Bitcoin with OpenTimestamps. Only the fingerprint leaves the app.',
+  'La page publique : n’importe qui vérifie le dossier, sans compte. Le navigateur refait les calculs.': 'The public page: anyone can check the file, without an account. The browser redoes the calculations.',
+  'La page de vérification publique : sans compte, tout se calcule dans le navigateur.': 'The public verification page: no account, everything is computed in the browser.',
+  'NobPay : l’argent de la diaspora, libéré étape par étape, sur preuve. Vérifiable par tous.': 'NobPay: the diaspora’s money, released step by step, only against proof. Verifiable by anyone.',
+};
+const caption = (fr) => (CAPS === 'en' && fr ? EN[fr] ?? (console.warn('NO ENGLISH CAPTION FOR:', fr), fr) : fr);
 const browser = await chromium.launch();
 const ctx = await browser.newContext({
   viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, locale: 'fr-FR', timezoneId: 'Africa/Dakar',
@@ -48,8 +99,11 @@ await ctx.addInitScript(() => {
 const page = await ctx.newPage();
 const log = (m) => console.log(`[${((Date.now() - T0) / 1000).toFixed(0).padStart(3)}s] ${m}`);
 const T0 = Date.now();
-const wait = (ms) => page.waitForTimeout(ms);
-const say = async (text, ms = 3200) => { await page.evaluate((t) => { sessionStorage.setItem('demoCap', t || ''); const c = document.getElementById('demo-cap'); if (c) { c.textContent = t || ''; c.classList.toggle('on', !!t); } }, text); log(text ? `« ${text} »` : '(caption off)'); await wait(ms);
+const wait = (ms) => page.waitForTimeout(ms * K);
+let shotN = 0;
+const say = async (fr, ms = 3200) => { const text = caption(fr); await page.evaluate((t) => { sessionStorage.setItem('demoCap', t || ''); const c = document.getElementById('demo-cap'); if (c) { c.textContent = t || ''; c.classList.toggle('on', !!t); } }, text); log(text ? `« ${text} »` : '(caption off)');
+  if (text && process.env.SHOTS === '1') { await wait(500); await page.screenshot({ path: `${OUTDIR}/shots/${String(++shotN).padStart(2, '0')}.png` }); }
+  await wait(ms);
   // the caption lives only for its duration: the actions that follow are shown without a stale sentence
   if (text) await page.evaluate(() => { sessionStorage.setItem('demoCap', ''); document.getElementById('demo-cap')?.classList.remove('on'); }); };
 const glide = async (x, y, steps = 28) => { await page.mouse.move(x, y, { steps }); };
@@ -77,7 +131,7 @@ await scrollBy(-2200, 1500);
 await say('C’est un prototype open source. Voici le parcours, en mode démonstration.', 3600);
 
 // ---------- 2. Entrée dans l'app ----------
-await click(page.getByRole('link', { name: /Essayer la démo/ }));
+await click(page.getByRole('link', { name: /Essayer l.application/ }));
 await page.waitForURL('**/app/**'); await wait(900);
 await say('On entre avec le compte de démonstration : aucun argent réel, Lightning et mobile money sont simulés.', 4200);
 await click(page.getByText('Essayer avec le compte démo'));
@@ -115,7 +169,7 @@ await say('Côté terrain : la personne de confiance ouvre un lien privé. Pas d
 await say('Étape 4 : Dalle. Elle envoie ses photos, la facture, et qui doit être payé.', 3800);
 await page.locator('input[type=file][multiple]').setInputFiles(`${ASSETS}/proof-immobilier.jpg`); await wait(1500);
 await say('La photo est datée et localisée par le téléphone.', 3200);
-await page.locator('input[type=file][accept*="pdf"]').setInputFiles(`${ASSETS}/facture.svg`).catch(() => {}); await wait(1200);
+await page.locator('input[type=file][accept*="pdf"]').setInputFiles(`${ASSETS}/factures/p_villa_s3.png`).catch((e) => log('invoice not attached: ' + e.message.split('\n')[0])); await wait(1200);
 await scrollBy(380, 1500);
 await type(page.getByPlaceholder('Ex. Quincaillerie Ndiaye'), 'Quincaillerie Ndiaye');
 await type(page.getByPlaceholder('77 123 45 67'), '77 654 32 10');
@@ -183,6 +237,7 @@ await say('NobPay : l’argent de la diaspora, libéré étape par étape, sur p
 await say('', 600);
 
 log('done');
+if (process.env.RESET === '1') { const r = await ctx.request.post(BASE + '/api/dev/reset'); log('demo data reset: HTTP ' + r.status()); }
 const video = page.video();
 await ctx.close();
 if (RECORD && video) { const p = await video.path(); console.log('VIDEO', p); }
