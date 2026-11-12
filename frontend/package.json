@@ -23,7 +23,7 @@
     "@getalby/sdk": "^9.0.0",
     "@scure/base": "^2.4.0",
     "lenis": "^1.3.27",
-    "next": "^16.4.3",
+    "next": "^16.4.5",
     "nostr-tools": "^2.25.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.3.1",
