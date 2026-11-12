@@ -67,6 +67,17 @@ Copiez ce message et adaptez-le :
 
 Ce que vous faites est simple : créer un compte, commander un petit serveur, enregistrer la clé publique, puis réinstaller le serveur avec cette clé. **Vous ne partagez jamais votre mot de passe OVH, ni le mot de passe temporaire reçu par e-mail.**
 
+### Si c'est vous qui payez (sans carte bancaire classique)
+Faites vous-même 2.1 à 2.5 : votre clé est déjà prête, et vous n'envoyez l'adresse IP à personne (gardez-la pour la partie 3).
+
+**Moyens de paiement** acceptés d'après la [page d'OVHcloud pour le Sénégal](https://www.ovhcloud.com/fr-sn/terms-and-conditions/payment/) (lue le 12 novembre) :
+- **Carte Visa ou Mastercard** : le plus rapide (moins de 15 minutes).
+- **Virement** vers la banque d'OVH à Dakar : au moins 3 jours, avec le numéro de commande à indiquer dans le motif. Trop lent si vous ne commandez pas tout de suite.
+- **Compte prépayé** : vous le chargez d'abord avec un des autres moyens, donc il ne règle pas le problème.
+- PayPal et mobile money ne sont **pas** cités sur cette page.
+
+**Une carte virtuelle Visa ou Mastercard rechargée par mobile money** (Wave, Orange Money, etc.) peut convenir, mais **aucune source officielle ne confirme qu'OVHcloud accepte les cartes prépayées** : il faut essayer. Un blog donne comme ordre de grandeur 1 000 à 3 000 FCFA pour créer la carte et 2 à 3,5 % de frais de change (chiffres à vérifier chez le fournisseur). Rechargez environ **10 000 FCFA** pour garder de la marge. Pour tester sans risque : dans l'espace client OVHcloud, ajoutez la carte comme moyen de paiement avant de commander. OVHcloud fait alors seulement une vérification, sans débiter. Si elle est refusée, n'insistez pas plus de 2 fois (la banque peut bloquer la carte) : choisissez un autre moyen ou revenez au plan « une personne de confiance paie ».
+
 ### 2.1 Choisir l'offre
 1. Allez sur le site d'OVHcloud (ovhcloud.com), rubrique **VPS** (serveurs privés virtuels).
 2. Choisissez l'offre **VPS-1**.
