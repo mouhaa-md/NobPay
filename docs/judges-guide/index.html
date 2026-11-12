@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NobPay: judges' guide</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  :root { --ink:#0B132B; --orange:#F7931A; --blue:#1D4ED8; --muted:#4A5878; --line:#D9DFEE; --soft:#F3F6FC; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10pt/1.42 'Segoe UI', Arial, sans-serif; color: var(--ink); }
+  a { color: var(--blue); text-decoration: none; }
+  header { background: var(--ink); color: #fff; margin: -12mm -12mm 7mm; padding: 13mm 12mm 9mm; }
+  header svg { height: 11mm; display: block; margin-bottom: 5mm; }
+  header h1 { margin: 0; font-size: 26pt; line-height: 1.05; font-weight: 700; }
+  header h1 span { color: var(--orange); }
+  header p { margin: 3mm 0 0; color: #C9D3EC; font-size: 10.5pt; }
+  h2 { font-size: 13.5pt; margin: 6.5mm 0 2.5mm; padding-bottom: 1.2mm; border-bottom: 2px solid var(--orange); display: table; }
+  p { margin: 0 0 2.2mm; }
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin: 3mm 0 1mm; }
+  .links div { background: var(--soft); border: 1px solid var(--line); border-radius: 7px; padding: 2.5mm 3.5mm; font-size: 9pt; }
+  .links b { display: block; font-size: 8pt; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: .6mm; }
+  ol { margin: 1mm 0 2mm; padding-left: 5.2mm; }
+  ol li { margin-bottom: 1.7mm; padding-left: 1mm; }
+  .note { background: #FFF6E8; border-left: 4px solid var(--orange); padding: 2.4mm 3.5mm; border-radius: 4px; font-size: 9.2pt; margin-top: 2.5mm; }
+  .fr { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3.2mm; margin-top: 2mm; }
+  figure { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; break-inside: avoid; background: #fff; }
+  figure img { display: block; width: 100%; }
+  figure img { aspect-ratio: 16 / 9; object-fit: cover; object-position: top; }
+  figcaption { padding: 1.8mm 2.4mm 2mm; font-size: 8pt; line-height: 1.33; }
+  figcaption b { display: block; font-size: 9.4pt; margin-bottom: .3mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin-top: 1.5mm; }
+  th { text-align: left; background: var(--soft); padding: 1.6mm 2.4mm; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 8.4pt; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  td { padding: 1.7mm 2.4mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { width: 34%; font-weight: 600; }
+  tr { break-inside: avoid; }
+  .tag { display: inline-block; font-size: 7.8pt; font-weight: 700; padding: .3mm 2mm; border-radius: 9px; margin-right: 1.5mm; }
+  .real { background: #DDF6E8; color: #0E6B3A; }
+  .sim { background: #E4ECFF; color: #1D3FA8; }
+  .off { background: #EDEFF5; color: #4A5878; }
+  ul { margin: 1mm 0 2mm; padding-left: 5mm; }
+  ul li { margin-bottom: 1.2mm; }
+  footer { margin-top: 5mm; padding-top: 2.5mm; border-top: 1px solid var(--line); font-size: 8.4pt; color: var(--muted); }
+  .pb { break-before: page; }
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 -40 658 180" aria-label="NobPay"><path fill="#fff" fill-rule="evenodd" d="M0 100V46.5A48 48 0 0 1 28.408 2.68L34.783 18.459A31 31 0 0 0 17 46.5V100ZM61.217 18.459L67.592 2.68A48 48 0 0 1 96 46.5V100H79V46.5A31 31 0 0 0 61.217 18.459ZM109 50A51.5 51.5 0 1 1 212 50A51.5 51.5 0 1 1 109 50ZM126 50A34.5 34.5 0 1 0 195 50A34.5 34.5 0 1 0 126 50ZM224 -40H241V11.764A51.5 51.5 0 1 1 241 88.236V100H224ZM241 50A34.5 34.5 0 1 0 310 50A34.5 34.5 0 1 0 241 50ZM338 0H355V11.764A51.5 51.5 0 1 1 355 88.236V140H338ZM355 50A34.5 34.5 0 1 0 424 50A34.5 34.5 0 1 0 355 50ZM535 0H552V100H535V88.236A51.5 51.5 0 1 1 535 11.764ZM466 50A34.5 34.5 0 1 0 535 50A34.5 34.5 0 1 0 466 50ZM560 0H578.7L608.733 76.419L639.3 0H658L602 140H583.3L599.3 100Z"/><path fill="#F7931A" d="M38.028 17.148L31.653 1.369A48 48 0 0 1 64.347 1.369L57.972 17.148A31 31 0 0 0 38.028 17.148Z"/></svg>
+  <h1>Judges' guide: pay on <span>proof.</span></h1>
+  <p>Dakar Bitcoin Hack #4 &nbsp;·&nbsp; updated 12 November 2026 &nbsp;·&nbsp; for judges and organizers</p>
+</header>
+
+<h2>The problem</h2>
+<p>The African diaspora sends hundreds of billions of dollars home every year (USD 124.2 billion to Africa in 2025, according to IFAD). A lot of it funds a house, a field, a school year or a shop run from afar, on someone's word. A transfer moves the money; it does not control what the money is used for. The family abroad can send everything and hope, or send nothing.</p>
+<h2>The solution</h2>
+<p><b>NobPay</b> holds the money in escrow and releases it <b>step by step, only when the work is shown</b>: photos, the supplier's invoice, and who is to be paid. The supplier is then paid directly, over Lightning at their Lightning address or by mobile money. Every decision goes into a hash-chained ledger anchored on Bitcoin, and a public page lets anyone re-check it in their browser, without trusting our server.</p>
+<ul>
+  <li><b>No account for the person on site:</b> a private link, a dated and located photo, the invoice, who to pay.</li>
+  <li><b>A second opinion before paying:</b> automatic checks (reused files, position, date), an optional AI advice, an independent witness, a quote before every payment.</li>
+  <li><b>Verify, don't trust:</b> the record can be checked without us. The browser redoes the calculations and asks the Bitcoin calendars and Nostr relays itself.</li>
+</ul>
+<div class="links">
+  <div><b>Live demo (payments simulated)</b><a href="https://nobpay.onrender.com">https://nobpay.onrender.com</a></div>
+  <div><b>Demo video (2 min 38, English voice and subtitles)</b><a href="https://youtu.be/e7h6IxnZVHs">https://youtu.be/e7h6IxnZVHs</a></div>
+  <div><b>Public verification page (no account)</b><a href="https://nobpay.onrender.com/verifier">https://nobpay.onrender.com/verifier</a></div>
+  <div><b>Source code (MIT licence)</b><a href="https://github.com/mouhaa-md/NobPay">https://github.com/mouhaa-md/NobPay</a></div>
+</div>
+
+<h2 class="pb">Test it in 3 minutes</h2>
+<ol>
+  <li>Open <a href="https://nobpay.onrender.com">nobpay.onrender.com</a>. The demo runs on a free plan: if it was asleep, the first page can take about a minute. The interface follows your browser language (French or English); the landing page has a language switch.</li>
+  <li>Click <b>Try the app</b> <span class="fr">(Essayer l'application)</span>, then <b>Try with the demo account</b> <span class="fr">(Essayer avec le compte démo)</span>. No sign-up, no phone number.</li>
+  <li>On the dashboard, one proof is waiting for a decision. Open <b>Residence in Thiès</b> <span class="fr">(Résidence à Thiès)</span>, then <b>Manage the project</b> <span class="fr">(Gérer le projet)</span> and step 3, <b>Walls</b> <span class="fr">(Élévation des murs)</span>: the photo with its date and position, the supplier's invoice, and the automatic checks.</li>
+  <li>Click <b>Approve and pay</b> <span class="fr">(Valider et payer)</span>: the quote shows what is debited, the rate, the fees and what the supplier receives. <b>Confirm and pay</b> <span class="fr">(Confirmer et payer)</span>: the supplier is paid after a few seconds (simulated mobile money) and the next step opens.</li>
+  <li>Once step 3 is paid, the next step ("Slab") opens on the page the person on site would receive as a private link, with no account: <a href="https://nobpay.onrender.com/terrain/demo-villa-thies">nobpay.onrender.com/terrain/demo-villa-thies</a>. Add any photo and any invoice image, a supplier name and number, then <b>Send the proof</b> <span class="fr">(Envoyer la preuve)</span>.</li>
+  <li>Back in the app, open the project's proof certificate, <b>Anchor the current state on Bitcoin</b> <span class="fr">(Ancrer l'état actuel sur Bitcoin)</span>, then <b>Public page</b> <span class="fr">(Page publique)</span>: the page anyone can open; the browser redoes every calculation.</li>
+  <li><i>Optional:</i> <b>New project</b>, then <b>Quick trial</b> <span class="fr">(Essai rapide)</span>: a 15 USD project in three steps, to go through funding (<b>Generate the invoice</b>, then <b>Simulate the payment</b>), proof and payment from scratch.</li>
+</ol>
+<div class="note"><b>Nothing here moves real money.</b> Payments, Lightning invoices and mobile money are simulated, and the data is reset each time the free server restarts, so feel free to try anything. Please do not type real personal data.</div>
+
+<h2 style="margin-top:4.5mm">How a payment goes</h2>
+<div class="grid">
+  <figure><img src="img/invoice.jpg" alt=""><figcaption><b>1 · Fund</b>A Lightning invoice puts the money in escrow, counted per project. Demo invoices cannot be paid, so the payment is simulated.</figcaption></figure>
+  <figure><img src="img/prove.jpg" alt=""><figcaption><b>2 · Prove</b>The person on site needs no account: a private link, a dated and located photo, the invoice, who to pay.</figcaption></figure>
+  <figure><img src="img/step.jpg" alt=""><figcaption><b>3 · Decide</b>The funder looks at the photo, the invoice and the automatic checks (reused files, position, date), then approves or refuses.</figcaption></figure>
+  <figure><img src="img/quote.jpg" alt=""><figcaption><b>4 · Release</b>A quote first: amount debited, rate, fees, what the supplier receives. Then the supplier is paid directly.</figcaption></figure>
+  <figure><img src="img/ledger.jpg" alt=""><figcaption><b>5 · Record</b>Every event joins a hash-chained ledger. Its fingerprint is anchored on Bitcoin with OpenTimestamps.</figcaption></figure>
+  <figure><img src="img/verify.jpg" alt=""><figcaption><b>6 · Verify</b>A public page re-checks everything in the browser, without an account. Nobody has to trust our server.</figcaption></figure>
+</div>
+<p style="margin-top:3mm"><b>Around the project:</b> an independent witness who confirms or disputes each proof (and can be made a condition of payment); a family link so relatives can add to the escrow from any Lightning wallet; Web Push notifications; editing and closing a project. The funder can also ask for an AI second opinion on the proof: the AI reads, plain code compares, the person decides, and it never blocks or triggers a payment.</p>
+
+<h2 class="pb">What is real, and what is not</h2>
+<p>As of 12 November 2026. We say it plainly: a prototype that states exactly what it does is stronger than one that says more.</p>
+<table>
+  <tr><th>Piece</th><th>Status</th></tr>
+  <tr><td>Hash-chained ledger, browser-side verification, OpenTimestamps anchoring</td><td><span class="tag real">REAL</span> Public calendars, downloadable <code>.ots</code> proof. Automatic anchoring is off on the live demo; the button anchors on request.</td></tr>
+  <tr><td>Funding over Lightning (Nostr Wallet Connect, NIP-47) and supplier payout to a Lightning address</td><td><span class="tag sim">SIMULATORS</span> Tested end to end against a scripted wallet, and the adapter against a real NIP-47 wallet service on a simulated relay. <b>Not yet run with a real wallet and real sats.</b> The live demo simulates payments.</td></tr>
+  <tr><td>Refund of unused escrow</td><td><span class="tag sim">SIMULATORS</span> Implemented and tested against the scripted wallet.</td></tr>
+  <tr><td>Mobile money payout (Wave, Orange Money, Free Money) through Bitnob</td><td><span class="tag sim">SANDBOX</span> Run end to end in the Bitnob sandbox earlier in the project; not part of the live demo.</td></tr>
+  <tr><td>Nostr commitments (kind 8421) and NIP-03 attestations</td><td><span class="tag off">OFF ON DEMO</span> Tested against fake relays; the verification page was checked against real relays in read-only mode. Publishing to real relays has not been tried yet.</td></tr>
+  <tr><td>AI advice on proofs (Claude)</td><td><span class="tag off">OFF ON DEMO</span> Tested with a fake client; never run against the real API yet (no API key on the demo).</td></tr>
+  <tr><td>Custody</td><td>The escrow is held by the instance's own wallet: a custodial design, bounded by pilot ceilings and a solvency check that pauses payments if what is owed exceeds what the wallets hold. Not a licensed financial service.</td></tr>
+  <tr><td>Demo hosting</td><td>A Docker image on a free plan: 512 MB of memory, asleep after 15 minutes without a visit, data reset at each restart. The deployment and backup scripts were run in a clean GitHub Codespace.</td></tr>
+</table>
+
+<h2>How it is built</h2>
+<svg viewBox="0 0 740 300" style="width:100%;margin:1mm 0 2mm" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+  <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#4A5878"/></marker></defs>
+  <g fill="#F3F6FC" stroke="#C9D3EC">
+    <rect x="6" y="16" width="190" height="62" rx="8"/><rect x="6" y="104" width="190" height="72" rx="8"/><rect x="6" y="212" width="190" height="74" rx="8"/>
+    <rect x="256" y="16" width="214" height="270" rx="10" fill="#EAF0FF" stroke="#9DB4F0"/>
+    <rect x="528" y="16" width="206" height="84" rx="8"/><rect x="528" y="110" width="206" height="50" rx="8"/><rect x="528" y="170" width="206" height="50" rx="8"/><rect x="528" y="230" width="206" height="56" rx="8"/>
+  </g>
+  <g fill="#fff" stroke="#9DB4F0"><rect x="270" y="58" width="186" height="56" rx="7"/><rect x="270" y="126" width="186" height="56" rx="7"/><rect x="270" y="194" width="186" height="56" rx="7"/></g>
+  <g fill="#0B132B">
+    <text x="18" y="40" font-weight="700">Funder</text><text x="18" y="58">web app, phone first</text>
+    <text x="18" y="128" font-weight="700">Person on site</text><text x="18" y="146">private link, no account:</text><text x="18" y="162">photos, invoice, who to pay</text>
+    <text x="18" y="236" font-weight="700">Anyone</text><text x="18" y="254">public verification page:</text><text x="18" y="270">the browser re-checks it all</text>
+    <text x="270" y="38" font-weight="700">NobPay server (Next.js, one process)</text>
+    <text x="282" y="80" font-weight="700">Escrow and payments</text><text x="282" y="98">quotes, ceilings, solvency check</text>
+    <text x="282" y="148" font-weight="700">Proof checks</text><text x="282" y="164">files, position, date;</text><text x="282" y="177">optional AI advice</text>
+    <text x="282" y="216" font-weight="700">Hash-chained ledger</text><text x="282" y="234">append-only, one fingerprint</text><text x="282" y="247">per event</text>
+    <text x="540" y="36" font-weight="700">Lightning wallets</text><text x="540" y="53">Nostr Wallet Connect (NIP-47):</text><text x="540" y="68">one connection only makes</text><text x="540" y="83">invoices, one pays, with a budget</text>
+    <text x="540" y="130" font-weight="700">Mobile money</text><text x="540" y="147">Bitnob (sandbox)</text>
+    <text x="540" y="190" font-weight="700">OpenTimestamps</text><text x="540" y="207">calendars, then Bitcoin</text>
+    <text x="540" y="250" font-weight="700">Nostr relays</text><text x="540" y="267">commitments with no name</text><text x="540" y="280">and no amount</text>
+  </g>
+  <g stroke="#4A5878" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+    <path d="M196 47 H256"/><path d="M196 140 H256"/>
+    <path d="M470 58 H528"/><path d="M470 135 H528"/><path d="M470 195 H528"/><path d="M470 258 H528"/>
+  </g>
+  <path d="M256 250 H196" stroke="#1D4ED8" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+</svg>
+<p>One Node process, a file database and an append-only ledger keep the demo simple to run and to audit. Money paths assume the network lies: every claim a wallet or another server makes is checked before it is believed.</p>
+
+<h2>Scope choices and what is next</h2>
+<ul>
+  <li><b>Built first:</b> the whole verifiable loop (fund, prove, decide, release, verify), end to end, against simulators.</li>
+  <li><b>Postponed:</b> a pilot with real sats (it needs a wallet connection and a few sats), SQLite (the file database is enough for a demo), a Wolof interface (it needs a native speaker to translate and review it).</li>
+  <li><b>Left out on purpose:</b> acting as a licensed custodian or doing KYC. The escrow is bounded by pilot ceilings and the project says plainly that it is not a financial service.</li>
+  <li><b>Next:</b> run the pilot with real sats and publish the results; a mobile money adapter for Senegal behind the same interface; SMS and Nostr notifications; an open-source NWC test harness for other builders.</li>
+</ul>
+
+<h2>Where each criterion is answered</h2>
+<table>
+  <tr><th>Criterion</th><th>In the project</th></tr>
+  <tr><td>A testable MVP</td><td>The live demo (steps above), a 15 USD quick trial, the public verification page, the demo video.</td></tr>
+  <tr><td>Usefulness and social impact</td><td>Remittances to Africa reached USD 124.2 billion in 2025 and close to a third of the money sent to low and middle income countries reaches rural areas (IFAD, 14 September 2026). A transfer moves money; it does not control its use. Three corridors on one engine: a project back home, school fees, a merchant's restock. These figures describe the market, not results of NobPay.</td></tr>
+  <tr><td>Security by design</td><td>Two wallet connections with different rights (one can only make and look up invoices, one pays and carries a budget); pilot ceilings; solvency check; a payment is believed only with a preimage that hashes to the invoice, and a lost answer keeps funds reserved instead of paying twice; SSRF-safe client for Lightning addresses; cross-site request protection; signed private links; commitments with no name and no amount; secrets never in Git (a scan runs in CI).</td></tr>
+  <tr><td>UX/UI</td><td>The person on site needs no account; the funder is told exactly what to look at and sees a quote before paying; French and English interface; designed phone first.</td></tr>
+  <tr><td>Originality</td><td>Pay on proof over Lightning, with a ledger anyone can verify without us (the browser asks Bitcoin calendars and Nostr relays itself); an independent witness and a family link without accounts.</td></tr>
+  <tr><td>Technicality</td><td>Next.js 16, React 19, TypeScript (strict), zod 4; own BOLT11 decoder and LNURL checks; NIP-47, NIP-03, NIP-05; OpenTimestamps; 929 automated tests run on every push by GitHub Actions; Docker and Caddy deployment script.</td></tr>
+  <tr><td>A clear pitch</td><td>The 2 min 38 video, and this guide.</td></tr>
+</table>
+
+<footer>
+  <b>Origin and what is new.</b> NobPay was born at the Code &amp; Chain Dakar hackathon (17-18 October 2026). Everything added after the opening of this hackathon (26 October) is listed in <a href="https://github.com/mouhaa-md/NobPay/blob/main/docs/CHANGELOG-DBD4.md">docs/CHANGELOG-DBD4.md</a>, and <code>git diff pre-dbd4..HEAD</code> shows all of it. Licence: MIT. NobPay is a prototype, not a licensed financial service.
+</footer>
+</body>
+</html>
