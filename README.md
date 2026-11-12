@@ -3,6 +3,8 @@
 **Investissez au pays. Avec preuve.**
 L'argent de la diaspora reste en séquestre et n'est libéré qu'étape par étape, sur preuve, directement au fournisseur. Chaque décision est inscrite dans un registre dont l'empreinte est ancrée sur Bitcoin : n'importe qui peut la vérifier, sans faire confiance à NobPay.
 
+**Essayer en ligne : [nobpay.onrender.com](https://nobpay.onrender.com)**, puis « Essayer avec le compte démo ». C'est une instance de **démonstration** : les paiements y sont **simulés**, aucun vrai bitcoin n'est en jeu. Elle est hébergée sur une offre gratuite : si le serveur dormait, le premier chargement peut prendre environ une minute, et les données de démonstration sont remises à zéro à chaque redémarrage.
+
 > *English version: [README.en.md](README.en.md). In short:* NobPay lets the diaspora fund projects, school fees and merchants' restocks back home. The money stays in escrow and is released step by step, only against proof, in bitcoin over Lightning; every event goes into a hash-chained record anchored on Bitcoin (OpenTimestamps), copied to Nostr relays, and verifiable from anyone's browser. "Verify, don't trust."
 
 NobPay est né au hackathon **Code & Chain Dakar** (17-18 octobre 2026) et se prolonge pour le **Dakar Bitcoin Hack #4**. Ce qui a été ajouté pour ce second hackathon est listé à part de la base dans [`docs/CHANGELOG-DBD4.md`](docs/CHANGELOG-DBD4.md) ; `git diff pre-dbd4..HEAD` montre tout. Licence MIT.

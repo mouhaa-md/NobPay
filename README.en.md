@@ -2,6 +2,8 @@
 
 > **Pay on proof.** Money sent home is held in escrow and released step by step, in bitcoin over Lightning, only when the work is shown. Every event goes into a hash-chained record that anyone can verify from their own browser, without trusting us. *(Version française: [README.md](README.md).)*
 
+**Try it online: [nobpay.onrender.com](https://nobpay.onrender.com)**, then tap "Try with the demo account". This is a **demo instance**: payments are **simulated** and no real bitcoin is involved. It runs on a free hosting plan: if the server was asleep, the first load can take about a minute, and demo data is reset at every restart.
+
 NobPay was born at the **Code & Chain Dakar** hackathon (17-18 Oct. 2026) and is being extended for **Dakar Bitcoin Hack #4**. What was added for this second hackathon is listed apart from the base in [`docs/CHANGELOG-DBD4.md`](docs/CHANGELOG-DBD4.md); `git diff pre-dbd4..HEAD` shows all of it. MIT licence.
 
 ## The problem
