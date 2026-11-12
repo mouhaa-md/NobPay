@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | Offre | **VPS-1** (la plus petite offre d'OVHcloud). D'après un site de comparaison : 2 cœurs, 4 Go de mémoire, 40 Go de disque |
-| Prix par mois, sans engagement | **de 5 à 6,5 € hors taxe** selon les sources (une source donne 5,35 $, une autre 6,49 €), **plus la TVA** du pays de la personne qui paie |
+| Prix par mois, sans engagement | **de 5 à 6,5 € hors taxe** selon les sources (une source donne 5,35 $, une autre 6,49 €), **plus la TVA** du pays de la personne qui paie. La [page d'OVHcloud pour le Sénégal](https://www.ovhcloud.com/fr-sn/vps/) affiche le VPS-1 (2 cœurs, 4 Go, 40 Go) « à partir de 2 954,84 FCFA par mois » le 12 novembre : c'est un prix de départ, probablement avec engagement. **Le prix sans engagement s'affiche dans le configurateur** |
 | À éviter | Le prix « à partir de 3,81 € » ou « 4,54 $ » : il demande 12 mois payés d'avance |
 | Durée utile | Du 13 novembre au 28 novembre, soit **environ 2 semaines**. L'abonnement se paie par mois : **un seul mois** suffit, soit **6 à 8 € au total, TVA comprise** (estimation), à condition de résilier avant le renouvellement (vers le 13 décembre) |
 
