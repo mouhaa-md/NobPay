@@ -65,6 +65,8 @@ export default async function FieldPage(props: { params: Promise<{ token: string
   const tokenState = managerTokenState(project);
 
   const stepById = new Map(project.steps.map((s) => [s.id, s]));
+  // the reason of a refusal is not in the public ledger (only its fingerprint is): it is read from the private record, for the latest refusal of a step
+  const reasonShown = new Set<string>();
   const news = ledgerFor(db, project.id)
     .filter((e) => NEWS[e.type] && typeof e.data.stepId === 'string')
     .reverse()
@@ -73,10 +75,15 @@ export default async function FieldPage(props: { params: Promise<{ token: string
       const step = stepById.get(String(e.data.stepId));
       const title = step ? t('« {title} »', { title: t(step.title) }) : t('une étape');
       const supplier = (e.data.supplier as { name?: string } | undefined)?.name ?? step?.payout?.supplier.name ?? t('Le fournisseur');
+      let reason: string | undefined;
+      if (e.type === 'step_rejected' && step && !reasonShown.has(step.id)) {
+        reasonShown.add(step.id);
+        reason = step.status === 'rejected' ? step.decision?.note : undefined;
+      }
       const text: Record<string, string> = {
         proof_submitted: t('Preuve envoyée pour {title}', { title }),
         step_approved: t('{owner} a validé {title}', { owner: ownerName, title }),
-        step_rejected: t('Preuve refusée pour {title}', { title }) + (e.data.note ? ` : « ${String(e.data.note)} »` : ''),
+        step_rejected: t('Preuve refusée pour {title}', { title }) + (reason ? ` : « ${reason} »` : ''),
         payout_started: t('Paiement lancé vers {supplier}', { supplier }),
         payout_completed: t('{supplier} a été payé ({title})', { supplier, title }),
         payout_failed: t('Paiement non abouti pour {title}', { title }),

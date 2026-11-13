@@ -26,7 +26,7 @@ Sources : [ONU Info](https://news.un.org/en/story/2026/09/1168330) · [IFAD](htt
 1. **Financer** : le financeur crée un projet (immobilier, agricole ou commerce), le découpe en étapes et verse en Bitcoin Lightning. Les fonds restent en séquestre dans un portefeuille Bitnob.
 2. **Prouver** : la personne de confiance sur place ouvre un lien privé (sans compte), envoie photos datées et localisées, facture, titre foncier, et indique qui payer.
 3. **Libérer** : le financeur regarde la preuve, voit le devis (taux, frais, montant reçu en FCFA), puis valide. Le fournisseur est payé directement en mobile money via Bitnob Payouts.
-4. **Vérifier** : chaque évènement s'ajoute à un registre enchaîné (SHA-256). Son empreinte est ancrée sur Bitcoin avec OpenTimestamps. La page publique `/verifier` refait tous les calculs dans le navigateur.
+4. **Vérifier** : chaque évènement s'ajoute à un registre enchaîné (SHA-256). Son empreinte est ancrée sur Bitcoin avec OpenTimestamps. La page publique `/verifier` refait tous les calculs dans le navigateur. Le registre public ne contient ni la position des photos ni les notes libres : seulement des empreintes scellées (avec un sel aléatoire gardé en privé), jamais les données.
 
 ## Ce qui est réel, ce qui est simulé
 

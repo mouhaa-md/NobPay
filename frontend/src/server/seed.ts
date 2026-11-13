@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Db, Funding, Payout, Project, Step, StoredFile, Supplier, User } from '@/lib/types';
 import { DEFAULT_USD_XOF } from './config';
 import { appendLedger } from './ledger';
+import { proofSubmittedData } from './commitments';
 import { mockPaymentHash, mockPreimage } from './bitnob/mock';
 import { sha256Hex } from './crypto';
 
@@ -29,6 +30,9 @@ function seedFile(id: string, name: string, rel: string, mime: string): StoredFi
 }
 
 export const DEMO_USER_ID = 'u_aminata';
+
+/** The demonstration data is the same at every reset, so its salts are too (a real proof gets random ones, see commitments.ts). */
+const seedSalt = (label: string): string => sha256Hex(`nobpay-seed-salt|${label}`).slice(0, 32);
 
 export function buildSeed(nowMs: number = Date.now()): Db {
   const at = (daysAgo: number, hour: number, minute = 0): string => {
@@ -137,6 +141,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
               ),
               takenAt: submittedAt,
               gps: { lat: 14.7889, lng: -16.9255, accuracy: 12 },
+              gpsSalt: seedSalt(`${step.id}-1`),
             },
           ]
         : [],
@@ -164,18 +169,7 @@ export function buildSeed(nowMs: number = Date.now()): Db {
     step.decision = { kind: 'approved', at: approvedAt };
     step.payout = payout;
     step.status = 'paid';
-    appendLedger(
-      db,
-      project.id,
-      'proof_submitted',
-      {
-        stepId: step.id,
-        index: step.index,
-        photos: proof.photos.map((p) => ({ sha256: p.sha256, takenAt: p.takenAt, gps: p.gps })),
-        invoice: { sha256: proof.invoice!.sha256, amountFcfa: proof.invoiceAmountFcfa },
-      },
-      submittedAt,
-    );
+    appendLedger(db, project.id, 'proof_submitted', proofSubmittedData(step, proof), submittedAt);
     appendLedger(db, project.id, 'step_approved', { stepId: step.id, index: step.index, amountCents: step.amountCents }, approvedAt);
     appendLedger(
       db,
@@ -266,28 +260,18 @@ export function buildSeed(nowMs: number = Date.now()): Db {
         ...seedFile('seed-villa-s3-1', 'murs-facade.jpg', 'demo/proof-immobilier.jpg', 'image/jpeg'),
         takenAt: at(1, 19, 5),
         gps: { lat: 14.7886, lng: -16.9262, accuracy: 9 },
+        gpsSalt: seedSalt('villa-s3-1'),
       },
     ],
     invoice: seedFile('seed-facture-villa-s3', 'facture-ciment.png', 'demo/factures/p_villa_s3.png', 'image/png'),
     invoiceAmountFcfa: Math.round((s3.amountCents / 100) * DEFAULT_USD_XOF),
     note: 'Murs du rez-de-chaussée terminés, parpaings livrés par la quincaillerie.',
+    noteSalt: seedSalt('villa-s3-note'),
     supplier: ndiaye,
     submittedAt: at(1, 19, 15),
     submittedBy: 'manager',
   };
-  appendLedger(
-    db,
-    villa.id,
-    'proof_submitted',
-    {
-      stepId: s3.id,
-      index: s3.index,
-      photos: s3.proof.photos.map((p) => ({ sha256: p.sha256, takenAt: p.takenAt, gps: p.gps })),
-      invoice: { sha256: s3.proof.invoice!.sha256, amountFcfa: s3.proof.invoiceAmountFcfa },
-      note: s3.proof.note,
-    },
-    s3.proof.submittedAt,
-  );
+  appendLedger(db, villa.id, 'proof_submitted', proofSubmittedData(s3, s3.proof), s3.proof.submittedAt);
 
   // ---- 2. Pépinière à Kaolack (Agricole) --------------------------------
   const champId = 'p_champ';

@@ -7,8 +7,8 @@
 ## 1. En bref
 
 - **Aucune faille critique trouvée** : rien qui permette de voler de l'argent, de lire les données d'un autre utilisateur, de prendre un compte sans son code, ni d'exécuter du code sur le serveur. (Exception voulue : en mode démonstration, le code de connexion est public par construction ; ce mode est réservé aux instances sans argent réel et le démarrage le refuse avec de vrais sats.)
-- **Cinq faiblesses réelles ou conditionnelles, corrigées** (F-1, F-2, F-4, F-5, F-6). Les plus utiles : un envoi de photos trop gros ou trop nombreux pouvait faire tomber la démo gratuite (F-1) ; une configuration précise ouvrait la page d'administration à quiconque connaît un numéro (F-2).
-- **Une décision pour vous** (F-3) : la position GPS précise des photos est dans le dossier public. Rien n'a été changé sans votre accord.
+- **Six constats, tous corrigés** (F-1 à F-6, dont F-3 le 13 novembre). Les plus utiles : un envoi de photos trop gros ou trop nombreux pouvait faire tomber la démo gratuite (F-1) ; une configuration précise ouvrait la page d'administration à quiconque connaît un numéro (F-2).
+- **Le point F-3 (position GPS précise des photos dans le dossier public) est réglé le 13 novembre** : le registre public ne contient plus ni position ni texte libre, seulement des empreintes scellées (voir F-3).
 - **Les corrections ne sont que dans votre ordinateur** (commit local). La démo en ligne ne change qu'après un `git push` **et** un « Manual Deploy » sur Render (section 7).
 
 ## 2. Ce qui a été fait, et pas fait
@@ -36,7 +36,7 @@
 |---|---|---|---|
 | F-1 | Moyenne (disponibilité) | Envoi de preuves : mémoire non bornée quand plusieurs envois arrivent ensemble | Corrigé |
 | F-2 | Moyenne si configuré ainsi ; nulle sur la démo actuelle | Page admin complète ouverte par le code de démonstration public | Corrigé |
-| F-3 | Vie privée (décision) | Position GPS à 1 m et notes libres dans le dossier public | **À décider** |
+| F-3 | Vie privée | Position GPS à 1 m et notes libres dans le dossier public | **Corrigé le 13 novembre** (empreintes scellées) |
 | F-4 | Faible | `/api/dev/reset` sans limite : n'importe quel visiteur pouvait effacer la démo en boucle | Corrigé |
 | F-5 | Faible | Table du limiteur de débit : clés de taille libre, balayage coûteux, aucune borne | Corrigé |
 | F-6 | Hygiène | Un montant à virgule était accepté puis arrondi en silence | Corrigé |
@@ -60,17 +60,22 @@
 - **Correction :** tant que le code est public, `ADMIN_PHONES` ne donne plus la vue complète (le compte de démonstration garde sa vue « démo »). Un avertissement est écrit au démarrage si les deux sont réunis.
 - **Tests :** 3 cas dans `admin.test.ts`, 1 dans `startup.test.ts`. Le test qui attendait l'ancien comportement a été corrigé.
 
-### F-3 — Position GPS précise et notes dans le dossier public (décision)
+### F-3 — Position GPS précise et notes dans le dossier public (corrigé le 13 novembre)
 
-- **Où :** [`services.ts`](../frontend/src/server/services.ts) (événement `proof_submitted`), [`ledger.ts`](../frontend/src/server/ledger.ts) (`buildDossier`), page publique de vérification et `/api/anchors/<id>/dossier`.
-- **Constat :** chaque preuve inscrit au registre la position des photos (5 décimales, environ 1 mètre, avec la précision annoncée par le téléphone), la note libre de la personne sur place (500 caractères) et les notes de refus du financeur (300 caractères). Ce registre forme le dossier ancré, lisible par **quiconque a le lien** de la page publique (le lien est tiré au hasard, 64 bits, non devinable). Le dossier doit rester identique octet pour octet à ce qui a été ancré : on ne peut pas masquer à la lecture, seulement changer ce qu'on inscrit.
-- **Impact :** pour un vrai projet (maison, commerce), le lieu exact devient connu de toute personne qui reçoit le lien. Sur la démo : données fictives, aucun impact.
-- **Pourquoi ce n'est pas modifié :** c'est aussi la preuve de lieu, une fonction centrale que le jury regarde, et changer le contenu du registre touche les tests et la vérification.
-- **Options :**
-  - **A. Garder** et le dire clairement au financeur (« la page publique montre où les photos ont été prises »). Recommandé pour le concours.
-  - **B. Arrondir** la position à 3 décimales (environ 110 m) dans le registre ; la position précise reste dans le dossier privé du financeur.
-  - **C. N'inscrire que l'empreinte** des notes libres.
-  - Avant un vrai pilote avec de vraies personnes : B + C.
+- **Où :** [`services.ts`](../frontend/src/server/services.ts) (événements `proof_submitted` et `step_rejected`), [`ledger.ts`](../frontend/src/server/ledger.ts) (`buildDossier`), page publique de vérification et `/api/anchors/<id>/dossier`.
+- **Constat initial :** chaque preuve inscrivait au registre la position des photos (5 décimales, environ 1 mètre, avec la précision annoncée par le téléphone), la note libre de la personne sur place (500 caractères) et la note de refus du financeur (300 caractères). Ce registre forme le dossier ancré, lisible par **quiconque a le lien** de la page publique (lien tiré au hasard, 64 bits). La page n'affichait pas les positions, mais le fichier téléchargeable les contenait. Le dossier doit rester identique octet pour octet à ce qui a été ancré : on ne peut pas masquer à la lecture, il faut changer ce qu'on inscrit.
+- **Ce que la recherche a montré**
+  - Dans le code, **aucune fonction ne lit la position dans le registre** : les contrôles de preuve (`proofChecks.ts`) lisent le dossier privé et ne comparent qu'à une boîte englobant le Sénégal ; l'écran du financeur lit lui aussi le dossier privé. La précision publique n'avait donc aucun usage.
+  - Lignes directrices 02/2025 du Comité européen de la protection des données (CEPD) sur la blockchain : garder les données personnelles hors de la chaîne et n'y inscrire que des preuves cryptographiques ; un condensat non salé n'est pas suffisant ; un condensat peut rester une donnée personnelle. Lignes directrices 01/2025 sur la pseudonymisation : les données pseudonymisées restent des données personnelles tant qu'une information supplémentaire permet de les relier à une personne, et cette information (ici le sel) doit rester séparée. Côté Sénégal, la loi n° 2008-12 sur les données à caractère personnel place la géolocalisation sous le contrôle de la Commission de protection des données (CDP) ; la loi est jugée dépassée et une révision est annoncée (non vérifiée).
+  - Précision des coordonnées : 5 décimales = environ 1 m, 4 = 11 m, 3 = 110 m, 2 = 1,1 km. Arrondir à 3 décimales laisse encore voir le pâté de maisons et ne protège pas une ferme isolée : l'arrondi (option B du premier rapport) était insuffisant et supprimait la preuve contre une modification.
+- **Choix retenu :** engagement à la source, avec sel. Le registre ne reçoit que `SHA-256(domaine | sel | valeur)` pour chaque position et pour chaque note ; la valeur et son sel (128 bits aléatoires) restent dans le dossier privé de la preuve. Aucune position, même arrondie, aucun mot de texte libre dans le dossier public. L'ajout d'une position approximative n'apporterait rien : la ville du projet est déjà publique.
+  - **Vie privée :** personne ne retrouve une position en essayant des valeurs, faute du sel.
+  - **Intégrité :** le dossier privé ne peut pas être modifié après coup sans contredire l'empreinte ancrée sur Bitcoin.
+  - **Ouverture :** qui détient la valeur et le sel (le financeur) peut ouvrir l'empreinte pour prouver ce qui avait été enregistré (`opensCommitment`).
+  - **Effacement :** supprimer le dossier privé laisse des empreintes sans signification.
+- **Correction :** [`commitments.ts`](../frontend/src/server/commitments.ts) (`commit`, `proofSubmittedData`) ; `submitProof`, `rejectProof` et les données de démonstration écrivent des empreintes ; la page publique n'affiche plus la raison d'un refus ; la page de l'équipe sur place lit cette raison dans le dossier privé.
+- **Tests :** `tests/commitments.test.ts` (11 cas) : le dossier téléchargeable d'une preuve neuve et celui de la démonstration ne contiennent ni coordonnée ni note, les empreintes s'ouvrent avec le dossier privé et plus après une modification, la chaîne de hachage reste valable.
+- **Reste, par choix de produit :** sont toujours publics le nom du projet et de la ville, les montants, le nom du fournisseur payé, le prénom d'un proche qui contribue et le nom du témoin. Avant un vrai pilote avec de vraies personnes, les rendre eux aussi privés (même mécanisme). Un export « ouvrir mes empreintes » pour le financeur n'est pas encore écrit : les sels sont gardés pour le permettre.
 
 ### F-4 — Réinitialisation de la démo sans limite
 

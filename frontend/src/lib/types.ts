@@ -60,6 +60,8 @@ export interface ProofPhoto extends StoredFile {
   takenAt: string;
   /** the phone's position when it SENT the proof (not necessarily where the photo was taken) */
   gps?: { lat: number; lng: number; accuracy?: number };
+  /** private: the random salt of the position's fingerprint, the only trace of the position in the public ledger */
+  gpsSalt?: string;
   /** what the phone wrote inside the photo itself, read before it was shrunk: when it was taken, and where */
   exif?: { takenAt?: string; gps?: { lat: number; lng: number } };
   /** perceptual fingerprint (16 hexadecimal characters): finds the same picture again when the file is not the same */
@@ -71,6 +73,8 @@ export interface Proof {
   invoice?: StoredFile;
   invoiceAmountFcfa?: number;
   note?: string;
+  /** private: the random salt of the note's fingerprint (the public ledger only says that a note exists) */
+  noteSalt?: string;
   supplier?: Supplier;
   submittedAt: string;
   submittedBy: 'manager' | 'owner';
@@ -185,6 +189,8 @@ export interface StepDecision {
   kind: 'approved' | 'rejected';
   at: string;
   note?: string;
+  /** private: the random salt of the note's fingerprint (the public ledger only says that a note exists) */
+  noteSalt?: string;
 }
 
 export interface Step {

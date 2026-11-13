@@ -31,6 +31,7 @@ N'envoyez **jamais** de vraie clé, de vrai secret ni de données personnelles d
 ## Ce que le code garantit, et ce qu'il ne garantit pas
 
 - **Garanti par des tests** : un webhook mal signé est refusé (401) ; un évènement rejoué ne crédite pas deux fois ; un montant différent de la facture ne crédite pas ; un paiement dont la réponse est perdue ne libère pas le séquestre ; des centaines de séquences aléatoires d'évènements ne produisent ni séquestre négatif, ni double crédit, ni double paiement.
+- **Dossier public sans données personnelles de la preuve** : le registre (donc le dossier téléchargeable et son ancrage Bitcoin) ne contient ni la position des photos ni un seul mot des notes libres ; il n'a que des **empreintes scellées** (SHA-256 d'une valeur et d'un sel aléatoire de 128 bits gardé dans le dossier privé). Personne ne peut retrouver une position en essayant des valeurs, le dossier privé ne peut pas être modifié après coup sans contredire l'empreinte ancrée, et celui qui détient la valeur et le sel peut ouvrir l'empreinte pour prouver ce qui a été enregistré. Restent publics, par choix de produit : le nom du projet et de la ville, les montants, le nom du fournisseur payé, le prénom d'un proche qui contribue et le nom du témoin (`tests/commitments.test.ts`).
 - **Non garanti** : la position GPS et l'heure d'une photo sont **déclarées par le téléphone** ; l'ancrage Bitcoin prouve qu'un dossier n'a pas changé, pas qu'une photo montre le bon chantier ; le séquestre est une règle logicielle dans une base locale, pas un contrat.
 
 ## Si vous déployez

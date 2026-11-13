@@ -218,5 +218,14 @@ Rapport complet : [`AUDIT-SECURITE-2026-11-12.md`](AUDIT-SECURITE-2026-11-12.md)
 - **Matrice d'autorisation** (`tests/authorization.test.ts`, 75 vérifications) : propriétaire, inconnu connecté, personne, lien de terrain, sur 19 appels ; un refus ne change pas la base.
 - 986 tests verts sur 70 fichiers (31 ignorés).
 
+## Registre public sans position ni texte libre (13 novembre 2026)
+
+Point F-3 du rapport [`AUDIT-SECURITE-2026-11-12.md`](AUDIT-SECURITE-2026-11-12.md), réglé après recherche (lignes directrices 02/2025 et 01/2025 du CEPD, loi sénégalaise 2008-12, précision des coordonnées).
+
+- **Le registre public ne contient plus ni la position des photos ni les notes libres** (note de la personne sur place, motif de refus du financeur) : seulement des **empreintes scellées** `SHA-256(domaine | sel | valeur)`, avec un sel aléatoire de 128 bits gardé dans le dossier privé (`server/commitments.ts`). La valeur et le sel restent dans le dossier privé de la preuve : personne ne retrouve une position en essayant des valeurs, le dossier privé ne peut plus être modifié sans contredire l'empreinte ancrée, et le financeur peut ouvrir l'empreinte.
+- La page publique n'affiche plus le motif d'un refus ; l'équipe sur place le lit toujours, depuis le dossier privé.
+- Les événements déjà ancrés ne changent pas (un dossier ancré reste identique octet pour octet) ; les nouveaux événements utilisent les empreintes.
+- `tests/commitments.test.ts` : 11 cas.
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

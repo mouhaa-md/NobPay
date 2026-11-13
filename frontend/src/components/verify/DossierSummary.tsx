@@ -38,7 +38,8 @@ function describe(t: T, type: string, data: Record<string, unknown>): string {
     case 'payout_completed':
       return t('Étape {step} · fournisseur payé', { step });
     case 'step_rejected':
-      return `${t('Étape {step}', { step })}${data.note ? ` · « ${String(data.note)} »` : ''}`;
+      // the reason is private (sealed in the ledger, readable by the person on site): the public page only says that the proof was refused
+      return t('Étape {step}', { step });
     case 'project_updated':
       return t('Plan modifié : {n} étapes, budget {amount}', { n: Array.isArray(data.steps) ? data.steps.length : 0, amount: usd(data.budgetCents) });
     case 'project_closed':

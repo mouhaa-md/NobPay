@@ -32,6 +32,7 @@ import { logger } from './logger';
 import { assertOpen } from './projectEdit';
 import { witnessGate } from './witness';
 import { appendLedger } from './ledger';
+import { newSalt, noteLedgerData, proofSubmittedData, sealNote } from './commitments';
 import { simulateInvoicePaid, simulatePayoutCompleted } from './mockEvents';
 import { lightningPayoutsEnabled } from './lightning';
 import { configuredRelays, nostrPublishing, projectPublicKey } from './nostr/keys';
@@ -536,10 +537,11 @@ export async function submitProof(actor: Actor, projectId: string, stepId: strin
     const step = stepOf(p, stepId);
     assertStepAcceptsProof(step, p); // two uploads racing for the same step: only the first one gets in
     step.proof = {
-      photos: input.photos.map((f) => ({ ...f, takenAt: f.takenAt ?? submittedAt })),
+      // the position and the note stay in this private record; the public ledger gets only their sealed fingerprints
+      photos: input.photos.map((f) => ({ ...f, takenAt: f.takenAt ?? submittedAt, ...(f.gps ? { gpsSalt: newSalt() } : {}) })),
       invoice: input.invoice,
       invoiceAmountFcfa: input.invoiceAmountFcfa,
-      note: input.note?.trim().slice(0, 500) || undefined,
+      ...sealNote(input.note?.trim().slice(0, 500) || undefined),
       supplier: {
         name: supplier.name.trim().slice(0, 80),
         phone: lightningAddress ? '' : supplier.phone.trim(),
@@ -552,19 +554,7 @@ export async function submitProof(actor: Actor, projectId: string, stepId: strin
     step.status = 'proof_submitted';
     step.decision = undefined;
     step.quote = undefined;
-    appendLedger(
-      d,
-      projectId,
-      'proof_submitted',
-      {
-        stepId,
-        index: step.index,
-        photos: step.proof.photos.map((f) => ({ sha256: f.sha256, takenAt: f.takenAt, gps: f.gps })),
-        invoice: step.proof.invoice ? { sha256: step.proof.invoice.sha256, amountFcfa: step.proof.invoiceAmountFcfa } : undefined,
-        note: step.proof.note,
-      },
-      submittedAt,
-    );
+    appendLedger(d, projectId, 'proof_submitted', proofSubmittedData(step, step.proof), submittedAt);
     return structuredClone(step);
   });
 }
@@ -575,9 +565,11 @@ export async function rejectProof(owner: User, projectId: string, stepId: string
     const step = stepOf(project, stepId);
     if (step.status !== 'proof_submitted') throw new HttpError(409, 'Aucune preuve à refuser');
     step.status = 'rejected';
-    step.decision = { kind: 'rejected', at: new Date().toISOString(), note: note?.trim().slice(0, 300) || undefined };
+    const sealed = sealNote(note?.trim().slice(0, 300) || undefined);
+    step.decision = { kind: 'rejected', at: new Date().toISOString(), ...sealed };
     step.quote = undefined;
-    appendLedger(db, projectId, 'step_rejected', { stepId, index: step.index, note: step.decision.note });
+    // the reason goes to the person on site through the private record; the public ledger only says that there is one
+    appendLedger(db, projectId, 'step_rejected', { stepId, index: step.index, ...noteLedgerData(sealed.note, sealed.noteSalt) });
     return structuredClone(step);
   });
 }
