@@ -16,8 +16,8 @@
  },
  {
   "id": "enter",
-  "speak": "This is the live demo. Payments are simulated, so nothing here moves real money. We sign in with the demo account.",
-  "caption": "This is the live demo. Payments are simulated, so nothing here moves real money. We sign in with the demo account."
+  "speak": "This is the live demo, in demo mode: payments are simulated. We sign in with the demo account.",
+  "caption": "This is the live demo, in demo mode: payments are simulated. We sign in with the demo account."
  },
  {
   "id": "dash",
@@ -46,8 +46,8 @@
  },
  {
   "id": "s1_fund",
-  "speak": "The funder adds the rest through a Lightning invoice. In this demo it cannot be paid, so we simulate the payment, and the escrow is credited.",
-  "caption": "The funder adds the rest through a Lightning invoice. In this demo it cannot be paid, so we simulate the payment, and the escrow is credited."
+  "speak": "The funder adds the rest through a Lightning invoice, with its QR code. In demo mode we simulate the payment, and the escrow is credited.",
+  "caption": "The funder adds the rest through a Lightning invoice, with its QR code. In demo mode we simulate the payment, and the escrow is credited."
  },
  {
   "id": "s1_witness",
@@ -206,8 +206,8 @@
  },
  {
   "id": "real",
-  "speak": "What is real: the ledger, the Bitcoin anchoring, and the verification. The Lightning path is tested against a wallet simulator, not yet with real sats, and Nostr publishing is off on this free demo.",
-  "caption": "What is real: the ledger, the Bitcoin anchoring, and the verification. The Lightning path is tested against a wallet simulator, not yet with real sats, and Nostr publishing is off on this free demo."
+  "speak": "What is real today: the ledger, the Bitcoin anchoring, and the public verification. The Lightning payments are built and tested against a wallet simulator, and the first pilot with real sats comes next.",
+  "caption": "What is real today: the ledger, the Bitcoin anchoring, and the public verification. The Lightning payments are built and tested against a wallet simulator, and the first pilot with real sats comes next."
  },
  {
   "id": "end",

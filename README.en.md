@@ -69,3 +69,5 @@ deploy/                    Docker Compose + Caddy + backup script
 ```
 
 [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md) · translations are welcome: the English wording lives in one file, [`frontend/src/lib/i18n/en.ts`](frontend/src/lib/i18n/en.ts), and a language is one more dictionary (Wolof help wanted: [`docs/TRADUIRE.md`](docs/TRADUIRE.md)).
+
+Trademarks: the names and logos of Wave, Orange Money and Free Money belong to their owners. They only name the networks a supplier can be paid on; NobPay has no partnership with them.
