@@ -89,9 +89,21 @@ print(f"music: {20 * np.log10(base):.1f} dB gain, {MUSIC_BELOW_VOICE_DB:.0f} dB 
 def stamp(x):
     h, r = divmod(x, 3600); mi, r = divmod(r, 60); s, ms = divmod(r, 1)
     return f"{int(h):02}:{int(mi):02}:{int(s):02},{int(ms * 1000):03}"
+def chunks(text, limit=80):
+    # a cue holds at most two lines of 42 characters: a longer sentence is cut at a comma, a colon or a conjunction, near its middle
+    if len(text) <= limit:
+        return [text]
+    cuts = [m.end() for m in re.finditer(r'(?<=[,:;]) |(?= (?:and|but|so|then|with|from|because) )', text)]
+    if not cuts:
+        cuts = [m.end() for m in re.finditer(r' ', text)]
+    ok = lambda xs: [c for c in xs if 25 <= c <= len(text) - 25]  # no tiny cue
+    cuts = ok(cuts) or ok([m.end() for m in re.finditer(r' ', text)]) or cuts
+    best = min(cuts, key=lambda c: abs(c - len(text) / 2))
+    return chunks(text[:best].strip(), limit) + chunks(text[best:].strip(), limit)
+
 cues = []
 for mk in marks:
-    sentences = re.split(r'(?<=[.!?])\s+', captions[mk['id']])
+    sentences = [c for s0 in re.split(r'(?<=[.!?])\s+', captions[mk['id']]) for c in chunks(s0)]
     total_chars = sum(len(s) for s in sentences)
     t = mk['start']
     for s in sentences:

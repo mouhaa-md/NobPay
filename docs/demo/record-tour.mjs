@@ -232,7 +232,7 @@ async function wizard(sec, { slow }) {
 }
 
 // ---- the field page, on screen ----
-async function fieldProof(p, idx) {
+async function fieldProof(p, idx, attempt = 1) {
   const { s, supplier, phone, photos, invoice, fcfa } = await proofParts(p, idx);
   await go(`/terrain/${p.token}`);
   // invoice-only steps have no photo input: wait for any file input of the form (a step that is not open yet shows none: reload then)
@@ -249,7 +249,15 @@ async function fieldProof(p, idx) {
   await click(page.getByRole('button', { name: /Wave/i }));
   await scrollBy(500, 700);
   await click(page.getByRole('button', { name: /Envoyer la preuve/ }));
-  await idle(() => page.getByText(/Merci\. Le financeur va la regarder/).first().waitFor({ timeout: 40000 }));
+  const sent = await idle(() => page.getByText(/Merci\. Le financeur va la regarder/).first().waitFor({ timeout: 40000 }).then(() => true, () => false));
+  if (!sent) {
+    // a request that hangs (the network of the recording machine blinks): look at what the server really has before doing it again
+    const status = (await stateOf(p.id))[idx].status;
+    console.log(`  (proof of step ${idx + 1}: no confirmation on screen, the server says "${status}")`);
+    if (status !== 'proof_submitted') { if (attempt >= 3) throw new Error('proof not accepted'); return fieldProof(p, idx, attempt + 1); }
+    await go(`/terrain/${p.token}`);
+    return;
+  }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' })); await wait(900);
 }
 
@@ -264,9 +272,13 @@ async function funderPays(p, idx, { showChecks = false, between } = {}) {
   await click(page.getByRole('button', { name: /Valider et payer/ }));
   await page.getByRole('button', { name: /Confirmer et payer/ }).waitFor(); await wait(1500);
 }
-async function confirmPayment() {
+async function confirmPayment(p, idx) {
   await click(page.getByRole('button', { name: /Confirmer et payer/ }));
-  await idle(() => page.getByText('Fournisseur payé').first().waitFor({ timeout: 60000 }), 0.4);
+  const paid = await idle(() => page.getByText('Fournisseur payé').first().waitFor({ timeout: 60000 }).then(() => true, () => false), 0.4);
+  if (!paid) {
+    await idle(() => waitStep(p, idx, ['paid']), 0.2);
+    await go(`/app/projets/${p.id}/etapes/${(await stateOf(p.id))[idx].id}`);
+  }
   await wait(900);
 }
 
@@ -358,7 +370,7 @@ try {
       await narrate('s1_review');
       await funderPays(p, 0, { showChecks: true });
       await narrate('s1_pay');
-      await confirmPayment();
+      await confirmPayment(p, 0);
       await idle(async () => { for (let i = 1; i < p.steps.length; i++) await completeViaApi(p, i); }, 0.3);
       await narrate('s1_done');
       await go(`/app/projets/${p.id}`);
@@ -376,7 +388,7 @@ try {
     await fieldProof(p, first);
     await narrate(`${n}_pay`);
     await funderPays(p, first, { showChecks: sec.key === 'agricole' });
-    await confirmPayment();
+    await confirmPayment(p, first);
     if (sec.key === 'scolarite') {
       await narrate('s4_receipt');
       const rec = page.getByRole('link', { name: /Voir le reçu/ });

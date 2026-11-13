@@ -16,7 +16,7 @@ For Devpost's "Elevator pitch" field (200 characters at most; this one has 192):
 
 ## Elevator pitch (about 50 words)
 
-The African diaspora sends hundreds of billions of dollars home, and much of it funds a house, a field, a school year or a shop run from afar, on someone's word. NobPay holds the money in escrow and pays the supplier directly, over Lightning, only when the proof arrives. Anyone can verify the record.
+Migrants send over a hundred billion dollars a year to their families in Africa, and much of it funds a house, a field, a school year or a shop run from afar, on someone's word. NobPay holds the money in escrow and pays the supplier directly, over Lightning, only when the proof arrives. Anyone can verify the record.
 
 ---
 
