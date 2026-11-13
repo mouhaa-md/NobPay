@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Spinner } from '@/components/ui/primitives';
 import { formatDateTime, formatFcfa, formatSats } from '@/lib/money';
 import { maskAddress } from '@/lib/supplierLabel';
+import { OperatorLogo } from '@/components/ui/OperatorLogo';
 import { SUPPLIER_NETWORKS } from '@/lib/templates';
 import { readDb } from '@/server/db';
 import { findReceipt, maskPhone } from '@/server/receipt';
@@ -91,6 +92,7 @@ export default async function Receipt(props: { params: Promise<{ token: string }
         </dd>
         <dt className="text-on-surface-variant">{payout.lightning ? t('Destination') : t('Mobile money')}</dt>
         <dd className="text-right font-medium text-on-surface">
+          <OperatorLogo network={payout.supplier.network} size={18} className="mr-1.5" />
           {SUPPLIER_NETWORKS[payout.supplier.network]}
           <span className="block font-normal text-on-surface-variant">{payout.lightning ? maskAddress(payout.lightning.address) : maskPhone(payout.supplier.phone)}</span>
         </dd>

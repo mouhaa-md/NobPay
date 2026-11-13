@@ -157,6 +157,14 @@ export const MOBILE_NETWORKS = {
   free_money: 'Free Money',
 } as const;
 
+/**
+ * The operators' own logos, shown next to their names. Their owners' trademarks: used only to name the networks a supplier can be
+ * paid on, with no suggestion of a partnership (the app says so). A network without a file here keeps its coloured dot.
+ */
+export const OPERATOR_LOGOS: Partial<Record<keyof typeof MOBILE_NETWORKS, string>> = {
+  wave: '/operators/wave.png',
+};
+
 /** How any supplier is named on screen: a mobile money operator, or Bitcoin Lightning (sats straight to a wallet). */
 export const SUPPLIER_NETWORKS = { ...MOBILE_NETWORKS, lightning: 'Bitcoin Lightning' } as const;
 

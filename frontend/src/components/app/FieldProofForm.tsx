@@ -7,7 +7,8 @@ import { Icon } from '@/components/ui/Icon';
 import { ErrorNote, Spinner } from '@/components/ui/primitives';
 import { isUploadableImage, isUploadableProof, photoFingerprint, shrinkImage } from '@/lib/image';
 import { formatInt } from '@/lib/money';
-import { MOBILE_NETWORKS } from '@/lib/templates';
+import { OperatorLogo } from '@/components/ui/OperatorLogo';
+import { MOBILE_NETWORKS, OPERATOR_LOGOS } from '@/lib/templates';
 import type { MobileNetwork, ProofKind, Supplier } from '@/lib/types';
 import { Tc, useT } from '@/lib/i18n/client';
 
@@ -309,7 +310,7 @@ export function FieldProofForm({ token, projectId, step, previous, payTo = 'mobi
           <div className="grid grid-cols-3 gap-2">
             {NETWORKS.map((n) => (
               <button key={n} type="button" aria-pressed={network === n} onClick={() => setNetwork(n)} className={`flex h-14 flex-col items-center justify-center gap-1 rounded-2xl font-label-md text-label-md transition active:scale-95 ${network === n ? 'bg-primary/5 font-bold text-primary ring-2 ring-primary-container' : 'bg-surface-container-low text-on-surface'}`}>
-                <span className={`h-2.5 w-2.5 rounded-full ${NET_DOT[n]}`} />
+                {OPERATOR_LOGOS[n] ? <OperatorLogo network={n} size={22} /> : <span className={`h-2.5 w-2.5 rounded-full ${NET_DOT[n]}`} />}
                 {MOBILE_NETWORKS[n]}
               </button>
             ))}
