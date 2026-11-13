@@ -8,7 +8,7 @@
 
 - **Aucune erreur visible à l'écran** : pas de page cassée, de message d'erreur, d'écran vide ni de montant incohérent sur les 128 images examinées (une toutes les 3 secondes) et sur les 43 images prises au début de chaque phrase de la voix.
 - **Deux défauts de fond ont été trouvés et corrigés** : un chiffre exagéré dans la première phrase, et un long passage figé dans les étapes « facture seule ».
-- **Un point reste à faire avant publication** : la phrase « les positions et les notes restent privées, seules des empreintes scellées sont publiées » n'est vraie sur le site en ligne qu'**après** la mise en ligne du correctif F-3 (voir §4).
+- **Le point V-2 est réglé** : le correctif F-3 est en ligne depuis le 13 novembre (vérifié, voir §4). **Version finale auditée le 13 novembre en fin de journée** : voix réécrite (une seule mention claire du mode démonstration, conclusion « ce qui est réel aujourd'hui »), vrais logos Wave, Orange Money et Free Money dans le formulaire du terrain et la carte « sera payé directement » ; 6 min 24, −15,3 LUFS, 94 sous-titres sans défaut, 171 images examinées sans erreur visible. Les logos sont petits dans le formulaire (22 pixels).
 
 ## 2. Ce qui a été examiné
 
@@ -32,15 +32,9 @@
 | V-5 | Un premier enregistrement complet a échoué à cause d'une coupure réseau de la machine d'enregistrement (envoi de preuve figé). | Faible (outil) | **Corrigé** : le script vérifie l'état réel sur le serveur avant de recommencer |
 | V-6 | Écrans fixes de 9 s environ (fenêtre du devis, page de reçu) et page d'accueil sans mouvement pendant les 12 premières secondes. | Cosmétique | Non corrigé, volontaire : le texte dit se déroule pendant ce temps |
 
-## 4. Avant de publier : le point V-2
+## 4. Le point V-2, vérifié
 
-La vidéo a été enregistrée sur le site en ligne, **qui exécute la version déployée avant le correctif F-3**. Les nouveaux événements y contiennent encore la position des photos dans le dossier téléchargeable. Pour que la phrase soit vraie :
-
-1. pousser les commits locaux (le correctif F-3 et les scripts) sur GitHub ;
-2. **Render → Manual Deploy** ;
-3. vérifier : ouvrir un dossier public du site et chercher `"lat"` dans le fichier téléchargeable (il ne doit plus y en avoir), ou demander à l'assistant de le faire (lecture seule).
-
-Tant que ce n'est pas fait, retirer la phrase (« Photo positions… ») de la voix ou ne pas publier la vidéo.
+La première version de la vidéo avait été enregistrée sur le site avant le correctif F-3. Après le push et le Manual Deploy du 13 novembre, vérification en lecture seule sur le site en ligne : le registre du projet de démonstration contient 6 empreintes de position (`gpsCommit`) et 2 empreintes de notes (`noteCommit`), **aucune coordonnée (`lat`/`lng`) et aucun texte de note**. La vidéo finale a été enregistrée après ce déploiement : la phrase « positions et notes restent privées » est vraie.
 
 ## 5. Ce que la vidéo dit honnêtement
 
