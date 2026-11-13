@@ -1,0 +1,217 @@
+[
+ {
+  "id": "problem",
+  "speak": "Every year, the African diaspora sends hundreds of billions of dollars home. A transfer moves the money, but it does not control what the money is used for.",
+  "caption": "Every year, the African diaspora sends hundreds of billions of dollars home. A transfer moves the money, but it does not control what the money is used for."
+ },
+ {
+  "id": "idea",
+  "speak": "Nob Pay fixes that. The money stays in escrow, and it is released step by step, only when the work is shown.",
+  "caption": "NobPay fixes that. The money stays in escrow, and it is released step by step, only when the work is shown."
+ },
+ {
+  "id": "tour",
+  "speak": "In this tour, we create one project for each of the five business models the app supports, and follow each one to its last paid step.",
+  "caption": "In this tour, we create one project for each of the five business models the app supports, and follow each one to its last paid step."
+ },
+ {
+  "id": "enter",
+  "speak": "This is the live demo. Payments are simulated, so nothing here moves real money. We sign in with the demo account.",
+  "caption": "This is the live demo. Payments are simulated, so nothing here moves real money. We sign in with the demo account."
+ },
+ {
+  "id": "dash",
+  "speak": "This is the funder's dashboard. We start a new project.",
+  "caption": "This is the funder's dashboard. We start a new project."
+ },
+ {
+  "id": "s1_pick",
+  "speak": "First model: real estate. Build, renovate, or buy land. We pick the model, name the project, and set a budget.",
+  "caption": "First model: real estate. Build, renovate, or buy land. We pick the model, name the project, and set a budget."
+ },
+ {
+  "id": "s1_steps",
+  "speak": "The app proposes the steps for this model, from checking the land title to the finishing work. Each step says which proof it needs, and everything can be edited.",
+  "caption": "The app proposes the steps for this model, from checking the land title to the finishing work. Each step says which proof it needs, and everything can be edited."
+ },
+ {
+  "id": "s1_team",
+  "speak": "Then we name the person on site, who will send the proofs and never touches the money.",
+  "caption": "Then we name the person on site, who will send the proofs and never touches the money."
+ },
+ {
+  "id": "s1_family",
+  "speak": "The project exists. Relatives abroad can already join in: a family link lets anyone add to the escrow from any Lightning wallet, with no account. A first name, if given, appears in the public record.",
+  "caption": "The project exists. Relatives abroad can already join in: a family link lets anyone add to the escrow from any Lightning wallet, with no account. A first name, if given, appears in the public record."
+ },
+ {
+  "id": "s1_fund",
+  "speak": "The funder adds the rest through a Lightning invoice. In this demo it cannot be paid, so we simulate the payment, and the escrow is credited.",
+  "caption": "The funder adds the rest through a Lightning invoice. In this demo it cannot be paid, so we simulate the payment, and the escrow is credited."
+ },
+ {
+  "id": "s1_witness",
+  "speak": "The funder also names an independent witness, here a neighbour, who looks at each proof from outside.",
+  "caption": "The funder also names an independent witness, here a neighbour, who looks at each proof from outside."
+ },
+ {
+  "id": "s1_field",
+  "speak": "The first step asks for the land title. The person on site opens a private link, with no account, photographs the document, and says who should be paid.",
+  "caption": "The first step asks for the land title. The person on site opens a private link, with no account, photographs the document, and says who should be paid."
+ },
+ {
+  "id": "s1_wit2",
+  "speak": "The witness sees the proof and confirms. The answer goes to the funder, and into the public record under the witness's name.",
+  "caption": "The witness sees the proof and confirms. The answer goes to the funder, and into the public record under the witness's name."
+ },
+ {
+  "id": "s1_review",
+  "speak": "The funder sees the proof, the witness's answer, and the checks the app ran: is this file already used somewhere else, was the phone in Senegal. The checks help, they never decide.",
+  "caption": "The funder sees the proof, the witness's answer, and the checks the app ran: is this file already used somewhere else, was the phone in Senegal. The checks help, they never decide."
+ },
+ {
+  "id": "s1_pay",
+  "speak": "Before paying, the quote shows what is debited, the rate, and what the supplier receives. She confirms, and the supplier is paid directly.",
+  "caption": "Before paying, the quote shows what is debited, the rate, and what the supplier receives. She confirms, and the supplier is paid directly."
+ },
+ {
+  "id": "s1_done",
+  "speak": "The same loop repeats for every step. Here is the project, with all six steps paid.",
+  "caption": "The same loop repeats for every step. Here is the project, with all six steps paid."
+ },
+ {
+  "id": "s2_pick",
+  "speak": "Second model: farming. The steps follow the season: soil, sowing, inputs, harvest, and the sale of the harvest.",
+  "caption": "Second model: farming. The steps follow the season: soil, sowing, inputs, harvest, and the sale of the harvest."
+ },
+ {
+  "id": "s2_steps",
+  "speak": "Each work step asks for photos and an invoice. Selling the harvest asks only for the invoice.",
+  "caption": "Each work step asks for photos and an invoice. Selling the harvest asks only for the invoice."
+ },
+ {
+  "id": "s2_field",
+  "speak": "For the work steps, the proof is photos and the supplier's invoice. The photos carry the phone's date and position.",
+  "caption": "For the work steps, the proof is photos and the supplier's invoice. The photos carry the phone's date and position."
+ },
+ {
+  "id": "s2_pay",
+  "speak": "The funder checks, approves, and the supplier is paid.",
+  "caption": "The funder checks, approves, and the supplier is paid."
+ },
+ {
+  "id": "s2_done",
+  "speak": "Season over: every step is paid, and the project is complete.",
+  "caption": "Season over: every step is paid, and the project is complete."
+ },
+ {
+  "id": "s3_pick",
+  "speak": "Third model: a shop. Initial stock, delivery, shelving, then restocking.",
+  "caption": "Third model: a shop. Initial stock, delivery, shelving, then restocking."
+ },
+ {
+  "id": "s3_steps",
+  "speak": "Buying stock and restocking need an invoice, delivery needs photos and an invoice, and shelving needs photos.",
+  "caption": "Buying stock and restocking need an invoice, delivery needs photos and an invoice, and shelving needs photos."
+ },
+ {
+  "id": "s3_field",
+  "speak": "Some steps need only an invoice. Buying the first stock is proven by the supplier's bill.",
+  "caption": "Some steps need only an invoice. Buying the first stock is proven by the supplier's bill."
+ },
+ {
+  "id": "s3_pay",
+  "speak": "The funder approves, and the supplier is paid.",
+  "caption": "The funder approves, and the supplier is paid."
+ },
+ {
+  "id": "s3_done",
+  "speak": "Four steps, four payments, and the shop is stocked.",
+  "caption": "Four steps, four payments, and the shop is stocked."
+ },
+ {
+  "id": "s4_pick",
+  "speak": "Fourth model: school fees, paid straight to the school. Registration, supplies, then one payment per term.",
+  "caption": "Fourth model: school fees, paid straight to the school. Registration, supplies, then one payment per term."
+ },
+ {
+  "id": "s4_steps",
+  "speak": "Every step asks for the school's invoice, and the supplies add photos.",
+  "caption": "Every step asks for the school's invoice, and the supplies add photos."
+ },
+ {
+  "id": "s4_field",
+  "speak": "The school's receipt is the proof. The money goes to the school, never through a middleman.",
+  "caption": "The school's receipt is the proof. The money goes to the school, never through a middleman."
+ },
+ {
+  "id": "s4_pay",
+  "speak": "The school is paid directly, once the funder approves.",
+  "caption": "The school is paid directly, once the funder approves."
+ },
+ {
+  "id": "s4_receipt",
+  "speak": "Each payment comes with a receipt that the funder can keep and share.",
+  "caption": "Each payment comes with a receipt that the funder can keep and share."
+ },
+ {
+  "id": "s4_done",
+  "speak": "All five payments are made, and the school year is covered.",
+  "caption": "All five payments are made, and the school year is covered."
+ },
+ {
+  "id": "s5_pick",
+  "speak": "Fifth model: restocking from a wholesaler. Order confirmed, goods delivered, goods on the shelf.",
+  "caption": "Fifth model: restocking from a wholesaler. Order confirmed, goods delivered, goods on the shelf."
+ },
+ {
+  "id": "s5_steps",
+  "speak": "The order needs an invoice, the delivery needs photos and an invoice, and the shelving needs photos.",
+  "caption": "The order needs an invoice, the delivery needs photos and an invoice, and the shelving needs photos."
+ },
+ {
+  "id": "s5_field",
+  "speak": "Delivery is proven with photos and the wholesaler's invoice. The payment follows the goods, not the promise.",
+  "caption": "Delivery is proven with photos and the wholesaler's invoice. The payment follows the goods, not the promise."
+ },
+ {
+  "id": "s5_pay",
+  "speak": "The wholesaler is paid once the delivery is shown.",
+  "caption": "The wholesaler is paid once the delivery is shown."
+ },
+ {
+  "id": "s5_done",
+  "speak": "Three steps, and the shelves are full.",
+  "caption": "Three steps, and the shelves are full."
+ },
+ {
+  "id": "ledger1",
+  "speak": "Every event, in every project, joins a hash chained ledger. Change one line, and everything after it breaks.",
+  "caption": "Every event, in every project, joins a hash-chained ledger. Change one line, and everything after it breaks."
+ },
+ {
+  "id": "ledger2",
+  "speak": "We anchor its fingerprint on Bitcoin, with Open Timestamps. Only the fingerprint leaves the app.",
+  "caption": "We anchor its fingerprint on Bitcoin, with OpenTimestamps. Only the fingerprint leaves the app."
+ },
+ {
+  "id": "verify1",
+  "speak": "A public page lets anyone check the file, without an account. The browser redoes the calculations itself.",
+  "caption": "A public page lets anyone check the file, without an account. The browser redoes the calculations itself."
+ },
+ {
+  "id": "verify2",
+  "speak": "The public record shows steps and amounts. Photo positions and notes stay private: only sealed fingerprints are published. So nobody has to trust our server.",
+  "caption": "The public record shows steps and amounts. Photo positions and notes stay private: only sealed fingerprints are published. So nobody has to trust our server."
+ },
+ {
+  "id": "real",
+  "speak": "What is real: the ledger, the Bitcoin anchoring, and the verification. The Lightning path is tested against a wallet simulator, not yet with real sats, and Nostr publishing is off on this free demo.",
+  "caption": "What is real: the ledger, the Bitcoin anchoring, and the verification. The Lightning path is tested against a wallet simulator, not yet with real sats, and Nostr publishing is off on this free demo."
+ },
+ {
+  "id": "end",
+  "speak": "Nob Pay: pay on proof. Five business models, one engine. Try it at nob pay dot on render dot com. The code is open source on GitHub.",
+  "caption": "NobPay: pay on proof. Five business models, one engine. Try it at nobpay.onrender.com. The code is open source on GitHub."
+ }
+]

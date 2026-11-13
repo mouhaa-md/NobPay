@@ -8,6 +8,7 @@
 # Writes <out-dir>/<id>.wav (mono) for each sentence group and <out-dir>/durations.json (seconds).
 # The default voice is af_heart, the best graded of Kokoro's voices ("A"); speed 1.0 is its natural pace.
 # The silence Kokoro leaves at the start and the end of each clip is trimmed, so the pauses are the ones the script chooses.
+# NEW_ONLY=1 keeps the clips already in <out-dir> (same voice and speed) and only synthesises the sentence groups that have none.
 import json, os, sys, wave
 import numpy as np
 from kokoro_onnx import Kokoro
@@ -21,6 +22,12 @@ segments = json.load(open(narration_path, encoding='utf-8'))
 durations = {}
 total_words = 0
 for s in segments:
+    wav_path = os.path.join(out_dir, f"{s['id']}.wav")
+    if os.environ.get('NEW_ONLY') == '1' and os.path.exists(wav_path):
+        with wave.open(wav_path) as w:
+            durations[s['id']] = w.getnframes() / w.getframerate()
+        total_words += len(s['speak'].split())
+        continue
     samples, rate = kokoro.create(s['speak'], voice=voice, speed=speed, lang='en-us')
     x = np.asarray(samples, dtype=np.float32)
     loud = np.where(np.abs(x) > 0.012)[0]
