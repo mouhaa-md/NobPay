@@ -101,7 +101,7 @@ const scrollBy = async (px, ms = 1000) => { await page.evaluate((p) => window.sc
 const retrying = async (fn, what) => {
   for (let i = 1; ; i++) {
     try { return await fn(); } catch (e) {
-      if (i >= 5 || !/ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ERR_NAME_NOT_RESOLVED|ERR_INTERNET|ERR_CONNECTION|net::|Timeout/i.test(String(e.message))) throw e;
+      if (i >= 30 || !/ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ERR_NAME_NOT_RESOLVED|ERR_INTERNET|ERR_CONNECTION|net::|Timeout/i.test(String(e.message))) throw e;
       console.log(`  (retry ${i} of ${what}: ${String(e.message).split('|')[0].slice(0, 90)})`);
       await new Promise((r) => setTimeout(r, 6000));
     }
