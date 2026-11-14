@@ -107,7 +107,7 @@ export function DossierSummary({ dossier }: { dossier: DossierLike }) {
                     <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at, t)}
                   </span>
                 </span>
-                <span className="hidden shrink-0 font-mono text-[11px] text-outline sm:block" title={e.hash}>
+                <span className="hidden shrink-0 font-mono text-xs text-outline sm:block" title={e.hash}>
                   {shortHash(e.hash, 6, 4)}
                 </span>
               </li>

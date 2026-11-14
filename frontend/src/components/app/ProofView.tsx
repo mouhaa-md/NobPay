@@ -53,7 +53,7 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
                       href={`https://www.openstreetmap.org/?mlat=${p.gps.lat}&mlon=${p.gps.lng}#map=17/${p.gps.lat}/${p.gps.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline"
+                      className="tap-area font-medium text-primary hover:underline"
                     >
                       {p.gps.lat.toFixed(4)}, {p.gps.lng.toFixed(4)}
                       {p.gps.accuracy ? t(' · ±{accuracy} m', { accuracy: p.gps.accuracy }) : ''}
@@ -128,13 +128,13 @@ export async function ProofView({ proof, projectId, token, expectedFcfa, hideDes
       )}
 
       <details className="rounded-2xl bg-surface-container-low p-3.5 font-label-sm text-label-sm text-on-surface-variant">
-        <summary className="cursor-pointer list-none font-label-md text-label-md font-semibold text-primary">
+        <summary className="tap-area cursor-pointer list-none font-label-md text-label-md font-semibold text-primary">
           <span className="inline-flex items-center gap-1.5">
             <Icon name="fingerprint" size={18} /> <Tc>Empreintes des fichiers (SHA-256)</Tc>
           </span>
         </summary>
         <p className="mb-2 mt-2"><Tc>Ces empreintes sont inscrites dans le registre de preuves. Modifier une photo après coup changerait son empreinte.</Tc></p>
-        <ul className="flex flex-col gap-1 font-mono text-[11px]">
+        <ul className="flex flex-col gap-1 font-mono text-xs">
           {[...proof.photos, ...(proof.invoice ? [proof.invoice] : [])].map((f) => (
             <li key={f.id} className="break-all" title={f.sha256}>
               {f.name.slice(0, 22)} · {shortHash(f.sha256, 12, 8)}

@@ -49,7 +49,7 @@ export default async function Certificate(props: { params: Promise<{ id: string 
           <p className="relative mt-2 font-body-sm text-body-sm text-surface-variant">
             {t(events.length > 1 ? '{n} événements enchaînés.' : '{n} événement enchaîné.', { n: events.length })} <Tc>Chaque ligne contient l&apos;empreinte de la précédente : en changer une seule casse toute la suite.</Tc>
           </p>
-          <p className="relative mt-3 font-mono text-[11px] text-surface-variant/80" title={chain.headHash}>
+          <p className="relative mt-3 font-mono text-xs text-surface-variant/80" title={chain.headHash}>
             <Tc>Empreinte de tête ·</Tc> {shortHash(chain.headHash, 16, 10)}
           </p>
           <p className="relative mt-3 flex items-center gap-2 font-label-md text-label-md">
@@ -103,7 +103,7 @@ export default async function Certificate(props: { params: Promise<{ id: string 
                       ) : null}
                       <Icon name="keyboard_arrow_down" size={20} className="text-on-surface-variant transition-transform group-open:rotate-180" />
                     </summary>
-                    <div className="bg-surface-container-low px-3.5 py-3 font-mono text-[11px] leading-relaxed text-on-surface-variant">
+                    <div className="bg-surface-container-low px-3.5 py-3 font-mono text-xs leading-relaxed text-on-surface-variant">
                       <p className="break-all"><Tc>empreinte :</Tc> {e.hash}</p>
                       <p className="break-all"><Tc>précédente :</Tc> {e.prevHash}</p>
                       <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all">{JSON.stringify(e.data, null, 2)}</pre>

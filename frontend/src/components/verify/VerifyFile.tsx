@@ -68,7 +68,7 @@ export function VerifyFile() {
               </CheckRow>
               {report.dossier && report.chainOk && <NostrCheck ledger={report.dossier.ledger} />}
               <CheckRow state="idle" title={t('Empreinte du fichier (SHA-256)')}>
-                <code className="break-all font-mono text-[11px]">{report.digest}</code>
+                <code className="break-all font-mono text-xs">{report.digest}</code>
                 <span className="mt-1 block"><Tc>Comparez-la à celle de la preuve .ots sur opentimestamps.org pour savoir quand ce dossier a été ancré sur Bitcoin.</Tc></span>
               </CheckRow>
             </ul>

@@ -12,7 +12,7 @@ export async function AppHeader({ title, user }: { title: string; user: { firstN
     <>
       <header className="pt-safe fixed left-1/2 top-0 z-50 w-full max-w-[480px] -translate-x-1/2 bg-surface-container-lowest/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:hidden">
         <div className="flex h-16 items-center justify-between px-space-md">
-          <Link href="/app/accueil" aria-label={t('NobPay, accueil')}>
+          <Link href="/app/accueil" aria-label={t('NobPay, accueil')} className="tap-area">
             <Logo className="text-[18px]" />
           </Link>
           <h1 className="font-title-md text-title-md text-on-surface">{title}</h1>
@@ -20,7 +20,7 @@ export async function AppHeader({ title, user }: { title: string; user: { firstN
             <Link href="/app/notifications" aria-label={t('Notifications')} className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container">
               <Icon name="notifications" size={22} />
             </Link>
-            <Link href="/app/profil" aria-label={t('Profil')}>
+            <Link href="/app/profil" aria-label={t('Profil')} className="tap-area">
               <Avatar first={user.firstName} last={user.lastName} size="sm" />
             </Link>
           </div>

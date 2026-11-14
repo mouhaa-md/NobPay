@@ -151,7 +151,7 @@ export default async function Projects(props: { searchParams: Promise<{ secteur?
                 >
                   {f.icon && <Icon name={f.icon} size={16} />}
                   {f.id === 'all' ? t('Tous les projets') : t(f.label)}
-                  <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${on ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>{count}</span>
+                  <span className={`rounded-full px-1.5 py-0.5 text-xs font-bold ${on ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>{count}</span>
                 </Link>
               );
             })}

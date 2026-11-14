@@ -62,7 +62,7 @@ export function NostrCheck({ ledger }: { ledger: DossierEventLike[] }) {
       {report.state === 'confirmed' && (
         <>
           {t(plural(report.confirmed, '{n} engagement retrouvé sur {relays} relais, signé par la clé du projet', '{n} engagements retrouvés sur {relays} relais, signés par la clé du projet'), { n: report.confirmed, relays: reached })}{' '}
-          <code className="font-mono text-[11px]">{npub.slice(0, 14)}…</code>
+          <code className="font-mono text-xs">{npub.slice(0, 14)}…</code>
           {t(plural(report.confirmed, ', et identique à ce registre.', ', et identiques à ce registre.'))} {tail.join(' ')}
         </>
       )}

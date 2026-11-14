@@ -169,9 +169,9 @@ export default async function Wallet() {
 
 function Mini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
+    <div className="rounded-xl bg-white/10 p-2 backdrop-blur min-[360px]:p-2.5">
       <span className="block font-label-sm text-label-sm text-surface-variant">{label}</span>
-      <span className="block truncate font-label-lg text-label-lg font-bold">{value}</span>
+      <span className="block whitespace-nowrap font-label-lg text-label-lg font-bold tracking-tight">{value}</span>
     </div>
   );
 }

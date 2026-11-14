@@ -214,7 +214,7 @@ export default async function StepPage(props: { params: Promise<{ id: string; st
                         <Tc>N°</Tc> {e.seq} · {formatDateTime(e.at, t)}
                       </span>
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] text-outline" title={e.hash}>
+                    <span className="shrink-0 font-mono text-xs text-outline" title={e.hash}>
                       {shortHash(e.hash, 6, 4)}
                     </span>
                   </li>

@@ -92,7 +92,7 @@ function Item({ k, v, strong, mono }: { k: string; v: string; strong?: boolean; 
   return (
     <>
       <dt className="text-on-surface-variant">{k}</dt>
-      <dd className={`min-w-0 break-words text-right ${strong ? 'font-bold text-on-surface' : 'font-medium text-on-surface'} ${mono ? 'font-mono text-[11px]' : ''}`}>{v}</dd>
+      <dd className={`min-w-0 break-words text-right ${strong ? 'font-bold text-on-surface' : 'font-medium text-on-surface'} ${mono ? 'font-mono text-xs' : ''}`}>{v}</dd>
     </>
   );
 }

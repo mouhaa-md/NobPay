@@ -99,13 +99,13 @@ export default async function Receipt(props: { params: Promise<{ token: string }
         {payout.lightning && (
           <>
             <dt className="text-on-surface-variant"><Tc>Empreinte du paiement</Tc></dt>
-            <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.lightning.paymentHash}</dd>
+            <dd className="break-all text-right font-mono text-xs text-on-surface">{payout.lightning.paymentHash}</dd>
           </>
         )}
         <dt className="text-on-surface-variant"><Tc>Date</Tc></dt>
         <dd className="text-right font-medium text-on-surface">{formatDateTime(payout.completedAt ?? payout.startedAt, t)}</dd>
         <dt className="text-on-surface-variant"><Tc>Référence</Tc></dt>
-        <dd className="break-all text-right font-mono text-[11px] text-on-surface">{payout.reference}</dd>
+        <dd className="break-all text-right font-mono text-xs text-on-surface">{payout.reference}</dd>
       </dl>
 
       <ol className="mx-6 mt-5 flex flex-col" aria-label={t('Suivi du paiement')}>

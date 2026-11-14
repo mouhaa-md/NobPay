@@ -69,7 +69,7 @@ export function VerifyAnchor({ initial }: { initial: AnchorView }) {
             t('Calcul de l’empreinte SHA-256 dans votre navigateur…')
           ) : report.digestMatches ? (
             <>
-              <Tc>L&apos;empreinte recalculée chez vous est identique :</Tc> <code className="font-mono text-[11px]">{shortHash(report.digest, 12, 8)}</code>
+              <Tc>L&apos;empreinte recalculée chez vous est identique :</Tc> <code className="font-mono text-xs">{shortHash(report.digest, 12, 8)}</code>
             </>
           ) : (
             t('Le fichier ne correspond pas à l’empreinte ancrée : il a été modifié.')
@@ -140,7 +140,7 @@ export function VerifyAnchor({ initial }: { initial: AnchorView }) {
             <Tc>et déposez le fichier .ots puis le fichier .json.</Tc>
           </li>
           <li>
-            <Tc>Ou, en ligne de commande :</Tc> <code className="rounded bg-surface-container px-1 font-mono text-[11px]">ots verify fichier.json.ots</code>
+            <Tc>Ou, en ligne de commande :</Tc> <code className="rounded bg-surface-container px-1 font-mono text-xs">ots verify fichier.json.ots</code>
           </li>
         </ol>
       </section>

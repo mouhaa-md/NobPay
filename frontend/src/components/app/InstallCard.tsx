@@ -93,7 +93,7 @@ export function InstallCard() {
           </button>
         </div>
       </div>
-      <button type="button" aria-label={t('Fermer')} className="absolute right-3 top-3 rounded-full p-1 text-on-surface-variant hover:text-on-surface" onClick={dismiss}>
+      <button type="button" aria-label={t('Fermer')} className="tap-area absolute right-3 top-3 rounded-full p-1 text-on-surface-variant hover:text-on-surface" onClick={dismiss}>
         <Icon name="close" size={18} />
       </button>
     </div>

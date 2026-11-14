@@ -292,9 +292,9 @@ export function FundingFlow({ projectId, projectName, mode, allowDemo = false, r
                     <Icon name="open_in_new" size={16} /> <Tc>Ouvrir mon portefeuille</Tc>
                   </a>
                 </div>
-                <p className="max-w-xs break-all text-center font-mono text-[11px] leading-snug text-outline">{bolt11.slice(0, 28)}…{bolt11.slice(-10)}</p>
+                <p className="max-w-xs break-all text-center font-mono text-xs leading-snug text-outline">{bolt11.slice(0, 28)}…{bolt11.slice(-10)}</p>
                 <details className="mt-1 w-full max-w-sm rounded-2xl bg-surface-container-low p-3 text-left">
-                  <summary className="cursor-pointer font-label-md text-label-md font-semibold text-primary"><Tc>Comment payer avec Lightning ?</Tc></summary>
+                  <summary className="tap-area cursor-pointer font-label-md text-label-md font-semibold text-primary"><Tc>Comment payer avec Lightning ?</Tc></summary>
                   <ol className="mt-2 list-decimal space-y-1 pl-5 font-body-sm text-body-sm text-on-surface-variant">
                     <li><Tc>Ouvrez un portefeuille Lightning (n’importe lequel : le paiement ne passe pas par une application imposée).</Tc></li>
                     <li><Tc>Scannez ce code, ou collez la facture copiée.</Tc></li>

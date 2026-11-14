@@ -179,7 +179,7 @@ export default async function ProjectPage(
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <ShareManagerLink token={managerLinkToken(project)} managerName={project.managerName} projectName={project.name} projectId={project.id} />
-            <Link href={`/terrain/${managerLinkToken(project)}`} className="font-label-md text-label-md font-semibold text-primary hover:underline">
+            <Link href={`/terrain/${managerLinkToken(project)}`} className="tap-row font-label-md text-label-md font-semibold text-primary hover:underline">
               <Tc>Ouvrir la vue terrain</Tc>
             </Link>
           </div>

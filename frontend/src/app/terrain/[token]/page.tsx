@@ -255,7 +255,7 @@ export default async function FieldPage(props: { params: Promise<{ token: string
                             {s.payout.supplier.name} · <OperatorLogo network={s.payout.supplier.network} size={14} /> {SUPPLIER_NETWORKS[s.payout.supplier.network]} ·{' '}
                             {s.payout.status === 'completed' ? t('payé') : s.payout.status === 'failed' ? t('paiement refusé') : t('en cours')}
                             {receipt && (
-                              <a href={`/recu/${receipt}`} className="font-semibold text-primary hover:underline">
+                              <a href={`/recu/${receipt}`} className="tap-area font-semibold text-primary hover:underline">
                                 <Tc>Reçu</Tc>
                               </a>
                             )}

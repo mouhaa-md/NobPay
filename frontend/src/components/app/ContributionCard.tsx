@@ -51,10 +51,10 @@ export function ContributionCard({ projectId, projectName, path, expired, contri
           <ShareLink path={path} text={t('Voici le lien pour participer au projet « {name} » :', { name: projectName })} label={t('Envoyer le lien')} copyLabel={t('Copier le lien')} />
           <p className="font-label-sm text-label-sm text-on-surface-variant"><Tc>Ce lien ne permet que d’ajouter de l’argent : il ne montre ni le solde ni les preuves, et ne débloque rien. Vous restez seul à décider, et seul à pouvoir reprendre le reste du séquestre.</Tc></p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-label-md text-label-md">
-            <button type="button" disabled={busy !== null} onClick={() => call('renew', { method: 'POST', body: JSON.stringify({ renew: true }) })} className="font-semibold text-primary hover:underline disabled:opacity-60">
+            <button type="button" disabled={busy !== null} onClick={() => call('renew', { method: 'POST', body: JSON.stringify({ renew: true }) })} className="tap-row font-semibold text-primary hover:underline disabled:opacity-60">
               {busy === 'renew' ? <Spinner /> : <Tc>Renouveler le lien</Tc>}
             </button>
-            <button type="button" disabled={busy !== null} onClick={() => call('close', { method: 'DELETE' })} className="font-semibold text-error hover:underline disabled:opacity-60">
+            <button type="button" disabled={busy !== null} onClick={() => call('close', { method: 'DELETE' })} className="tap-row font-semibold text-error hover:underline disabled:opacity-60">
               {busy === 'close' ? <Spinner /> : <Tc>Fermer le lien</Tc>}
             </button>
           </div>

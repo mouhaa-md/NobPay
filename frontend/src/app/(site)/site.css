@@ -1175,3 +1175,19 @@ html:has(.site) {
     margin-top: 8rem;
   }
 }
+
+/* Touch screens (mobile review, 14 Nov 2026): the small text links of the header and of the footer get a larger hit area; nothing moves. */
+@media (pointer: coarse) {
+  .site-logo,
+  .site-nav a:not(.pill),
+  .foot nav a {
+    position: relative;
+  }
+  .site-logo::after,
+  .site-nav a:not(.pill)::after,
+  .foot nav a::after {
+    content: "";
+    position: absolute;
+    inset: -10px -8px;
+  }
+}

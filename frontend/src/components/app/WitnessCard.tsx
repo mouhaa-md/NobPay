@@ -60,11 +60,11 @@ export function WitnessCard({ projectId, witness, path }: Props) {
             <ShareLink path={path} text={t('Bonjour {name}, voici le lien pour regarder les preuves du projet et dire si elles correspondent :', { name: witness.name })} label={t('Envoyer le lien')} copyLabel={t('Copier le lien')} />
           )}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-label-md text-label-md">
-            <button type="button" onClick={() => setEditing(true)} className="font-semibold text-primary hover:underline"><Tc>Modifier</Tc></button>
-            <button type="button" disabled={busy !== null} onClick={() => save(true)} className="font-semibold text-primary hover:underline disabled:opacity-60">
+            <button type="button" onClick={() => setEditing(true)} className="tap-row font-semibold text-primary hover:underline"><Tc>Modifier</Tc></button>
+            <button type="button" disabled={busy !== null} onClick={() => save(true)} className="tap-row font-semibold text-primary hover:underline disabled:opacity-60">
               {busy === 'renew' ? <Spinner /> : <Tc>Renouveler le lien</Tc>}
             </button>
-            <button type="button" disabled={busy !== null} onClick={() => call('remove', { method: 'DELETE' })} className="font-semibold text-error hover:underline disabled:opacity-60">
+            <button type="button" disabled={busy !== null} onClick={() => call('remove', { method: 'DELETE' })} className="tap-row font-semibold text-error hover:underline disabled:opacity-60">
               {busy === 'remove' ? <Spinner /> : <Tc>Retirer le témoin</Tc>}
             </button>
           </div>

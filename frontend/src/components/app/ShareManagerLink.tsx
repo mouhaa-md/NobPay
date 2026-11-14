@@ -58,7 +58,7 @@ export function ShareManagerLink({ token, managerName, projectName, projectId }:
       </button>
       <CopyButton value={path} label={t('Copier')} />
       {projectId && !asking && (
-        <button type="button" onClick={() => setAsking(true)} className="font-label-md text-label-md font-semibold text-on-surface-variant underline underline-offset-4 hover:text-primary">
+        <button type="button" onClick={() => setAsking(true)} className="tap-row font-label-md text-label-md font-semibold text-on-surface-variant underline underline-offset-4 hover:text-primary">
           <Tc>Renouveler le lien</Tc>
         </button>
       )}

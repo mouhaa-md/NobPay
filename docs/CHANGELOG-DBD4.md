@@ -227,5 +227,21 @@ Point F-3 du rapport [`AUDIT-SECURITE-2026-11-12.md`](AUDIT-SECURITE-2026-11-12.
 - Les événements déjà ancrés ne changent pas (un dossier ancré reste identique octet pour octet) ; les nouveaux événements utilisent les empreintes.
 - `tests/commitments.test.ts` : 11 cas.
 
+## Confort sur téléphone (14 novembre 2026)
+
+Contrôle de 18 pages (accueil public, vérification, application, vue terrain, liens famille et témoin) à 320, 360 et 390 px, dans un navigateur qui simule un téléphone tactile, avec le compte de démonstration. **Limite :** personne n'a encore essayé sur un vrai iPhone ou un vrai Android.
+
+- **Avant** (site en ligne) : aucun débordement horizontal, mais 325 textes de moins de 11,5 px, 9 champs de moins de 16 px (l'iPhone zoome la page quand on y écrit), 80 boutons ou liens de moins de 40 px de haut et des pastilles du portefeuille coupées.
+- **Après** : aucun débordement, aucun texte sous 12 px, aucun champ sous 16 px. Les zones réellement touchables (mesurées point par point, zones agrandies comprises) font au moins 38 px dans les deux sens, sauf les liens placés dans une phrase et l'icône « masquer le solde » (30 px de large).
+
+Ce qui a changé :
+
+- **Textes :** les deux plus petits styles passent de 11 à 12 px et de 12 à 13 px ; les références et empreintes passent de 11 à 12 px.
+- **Champs :** 16 px sur écran tactile, donc plus de zoom automatique de l'iPhone.
+- **Boutons et liens :** les boutons de 36 px passent à 44 px sur écran tactile ; les liens-textes (« Voir détails », « Examiner la preuve », position des photos, « Empreintes des fichiers », en-tête et pied de la page d'accueil) gardent leur place mais touchent plus large (`tap-area`) ; quand plusieurs liens se suivent (« Renouveler le lien », « Fermer le lien », « Retirer le témoin »), ils font 40 px de haut (`tap-row`) pour ne pas se marcher dessus. Le bureau ne change pas.
+- **Hauteur de l'écran :** les pages plein écran (financement, nouveau projet, connexion) suivent la hauteur réellement visible, barre d'adresse comprise, pour que le bouton du bas ne passe plus sous le bord de l'écran (`100dvh` sous 1024 px ; au-dessus, rien ne change).
+- **Portefeuille :** les montants des trois pastilles s'affichent en entier à 320 px. Titres équilibrés sur deux lignes (`text-wrap: balance`).
+- `tests/mobile-touch.test.ts` : 5 cas pour que ces réglages ne reviennent pas en arrière par accident. 1004 tests verts sur 71 fichiers (31 ignorés).
+
 ## À venir (voir le plan du rapport d'audit)
 Architecture en ports/adaptateurs et SQLite (à sacrifier en premier si le temps manque) · M4 couloirs scolarité et commerçant, anglais, finition · M5 gel et soumission.

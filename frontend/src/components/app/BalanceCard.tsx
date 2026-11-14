@@ -14,7 +14,7 @@ export function BalanceCard({ escrowCents, rate, euro = false }: { escrowCents: 
     <div className="relative z-10 rounded-2xl bg-white/10 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-xl">
       <div className="mb-2 flex items-center gap-2">
         <span className="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-surface-variant"><Tc>Total en séquestre</Tc></span>
-        <button type="button" aria-label={hidden ? t('Afficher le solde') : t('Masquer le solde')} className="flex items-center text-surface-variant transition hover:text-white" onClick={() => setHidden((h) => !h)}>
+        <button type="button" aria-label={hidden ? t('Afficher le solde') : t('Masquer le solde')} className="tap-area flex items-center text-surface-variant transition hover:text-white" onClick={() => setHidden((h) => !h)}>
           <Icon name={hidden ? 'visibility_off' : 'visibility'} size={17} />
         </button>
       </div>

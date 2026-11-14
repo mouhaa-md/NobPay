@@ -155,7 +155,7 @@ export default async function Admin() {
                   {p.mode === 'mock' && <span className="mt-1 block text-on-surface-variant">simulé</span>}
                   {p.error && <span className="mt-1 block text-error">{p.error}</span>}
                 </td>
-                <td className={`${td} break-all font-mono text-[11px]`}>{p.reference}</td>
+                <td className={`${td} break-all font-mono text-xs`}>{p.reference}</td>
               </tr>
             ))}
           </Table>
