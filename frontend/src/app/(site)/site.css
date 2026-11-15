@@ -192,6 +192,10 @@ html:has(.site) {
 .site-nav a:hover {
   opacity: 1;
 }
+.site-nav .lang-switch {
+  display: inline-flex;
+  align-items: center;
+}
 .site-nav .pill {
   background: #fff;
   color: var(--blue-deep);

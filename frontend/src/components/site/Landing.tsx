@@ -4,6 +4,7 @@ import { HeroArt } from '@/components/site/HeroArt';
 import { LANDING_COPY, SOURCE_URLS, type Lang } from '@/components/site/landingCopy';
 import { MotionProvider } from '@/components/site/MotionProvider';
 import { Phone } from '@/components/site/Phone';
+import { Flag } from '@/components/ui/Flag';
 import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { SECTORS, STEP_TEMPLATES } from '@/lib/templates';
@@ -51,8 +52,8 @@ export function Landing({ lang }: { lang: Lang }) {
             <Link prefetch={false} href={to('/verifier')} className="hide-sm">
               {c.nav.verify}
             </Link>
-            <Link prefetch={false} href={c.nav.switchHref} hrefLang={lang === 'en' ? 'fr' : 'en'} lang={lang === 'en' ? 'fr' : 'en'} aria-label={`${c.nav.switchLabel}: ${c.nav.switchTo}`}>
-              {c.nav.switchTo}
+            <Link prefetch={false} href={c.nav.switchHref} hrefLang={lang === 'en' ? 'fr' : 'en'} lang={lang === 'en' ? 'fr' : 'en'} aria-label={`${c.nav.switchLabel}: ${c.nav.switchTo}`} title={c.nav.switchTo} className="lang-switch">
+              <Flag code={lang === 'en' ? 'FR' : 'GB'} className="h-[1.7rem] w-[2.55rem]" />
             </Link>
             <Link prefetch={false} href={to('/app')} className="pill nm-btn">
               {c.nav.open}
