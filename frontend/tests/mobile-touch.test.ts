@@ -50,6 +50,14 @@ describe('phone ergonomics', () => {
     expect(css).toMatch(/@media \(pointer: coarse\)[\s\S]*\.site-nav a:not\(\.pill\)::after/);
   });
 
+  it('the landing keeps its header and its corridor cards inside the window (phones and reduced windows)', () => {
+    const css = read('src/app/(site)/site.css');
+    expect(css).toMatch(/\.sector-grid\s*\{[^}]*repeat\(6, minmax\(0, 1fr\)\)/); // a long word must not widen a column
+    expect(css).toMatch(/\.sector h3\s*\{[^}]*overflow-wrap:\s*break-word/);
+    expect(css).toMatch(/\.site-nav a\s*\{[^}]*white-space:\s*nowrap/); // the nav must not wrap onto the logo
+    expect(css).toMatch(/@media \(min-width: 761px\) and \(max-width: 840px\)\s*\{\s*\.site-nav \.hide-sm/);
+  });
+
   it('the viewport uses the whole screen and still lets people zoom', () => {
     const layout = read('src/app/layout.tsx');
     expect(layout).toMatch(/viewportFit:\s*'cover'/);

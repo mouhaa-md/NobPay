@@ -187,6 +187,7 @@ html:has(.site) {
 .site-nav a {
   text-decoration: none;
   opacity: 0.92;
+  white-space: nowrap;
 }
 .site-nav a:hover {
   opacity: 1;
@@ -545,7 +546,7 @@ html:has(.site) {
 }
 .sector-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr)); /* minmax(0, ...): a long word (réapprovisionnement) must not widen its column */
   gap: 2.2rem;
 }
 .sector-grid > .sector {
@@ -616,6 +617,8 @@ html:has(.site) {
 .sector h3 {
   font-size: 2.6rem;
   line-height: 1.12;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .sector-body p {
   font-size: 1.5rem;
@@ -716,7 +719,7 @@ html:has(.site) {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2.4rem;
   position: relative;
 }
@@ -754,6 +757,8 @@ html:has(.site) {
 .rail h3 {
   font-size: 2.3rem;
   margin-bottom: 1rem;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .rail p {
   font-size: 1.4rem;
@@ -974,18 +979,19 @@ html:has(.site) {
   /* the root is 3.4vw here, so these sizes fit every phone width; the English labels are longer than the French
      ones, and neither the language link nor the button may wrap */
   .site-logo {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
     flex-shrink: 0;
   }
   .site-nav {
-    gap: 1rem;
+    gap: 0.9rem;
+    font-size: 1.3rem;
   }
   .site-nav a {
     white-space: nowrap;
   }
   .site-nav .pill {
-    padding: 0.8rem 1.3rem;
-    font-size: 1.4rem;
+    padding: 0.8rem 1.1rem;
+    font-size: 1.3rem;
   }
   .hero {
     padding-top: 7rem;
@@ -1081,8 +1087,11 @@ html:has(.site) {
   .sectors {
     padding: 8rem 0 6rem;
   }
+  .sector-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .sector h3 {
-    font-size: 3.2rem;
+    font-size: 2.5rem;
   }
   .sector-body p,
   .sector li {
@@ -1107,7 +1116,7 @@ html:has(.site) {
     --phone-w: 28rem;
   }
   .rail-flow {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 3.4rem;
   }
   .rail h3 {
@@ -1173,6 +1182,39 @@ html:has(.site) {
     flex-direction: column-reverse;
     gap: 2rem;
     margin-top: 8rem;
+  }
+}
+
+/* Between a phone and a laptop (window reduced to 761-1100 px) the rem is still 11 px while the columns keep shrinking:
+   the French header wrapped onto the logo and the third corridor card was cut off. Fewer links, two columns. */
+@media (min-width: 761px) and (max-width: 840px) {
+  .site-nav .hide-sm {
+    display: none;
+  }
+}
+@media (min-width: 761px) and (max-width: 900px) {
+  .rail-flow {
+    gap: 1.6rem;
+  }
+  .rail {
+    padding: 3rem 1.6rem 3.2rem;
+  }
+  .rail h3 {
+    font-size: 1.9rem;
+  }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .sector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sector-grid > .sector,
+  .sector-grid > .sector:nth-child(4) {
+    grid-column: auto;
+  }
+  .sector-grid > .sector:nth-child(5) {
+    grid-column: 1 / -1;
+    width: calc(50% - 1.1rem);
+    justify-self: center;
   }
 }
 
